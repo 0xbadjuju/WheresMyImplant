@@ -2,6 +2,8 @@
 
 This WMI provider includes functions to execute commands, payloads, and Empire Agent to maintain a low profile on the host.
 
+This is the sister project to PowerProvider.
+
 ### Methods
 
 * #### RunCMD
