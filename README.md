@@ -1,6 +1,6 @@
 # WheresMyImplant
 
-WheresMyImplant: A C# WMI Provider for long term persistance
+#H1 WheresMyImplant: A C# WMI Provider for long term persistance
 
 This WMI provider includes functions to execute commands, payloads, and Empire Agent to maintain a low profile on the host.
 
