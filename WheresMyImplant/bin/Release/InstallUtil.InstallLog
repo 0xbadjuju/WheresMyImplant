@@ -1,0 +1,14 @@
+﻿
+Running a transacted installation.
+
+Beginning the Install phase of the installation.
+See the contents of the log file for the C:\Users\0xbadjuju\Documents\Visual Studio 2008\Projects\WheresMyImplant\WheresMyImplant\bin\Release\WheresMyImplant.dll assembly's progress.
+The file is located at C:\Users\0xbadjuju\Documents\Visual Studio 2008\Projects\WheresMyImplant\WheresMyImplant\bin\Release\WheresMyImplant.InstallLog.
+
+The Install phase completed successfully, and the Commit phase is beginning.
+See the contents of the log file for the C:\Users\0xbadjuju\Documents\Visual Studio 2008\Projects\WheresMyImplant\WheresMyImplant\bin\Release\WheresMyImplant.dll assembly's progress.
+The file is located at C:\Users\0xbadjuju\Documents\Visual Studio 2008\Projects\WheresMyImplant\WheresMyImplant\bin\Release\WheresMyImplant.InstallLog.
+
+The Commit phase completed successfully.
+
+The transacted install has completed.

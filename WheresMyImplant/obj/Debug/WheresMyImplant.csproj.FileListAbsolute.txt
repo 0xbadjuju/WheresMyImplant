@@ -1,0 +1,6 @@
+C:\Users\0xbadjuju\AppData\Local\Temporary Projects\WheresMyImplant\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\0xbadjuju\Documents\Visual Studio 2008\Projects\WheresMyImplant\WheresMyImplant\bin\Debug\WheresMyImplant.dll
+C:\Users\0xbadjuju\Documents\Visual Studio 2008\Projects\WheresMyImplant\WheresMyImplant\bin\Debug\WheresMyImplant.pdb
+C:\Users\0xbadjuju\Documents\Visual Studio 2008\Projects\WheresMyImplant\WheresMyImplant\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\0xbadjuju\Documents\Visual Studio 2008\Projects\WheresMyImplant\WheresMyImplant\obj\Debug\WheresMyImplant.dll
+C:\Users\0xbadjuju\Documents\Visual Studio 2008\Projects\WheresMyImplant\WheresMyImplant\obj\Debug\WheresMyImplant.pdb
