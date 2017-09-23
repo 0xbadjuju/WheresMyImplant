@@ -2,7 +2,8 @@
 
 This WMI provider includes functions to execute commands, payloads, and Empire Agent to maintain a low profile on the host.
 
-This is related to the project PowerProvider - https://github.com/0xbadjuju/PowerProvider/
+This is related to the project PowerProvider - https://github.com/0xbadjuju/PowerProvider/ <br/>
+PowerProvider provides the deployment methods for the implant.
 
 ### Methods
 
