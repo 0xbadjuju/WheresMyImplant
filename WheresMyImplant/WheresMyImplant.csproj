@@ -45,6 +45,7 @@
     <Reference Include="System.Net">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -58,6 +59,7 @@
     <Compile Include="Class1.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Credentials\Tokens.cs" />
     <Compile Include="Empire\Empire.Agent.Coms.cs" />
     <Compile Include="Empire\Empire.Agent.cs" />
     <Compile Include="Empire\Empire.Agent.Jobs.cs" />
@@ -71,9 +73,12 @@
     <Compile Include="Base\Base.cs" />
     <Compile Include="Base\BaseRemote.cs" />
     <Compile Include="Base\BaseSQL.cs" />
+    <Compile Include="Resources\Constants.cs" />
+    <Compile Include="Resources\Enums.cs" />
     <Compile Include="Resources\Misc.cs" />
     <Compile Include="Resources\PELoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Resources\Services.cs" />
     <Compile Include="Run\RunCommandPrompt.cs" />
     <Compile Include="Run\RunPowerShell.cs" />
     <Compile Include="Resources\Structs.cs" />

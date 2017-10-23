@@ -11,7 +11,7 @@ using System.Threading;
 
 namespace WheresMyImplant
 {
-    class Coms
+    class Coms : Base
     {
         private String sessionId {get; set;}
         private String stagingKey {get; set;}
@@ -106,6 +106,7 @@ namespace WheresMyImplant
                 }
                 catch (IndexOutOfRangeException error)
                 {
+                    WriteOutputBad(error.ToString());
                 }
                 byte[] extra = routingPacket.Skip(10).Take(2).ToArray();
                 UInt32 packetLength = BitConverter.ToUInt32(routingData, 12);
@@ -125,6 +126,7 @@ namespace WheresMyImplant
                     }
                     catch (Exception error)
                     {
+                        WriteOutputBad(error.ToString());
                     }
                 }
             }
@@ -200,6 +202,7 @@ namespace WheresMyImplant
                 }
                 catch (WebException error)
                 {
+                    WriteOutputBad(error.ToString());
                 }
             }
 
