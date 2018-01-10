@@ -1,5 +1,6 @@
 ﻿using System;
 
+namespace WheresMyImplant
 {
     class Constants
     {
@@ -55,5 +56,22 @@
         public const String SE_DEBUG_NAME               = "SeDebugPrivilege";
         public const String SE_INCREASE_QUOTA_NAME      = "SeIncreaseQuotaPrivilege";
         public const String SE_TCB_NAME                 = "SeTcbPrivilege";
+
+        public const UInt64 SE_GROUP_ENABLED            = 0x00000004L;
+        public const UInt64 SE_GROUP_ENABLED_BY_DEFAULT = 0x00000002L;
+        public const UInt64 SE_GROUP_INTEGRITY          = 0x00000020L;
+        public const UInt32 SE_GROUP_INTEGRITY_32       = 0x00000020;
+        public const UInt64 SE_GROUP_INTEGRITY_ENABLED  = 0x00000040L;
+        public const UInt64 SE_GROUP_LOGON_ID           = 0xC0000000L;
+        public const UInt64 SE_GROUP_MANDATORY          = 0x00000001L;
+        public const UInt64 SE_GROUP_OWNER              = 0x00000008L;
+        public const UInt64 SE_GROUP_RESOURCE           = 0x20000000L;
+        public const UInt64 SE_GROUP_USE_FOR_DENY_ONLY  = 0x00000010L;
+
+        //https://msdn.microsoft.com/en-us/library/windows/desktop/aa446583%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396
+        public const UInt32 DISABLE_MAX_PRIVILEGE       = 0x1;
+        public const UInt32 SANDBOX_INERT               = 0x2;
+        public const UInt32 LUA_TOKEN                   = 0x4;
+        public const UInt32 WRITE_RESTRICTED            = 0x8;
     }
 }
