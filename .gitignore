@@ -1,3 +1,5 @@
 *.pdb
 WheresMyImplant\obj\
 *.snk
+*.dll
+*.pdb

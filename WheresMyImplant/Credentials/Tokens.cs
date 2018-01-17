@@ -12,6 +12,13 @@ namespace WheresMyImplant
 {
     class Tokens : Base
     {
+        private const String helpMessage = @"
+Invalid Options
+GetSystem            <new_process>
+GetTrustedInstaller  <new_process>
+StealToken           <process_id> <new_process>
+BypassUAC            <process_id> <new_process>";
+
         protected IntPtr phNewToken;
         protected IntPtr hExistingToken;
         private IntPtr currentProcessToken;
@@ -41,6 +48,13 @@ namespace WheresMyImplant
         {
             Unmanaged.CloseHandle(phNewToken);
             Unmanaged.CloseHandle(hExistingToken);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////
+        public void GetHelp()
+        {
+            WriteOutputBad(helpMessage);
         }
 
         ////////////////////////////////////////////////////////////////////////////////

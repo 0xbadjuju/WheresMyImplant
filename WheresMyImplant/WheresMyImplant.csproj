@@ -74,6 +74,9 @@
     <Compile Include="Base\Base.cs" />
     <Compile Include="Base\BaseRemote.cs" />
     <Compile Include="Base\BaseSQL.cs" />
+    <Compile Include="Credentials\LSASecrets.cs" />
+    <Compile Include="Resources\advapi32.cs" />
+    <Compile Include="Resources\Registry.cs" />
     <Compile Include="Resources\Constants.cs" />
     <Compile Include="Resources\Enums.cs" />
     <Compile Include="Resources\Misc.cs" />

