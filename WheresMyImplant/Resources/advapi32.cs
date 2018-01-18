@@ -25,7 +25,18 @@ namespace WheresMyImplant
             Int32 lpReserved,
             ref RegistryValueKind lpType,
             IntPtr lpData,
-            ref Int32 lpcbData);
+            ref Int32 lpcbData
+        );
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        public static extern uint RegQueryValueEx(
+            UIntPtr hKey,
+            string lpValueName,
+            int lpReserved,
+            ref Int32 lpType,
+            IntPtr lpData,
+            ref int lpcbData
+        );
 
         [DllImport("advapi32.dll")]
         public static extern Int32 RegQueryInfoKey(

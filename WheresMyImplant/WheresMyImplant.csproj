@@ -60,6 +60,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Credentials\RestrictedToken.cs" />
+    <Compile Include="Credentials\SAM.cs" />
     <Compile Include="Credentials\Tokens.cs" />
     <Compile Include="Empire\Empire.Agent.Coms.cs" />
     <Compile Include="Empire\Empire.Agent.cs" />
