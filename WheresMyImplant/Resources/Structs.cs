@@ -311,5 +311,66 @@ namespace WheresMyImplant
         {
             public SID_AND_ATTRIBUTES Label;
         }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct CacheData
+        {
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public Byte[] userNameLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public Byte[] domainNameLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public Byte[] effectiveNameLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public Byte[] fullNameLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public Byte[] logonScriptLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public Byte[] profilePathLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public Byte[] homeDirectoryLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public Byte[] homeDirectoryDriveLength;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public Byte[] userId;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public Byte[] primaryGroupId;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public Byte[] groupCount;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public Byte[] logonDomainNameLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public Byte[] logonDomainIdLength;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public Byte[] lastAccess;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public Byte[] lastAccessTime;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public Byte[] revision;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public Byte[] sidCount;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public Byte[] valid;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public Byte[] iterationCount;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public Byte[] sifLength;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public Byte[] logonPackage;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public Byte[] dnsDomainNameLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public Byte[] upnLength;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+            public Byte[] challenge;
+        }
     }
 }

@@ -6,6 +6,8 @@ namespace WheresMyImplant
     public class Misc
     {
         ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
         public static byte[] combine(byte[] byte1, byte[] byte2)
         {
             Int32 dwSize = byte1.Length + byte2.Length;
@@ -16,6 +18,8 @@ namespace WheresMyImplant
             return combinedBytes;
         }
 
+        ////////////////////////////////////////////////////////////////////////////////
+        //
         ////////////////////////////////////////////////////////////////////////////////
         public static byte[] rc4Encrypt(byte[] RC4Key, byte[] data)
         {
@@ -61,6 +65,23 @@ namespace WheresMyImplant
                 output[k++] = Convert.ToByte(entry ^ s[(s[i] + s[j]) % 256]);
             }
             return output;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        public static Boolean is64BitOs()
+        {
+            if (Directory.Exists(@"C:\Program Files (x86)\"))
+            {
+                Console.WriteLine("[*] 64 Bit OS");
+                return true;
+            }
+            else
+            {
+                Console.WriteLine("[*] 32 Bit OS");
+                return false;
+            }
         }
     }
 }

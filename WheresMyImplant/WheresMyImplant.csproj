@@ -59,6 +59,7 @@
     <Compile Include="Class1.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Credentials\CacheDump.cs" />
     <Compile Include="Credentials\RestrictedToken.cs" />
     <Compile Include="Credentials\SAM.cs" />
     <Compile Include="Credentials\Tokens.cs" />
@@ -77,6 +78,7 @@
     <Compile Include="Base\BaseSQL.cs" />
     <Compile Include="Credentials\LSASecrets.cs" />
     <Compile Include="Resources\advapi32.cs" />
+    <Compile Include="Resources\CheckPrivileges.cs" />
     <Compile Include="Resources\Registry.cs" />
     <Compile Include="Resources\Constants.cs" />
     <Compile Include="Resources\Enums.cs" />

