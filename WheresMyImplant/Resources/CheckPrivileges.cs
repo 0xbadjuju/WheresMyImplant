@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Principal;
 
 namespace WheresMyImplant
@@ -11,28 +12,89 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public void GetSystem()
+        public Boolean GetSystem()
         {
-            if (!WindowsIdentity.GetCurrent().IsSystem)
+            WindowsIdentity currentIdentity = WindowsIdentity.GetCurrent();
+            if (!currentIdentity.IsSystem)
             {
-                WriteOutputBad("Not running as SYSTEM, checking for Administrator access.");
-                if ((new WindowsPrincipal(WindowsIdentity.GetCurrent())).IsInRole(WindowsBuiltInRole.Administrator))
+                WindowsPrincipal currentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+
+                WriteOutputNeutral("Not running as SYSTEM, checking for Administrator access.");
+                WriteOutputNeutral(String.Format("Operating as {0}", WindowsIdentity.GetCurrent().Name));
+
+                if (CheckAdministrator(currentIdentity))
                 {
-                    WriteOutputBad("Not running as Administrator, Exiting.");
-                    croak = true;
-                }
-                else
-                {
+                    WriteOutputNeutral("Attempting to elevate to SYSTEM");
                     new Tokens().GetSystem();
                     if (!WindowsIdentity.GetCurrent().IsSystem)
                     {
                         WriteOutputBad("GetSystem Failed");
                         croak = true;
-                        return;
+                        return false;
                     }
+                    WriteOutputGood("Running as SYSTEM");
+                    WriteOutput(" ");
+                    return true;
+                }
+                else
+                {
+                    return false;
                 }
             }
-            WriteOutputGood("Running as SYSTEM");
+            else
+            {
+                WriteOutputGood("Running as SYSTEM");
+                return true;
+            }
+            
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //https://blogs.msdn.microsoft.com/cjacks/2006/10/08/how-to-determine-if-a-user-is-a-member-of-the-administrators-group-with-uac-enabled-on-windows-vista/
+        ////////////////////////////////////////////////////////////////////////////////
+        public Boolean CheckAdministrator(WindowsIdentity currentIdentity)
+        {
+            if ((new WindowsPrincipal(currentIdentity)).IsInRole(WindowsBuiltInRole.Administrator))
+            {
+                WriteOutputGood("Running as Administrator");
+                return true;
+            }
+
+            IntPtr hToken = currentIdentity.Token;
+            UInt32 tokenInformationLength = (UInt32)Marshal.SizeOf(typeof(UInt32));
+            IntPtr tokenInformation = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(UInt32)));
+            UInt32 returnLength;
+
+            Boolean result = Unmanaged.GetTokenInformation(
+                hToken,
+                Enums._TOKEN_INFORMATION_CLASS.TokenElevationType,
+                tokenInformation,
+                tokenInformationLength,
+                out returnLength
+            );
+
+            switch ((Enums.TOKEN_ELEVATION_TYPE)Marshal.ReadInt32(tokenInformation))
+            {
+                case Enums.TOKEN_ELEVATION_TYPE.TokenElevationTypeDefault:
+                    WriteOutputBad("TokenElevationTypeDefault");
+                    WriteOutputNeutral("Token: Not Split");
+                    WriteOutputNeutral("ProcessIntegrity: Medium/Low");
+                    return false;
+                case Enums.TOKEN_ELEVATION_TYPE.TokenElevationTypeFull:
+                    WriteOutputGood("TokenElevationTypeFull");
+                    WriteOutputNeutral("Token: Split");
+                    WriteOutputNeutral("ProcessIntegrity: High");
+                    return true;
+                case Enums.TOKEN_ELEVATION_TYPE.TokenElevationTypeLimited:
+                    WriteOutputNeutral("TokenElevationTypeLimited");
+                    WriteOutputNeutral("Token: Split - ProcessIntegrity: Medium/Low");
+                    WriteOutputNeutral("Hint: Try to Bypass UAC");
+                    return false;
+                default:
+                    WriteOutputBad("Unknown integrity");
+                    WriteOutputNeutral("Trying anyway");
+                    return true;
+            }
         }
     }
 }

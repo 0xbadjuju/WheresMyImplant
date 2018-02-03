@@ -5,10 +5,10 @@ using System.Text;
 
 namespace WheresMyImplant
 {
-    public class Enums
+    internal class Enums
     {
         [Flags]
-        public enum LOGON_FLAGS
+        internal enum LOGON_FLAGS
         {
             WithProfile = 1,
             NetCredentialsOnly
@@ -16,7 +16,7 @@ namespace WheresMyImplant
 
         //https://msdn.microsoft.com/en-us/library/windows/desktop/ms682434(v=vs.85).aspx
         [Flags]
-        public enum CREATION_FLAGS
+        internal enum CREATION_FLAGS
         {
             NONE = 0x0,
             CREATE_DEFAULT_ERROR_MODE       = 0x04000000,
@@ -31,7 +31,7 @@ namespace WheresMyImplant
 
 
         [Flags]
-        public enum _SECURITY_IMPERSONATION_LEVEL : int
+        internal enum _SECURITY_IMPERSONATION_LEVEL : int
         {
             SecurityAnonymous       = 0,
             SecurityIdentification  = 1,
@@ -40,7 +40,7 @@ namespace WheresMyImplant
         };
 
         [Flags]
-        public enum TOKEN_TYPE
+        internal enum TOKEN_TYPE
         {
             TokenPrimary = 1,
             TokenImpersonation
@@ -48,7 +48,7 @@ namespace WheresMyImplant
 
         //http://www.pinvoke.net/default.aspx/Enums.ACCESS_MASK
         [Flags]
-        public enum ACCESS_MASK : uint
+        internal enum ACCESS_MASK : uint
         {
             DELETE                      = 0x00010000,
             READ_CONTROL                = 0x00020000,
@@ -88,7 +88,14 @@ namespace WheresMyImplant
             WINSTA_ALL_ACCESS           = 0x0000037F
         };
 
-        public enum SECURITY_IMPERSONATION_LEVEL
+        internal enum TOKEN_ELEVATION_TYPE 
+        {
+            TokenElevationTypeDefault = 1,
+            TokenElevationTypeFull,
+            TokenElevationTypeLimited 
+        }
+
+        internal enum SECURITY_IMPERSONATION_LEVEL
         {
              SecurityAnonymous,
              SecurityIdentification,
@@ -96,8 +103,8 @@ namespace WheresMyImplant
              SecurityDelegation
         }
 
-        public enum _TOKEN_INFORMATION_CLASS { 
-            TokenUser                             = 1,
+        internal enum _TOKEN_INFORMATION_CLASS { 
+            TokenUser = 1,
             TokenGroups,
             TokenPrivileges,
             TokenOwner,

