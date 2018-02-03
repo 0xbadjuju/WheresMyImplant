@@ -5,7 +5,7 @@ namespace WheresMyImplant
 {
     public class InjectDll : Base
     {
-        public InjectDll(string library)
+        InjectDll(string library)
         {
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpAddress = IntPtr.Zero;
