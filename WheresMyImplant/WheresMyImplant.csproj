@@ -45,6 +45,9 @@
     <Reference Include="System.Net">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.ServiceModel">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -92,6 +95,7 @@
     <Compile Include="Resources\Structs.cs" />
     <Compile Include="Resources\Unmanaged.cs" />
     <Compile Include="Run\RunXPCmdShell.cs" />
+    <Compile Include="C2\WebService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="bin\Debug\WheresMyImplant.dll" />

