@@ -147,5 +147,38 @@ namespace WheresMyImplant
             MaxTokenInfoClass
         }
 
+        internal struct _CREDENTIAL_ATTRIBUTE
+        {
+            String Keyword;
+            Int32 Flags;
+            Int32 ValueSize;
+            IntPtr Value;
+        }
+
+        internal enum CRED_FLAGS : uint
+        {
+            NONE = 0x0,
+            PROMPT_NOW = 0x2,
+            USERNAME_TARGET = 0x4
+        }
+
+        internal enum CRED_PERSIST : uint
+        {
+            Session = 1,
+            LocalMachine,
+            Enterprise
+        }
+
+        internal enum CRED_TYPE : uint
+        {
+            Generic = 1,
+            DomainPassword,
+            DomainCertificate,
+            DomainVisiblePassword,
+            GenericCertificate,
+            DomainExtended,
+            Maximum,
+            MaximumEx = Maximum + 1000,
+        }
     }
 }

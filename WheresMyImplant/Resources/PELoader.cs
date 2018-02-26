@@ -7,11 +7,11 @@ namespace WheresMyImplant
     public class PELoader
     {
         public Boolean is64Bit;
-        public Structs._IMAGE_DOS_HEADER imageDosHeader;
-        public Structs._IMAGE_FILE_HEADER imageFileHeader;
-        public Structs._IMAGE_OPTIONAL_HEADER64 imageOptionalHeader64;
-        public Structs._IMAGE_OPTIONAL_HEADER32 imageOptionalHeader32;
-        public Structs._IMAGE_SECTION_HEADER[] imageSectionHeaders;
+        internal Structs._IMAGE_DOS_HEADER imageDosHeader;
+        internal Structs._IMAGE_FILE_HEADER imageFileHeader;
+        internal Structs._IMAGE_OPTIONAL_HEADER64 imageOptionalHeader64;
+        internal Structs._IMAGE_OPTIONAL_HEADER32 imageOptionalHeader32;
+        internal Structs._IMAGE_SECTION_HEADER[] imageSectionHeaders;
         public byte[] imageBytes;
         public UInt32 sizeOfImage;
         public UInt32 imageBase;

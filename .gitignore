@@ -50,3 +50,5 @@ $RECYCLE.BIN/
 *.snk
 *.pdb
 *.exe
+*.dll
+WheresMyImplant/obj/Release/WheresMyImplant.pdb

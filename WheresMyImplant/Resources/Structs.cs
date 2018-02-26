@@ -10,7 +10,7 @@ namespace WheresMyImplant
     public class Structs
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct _IMAGE_SECTION_HEADER
+        internal struct _IMAGE_SECTION_HEADER
         {
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
             public char[] Name;
@@ -26,7 +26,7 @@ namespace WheresMyImplant
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct _IMAGE_FILE_HEADER
+        internal struct _IMAGE_FILE_HEADER
         {
             public word Machine;
             public word NumberOfSections;
@@ -39,7 +39,7 @@ namespace WheresMyImplant
 
         //https://msdn.microsoft.com/en-us/library/ms809762.aspx
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct _IMAGE_IMPORT_DIRECTORY
+        internal struct _IMAGE_IMPORT_DIRECTORY
         {
             public dword RvaImportLookupTable;
             public dword TimeDateStamp;
@@ -70,14 +70,14 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct IMAGE_DATA_DIRECTORY
+        internal struct IMAGE_DATA_DIRECTORY
         {
             public dword VirtualAddress;
             public dword Size;
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct _IMAGE_OPTIONAL_HEADER32
+        internal struct _IMAGE_OPTIONAL_HEADER32
         {
             public word Magic;
             public byte MajorLinkerVersion;
@@ -114,7 +114,7 @@ namespace WheresMyImplant
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct _IMAGE_OPTIONAL_HEADER64
+        internal struct _IMAGE_OPTIONAL_HEADER64
         {
             public word Magic;
             public byte MajorLinkerVersion;
@@ -150,7 +150,7 @@ namespace WheresMyImplant
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct IMAGE_NT_HEADERS
+        internal struct IMAGE_NT_HEADERS
         {
             public dword Signature;
             public _IMAGE_FILE_HEADER FileHeader;
@@ -158,7 +158,7 @@ namespace WheresMyImplant
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct IMAGE_NT_HEADERS64
+        internal struct IMAGE_NT_HEADERS64
         {
             public dword Signature;
             public _IMAGE_FILE_HEADER FileHeader;
@@ -166,7 +166,7 @@ namespace WheresMyImplant
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct _IMAGE_DOS_HEADER
+        internal struct _IMAGE_DOS_HEADER
         {
             public word e_magic;
             public word e_cblp;
@@ -192,7 +192,7 @@ namespace WheresMyImplant
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct IMAGE_BASE_RELOCATION
+        internal struct IMAGE_BASE_RELOCATION
         {
             public dword VirtualAdress;
             public dword SizeOfBlock;
@@ -203,7 +203,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //https://msdn.microsoft.com/en-us/library/windows/desktop/ms686331(v=vs.85).aspx
         [StructLayout(LayoutKind.Sequential)]
-        public struct _STARTUPINFO
+        internal struct _STARTUPINFO
         {
             public UInt32 cb;
             public String lpReserved;
@@ -227,7 +227,7 @@ namespace WheresMyImplant
 
         //https://msdn.microsoft.com/en-us/library/windows/desktop/ms686331(v=vs.85).aspx
         [StructLayout(LayoutKind.Sequential)]
-        public struct _STARTUPINFOEX
+        internal struct _STARTUPINFOEX
         {
             _STARTUPINFO StartupInfo;
             // PPROC_THREAD_ATTRIBUTE_LIST lpAttributeList;
@@ -235,7 +235,7 @@ namespace WheresMyImplant
 
         //https://msdn.microsoft.com/en-us/library/windows/desktop/ms684873(v=vs.85).aspx
         [StructLayout(LayoutKind.Sequential)]
-        public struct _PROCESS_INFORMATION
+        internal struct _PROCESS_INFORMATION
         {
             public IntPtr hProcess;
             public IntPtr hThread;
@@ -245,7 +245,7 @@ namespace WheresMyImplant
 
         //lpTokenAttributes
         [StructLayout(LayoutKind.Sequential)]
-        public struct _SECURITY_ATTRIBUTES
+        internal struct _SECURITY_ATTRIBUTES
         {
             UInt32 nLength;
             IntPtr lpSecurityDescriptor;
@@ -253,14 +253,14 @@ namespace WheresMyImplant
         };
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct _TOKEN_PRIVILEGES
+        internal struct _TOKEN_PRIVILEGES
         {
             public UInt32 PrivilegeCount;
             public _LUID_AND_ATTRIBUTES Privileges;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct _TOKEN_PRIVILEGES_ARRAY
+        internal struct _TOKEN_PRIVILEGES_ARRAY
         {
             public UInt32 PrivilegeCount;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 30)]
@@ -268,14 +268,14 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct _LUID_AND_ATTRIBUTES
+        internal struct _LUID_AND_ATTRIBUTES
         {
             public _LUID Luid;
             public UInt32 Attributes;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct _LUID
+        internal struct _LUID
         {
             public UInt32 LowPart;
             public UInt32 HighPart;
@@ -293,27 +293,27 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct SidIdentifierAuthority
+        internal struct SidIdentifierAuthority
         {
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6, ArraySubType = UnmanagedType.I1)]
             public byte[] Value;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct SID_AND_ATTRIBUTES
+        internal struct SID_AND_ATTRIBUTES
         {
             public IntPtr Sid;
             public UInt32 Attributes;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct TOKEN_MANDATORY_LABEL
+        internal struct TOKEN_MANDATORY_LABEL
         {
             public SID_AND_ATTRIBUTES Label;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct CacheData
+        internal struct CacheData
         {
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
             public Byte[] userNameLength;
@@ -371,6 +371,23 @@ namespace WheresMyImplant
 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
             public Byte[] challenge;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        internal struct _CREDENTIAL
+        {
+            public Enums.CRED_FLAGS Flags;
+            public Enums.CRED_TYPE Type;
+            public IntPtr TargetName;
+            public IntPtr Comment;
+            public FILETIME LastWritten;
+            public UInt32 CredentialBlobSize;
+            public IntPtr CredentialBlob;
+            public Enums.CRED_PERSIST Persist;
+            public UInt32 AttributeCount;
+            public IntPtr Attributes;
+            public IntPtr TargetAlias;
+            public IntPtr UserName;
         }
     }
 }

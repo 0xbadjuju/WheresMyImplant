@@ -36,7 +36,7 @@ namespace WheresMyImplant
         );
 
         [DllImport("advapi32.dll", SetLastError = true)]
-        public static extern uint RegQueryValueEx(
+        public static extern UInt32 RegQueryValueEx(
             UIntPtr hKey,
             string lpValueName,
             int lpReserved,
@@ -60,5 +60,35 @@ namespace WheresMyImplant
             IntPtr lpSecurityDescriptor,
             IntPtr lpftLastWriteTime
         );
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // Vault Functions
+        ////////////////////////////////////////////////////////////////////////////////
+        [DllImport("advapi32.dll")]
+        public static extern Boolean CredEnumerateW(
+            String Filter,
+            Int32 Flags,
+            out Int32 Count,
+            out IntPtr Credentials
+        );
+
+        [DllImport("advapi32.dll")]
+        public static extern Boolean CredReadW(
+            String target,
+            Enums.CRED_TYPE type, 
+            Int32 reservedFlag, 
+            out IntPtr credentialPtr
+        );
+
+        [DllImport("advapi32.dll")]
+        public static extern Boolean CredWriteW(
+            ref Structs._CREDENTIAL userCredential, 
+            UInt32 flags
+        );
+
+        [DllImport("advapi32.dll")]
+        public static extern Boolean CredFree(
+            IntPtr Buffer
+        );
     }
-}
+} 

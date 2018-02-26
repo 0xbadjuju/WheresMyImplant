@@ -38,30 +38,14 @@ namespace WheresMyImplant
                     output = (String)methodInfo.Invoke(iServiceEndpoint, args);
                     return true;
                 }
-                catch (ProtocolException error)
-                {
-                    //Die
-                    Console.WriteLine(error);
-                    return false;
-                }
-                catch (EndpointNotFoundException)
-                {
-                    //Die
-                    Console.WriteLine("Endpoint not found");
-                    return false;
-                }
                 catch (TargetInvocationException)
                 {
-                    //Die
-                    Console.WriteLine("Reflection Exception");
                     return false;
                 }
                 catch (Exception error)
                 {
-                    //Don't Die
                     Console.WriteLine(error);
-                    Console.ReadKey();
-                    return true;
+                    return false;
                 }
             }
         }
