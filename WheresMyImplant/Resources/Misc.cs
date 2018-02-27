@@ -6,9 +6,9 @@ namespace WheresMyImplant
     public class Misc
     {
         ////////////////////////////////////////////////////////////////////////////////
-        //
+        // 
         ////////////////////////////////////////////////////////////////////////////////
-        public static byte[] combine(byte[] byte1, byte[] byte2)
+        public static byte[] Combine(byte[] byte1, byte[] byte2)
         {
             Int32 dwSize = byte1.Length + byte2.Length;
             MemoryStream memoryStream = new MemoryStream(new byte[dwSize], 0, dwSize, true, true);
@@ -19,9 +19,9 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        //
+        // 
         ////////////////////////////////////////////////////////////////////////////////
-        public static byte[] rc4Encrypt(byte[] RC4Key, byte[] data)
+        public static byte[] RC4Encrypt(byte[] RC4Key, byte[] data)
         {
             byte[] output = new byte[data.Length];
             byte[] s = new byte[256];
@@ -70,7 +70,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public static Boolean is64BitOs()
+        public static Boolean Is64BitOs()
         {
             if (Directory.Exists(@"C:\Program Files (x86)\"))
             {
@@ -82,6 +82,18 @@ namespace WheresMyImplant
                 Console.WriteLine("[*] 32 Bit OS");
                 return false;
             }
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        public static double GetOSVersion()
+        {
+            double version = 0.0;
+            System.OperatingSystem system = Environment.OSVersion;
+            String versionString = String.Format("{0}.{1}", system.Version.Major, system.Version.Minor);
+            double.TryParse(versionString, out version);
+            return version;
         }
     }
 }

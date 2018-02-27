@@ -180,5 +180,24 @@ namespace WheresMyImplant
             Maximum,
             MaximumEx = Maximum + 1000,
         }
+
+        //https://github.com/rapid7/meterpreter/blob/master/source/extensions/kiwi/mimikatz/modules/kuhl_m_vault.h
+        internal enum _VAULT_ELEMENT_TYPE : uint
+        {
+            Type_Boolean,
+            Type_Short,
+            Type_UnsignedShort,
+            Type_Integer,
+            Type_UnsignedInteger,
+            Type_Double,
+            Type_Guid,
+            Type_String,
+            Type_ByteArray,
+            Type_TimeStamp,
+            Type_ProtectedArray,
+            Type_Attribute,
+            Type_Sid,
+            Type_Max,
+        }
     }
 }

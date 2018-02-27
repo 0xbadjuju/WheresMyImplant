@@ -37,12 +37,12 @@ namespace WheresMyImplant
             using (MD5 md5 = new MD5CryptoServiceProvider())
             {
                 Byte[] compute = new Byte[0];
-                compute = Misc.combine(compute, F.Skip(0x70).Take(0x10).ToArray());
-                compute = Misc.combine(compute, qwerty);
-                compute = Misc.combine(compute, bootKey);
-                compute = Misc.combine(compute, numeric);
+                compute = Misc.Combine(compute, F.Skip(0x70).Take(0x10).ToArray());
+                compute = Misc.Combine(compute, qwerty);
+                compute = Misc.Combine(compute, bootKey);
+                compute = Misc.Combine(compute, numeric);
                 Byte[] rc4Key = md5.ComputeHash(compute);
-                Byte[] hBootKey = Misc.rc4Encrypt(rc4Key, F.Skip(0x80).Take(0x20).ToArray());
+                Byte[] hBootKey = Misc.RC4Encrypt(rc4Key, F.Skip(0x80).Take(0x20).ToArray());
                 return hBootKey;
             }
         }
@@ -145,14 +145,14 @@ namespace WheresMyImplant
             Byte[] rc4DecryptedHash;
             using (MD5 md5 = new MD5CryptoServiceProvider())
             {               
-                Byte[] combined = Misc.combine(Misc.combine(hBootKey.Take(16).ToArray(), BitConverter.GetBytes(rid)), hashType);
+                Byte[] combined = Misc.Combine(Misc.Combine(hBootKey.Take(16).ToArray(), BitConverter.GetBytes(rid)), hashType);
 
                 Byte[] hash = md5.ComputeHash(combined);
-                rc4DecryptedHash = Misc.rc4Encrypt(hash, encryptedHash);
+                rc4DecryptedHash = Misc.RC4Encrypt(hash, encryptedHash);
             }
             Byte[] desDecryptedHash1 = decryptDes(rc4DecryptedHash.Take(8).ToArray(), desKeys[0]);
             Byte[] desDecryptedHash2 = decryptDes(rc4DecryptedHash.Skip(8).Take(8).ToArray(), desKeys[1]);
-            return Misc.combine(desDecryptedHash1, desDecryptedHash2);
+            return Misc.Combine(desDecryptedHash1, desDecryptedHash2);
         }
 
         ////////////////////////////////////////////////////////////////////////////////

@@ -389,5 +389,53 @@ namespace WheresMyImplant
             public IntPtr TargetAlias;
             public IntPtr UserName;
         }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        internal struct _GUID {
+            public Int32 Data1;
+            public Int16 Data2;
+            public Int16 Data3;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
+            public Byte[] Data4;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct _VAULT_ITEM_7
+        {
+            public Guid SchemaId;
+            public IntPtr FriendlyName;
+            public IntPtr Resource;
+            public IntPtr Identity;
+            public IntPtr Authenticator;
+            public Int64 LastWritten;
+            public Int32 Flags;
+            public Int32 PropertiesCount;
+            public IntPtr Properties;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct _VAULT_ITEM_8
+        {
+            public Guid SchemaId;
+            public IntPtr FriendlyName;
+            public IntPtr Resource;
+            public IntPtr Identity;
+            public IntPtr Authenticator;
+            public IntPtr PackageSid;
+            public Int64 LastWritten;
+            public Int32 Flags;
+            public Int32 PropertiesCount;
+            public IntPtr Properties;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct _VAULT_ITEM_DATA
+        {
+            public Int32 SchemaElementId;
+            public Int32 unknown1;
+            public Enums._VAULT_ELEMENT_TYPE Type;
+            public Int32 unknown2;
+            //public Object data;
+        }
     }
 }

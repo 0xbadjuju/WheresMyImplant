@@ -100,7 +100,7 @@ namespace WheresMyImplant
                     {
                         padding[i] = (byte)'\0';
                     }
-                    encData = Misc.combine(encData, padding);
+                    encData = Misc.Combine(encData, padding);
                 }
 
                 ////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +115,7 @@ namespace WheresMyImplant
                     ICryptoTransform decryptor = aes.CreateDecryptor();
                     for (Int32 i = 0; i < encData.Length; i += 16)
                     { 
-                        aesDecrypted = Misc.combine(aesDecrypted, decryptor.TransformFinalBlock(encData, i, 16));
+                        aesDecrypted = Misc.Combine(aesDecrypted, decryptor.TransformFinalBlock(encData, i, 16));
                     }
                 }
                 parseDecryptedData(ref cacheData, ref aesDecrypted);

