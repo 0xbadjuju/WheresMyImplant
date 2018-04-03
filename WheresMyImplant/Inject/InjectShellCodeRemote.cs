@@ -26,7 +26,7 @@ namespace WheresMyImplant
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = (UInt32)shellCodeBytes.Length;
             WriteOutputNeutral("Attempting to allocate memory");
-            IntPtr lpBaseAddress = Unmanaged.VirtualAllocEx(hProcess, lpAddress, dwSize, Unmanaged.MEM_COMMIT, Unmanaged.PAGE_READWRITE);
+            IntPtr lpBaseAddress = Unmanaged.VirtualAllocEx(hProcess, lpAddress, dwSize, Unmanaged.MEM_COMMIT, Winnt.PAGE_READWRITE);
             WriteOutputGood("Allocated " + dwSize + " bytes at " + lpBaseAddress.ToString("X4"));
             WriteOutputGood("Memory Protection Set to PAGE_READWRITE");  
 
@@ -41,7 +41,7 @@ namespace WheresMyImplant
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 lpflOldProtect = 0;
             WriteOutputNeutral("Attempting to Alter Memory Protections to PAGE_EXECUTE_READ");
-            Boolean test = Unmanaged.VirtualProtectEx(hProcess, lpBaseAddress, dwSize, Unmanaged.PAGE_EXECUTE_READ, ref lpflOldProtect);
+            Boolean test = Unmanaged.VirtualProtectEx(hProcess, lpBaseAddress, dwSize, Winnt.PAGE_EXECUTE_READ, ref lpflOldProtect);
             WriteOutputGood("Set Memory Protection to PAGE_EXECUTE_READ");
 
             ////////////////////////////////////////////////////////////////////////////////

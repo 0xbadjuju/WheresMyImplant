@@ -437,5 +437,13 @@ namespace WheresMyImplant
             public Int32 unknown2;
             //public Object data;
         }
+
+        internal struct _CREDENTIAL_ATTRIBUTE
+        {
+            String Keyword;
+            Int32 Flags;
+            Int32 ValueSize;
+            IntPtr Value;
+        }
     }
 }

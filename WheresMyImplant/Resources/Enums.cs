@@ -147,14 +147,6 @@ namespace WheresMyImplant
             MaxTokenInfoClass
         }
 
-        internal struct _CREDENTIAL_ATTRIBUTE
-        {
-            String Keyword;
-            Int32 Flags;
-            Int32 ValueSize;
-            IntPtr Value;
-        }
-
         internal enum CRED_FLAGS : uint
         {
             NONE = 0x0,

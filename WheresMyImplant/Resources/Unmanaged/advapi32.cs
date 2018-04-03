@@ -12,6 +12,43 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // Token Functions
         ////////////////////////////////////////////////////////////////////////////////
+        [DllImport("Advapi32", SetLastError = true)]
+        public static extern IntPtr OpenSCManager(String lpMachineName, String lpDatabaseName, Winsvc.dwSCManagerDesiredAccess dwDesiredAccess);
+
+        [DllImport("Advapi32")]
+        public static extern IntPtr CreateService(
+            IntPtr hSCManager,
+            String lpServiceName,
+            String lpDisplayName,
+            Winsvc.dwDesiredAccess dwDesiredAccess,
+            Winsvc.dwServiceType dwServiceType,
+            Winsvc.dwStartType dwStartType,
+            Winsvc.dwErrorControl dwErrorControl,
+            String lpBinaryPathName,
+            String lpLoadOrderGroup,
+            String lpdwTagId,
+            String lpDependencies,
+            String lpServiceStartName,
+            String lpPassword
+        );
+
+        [DllImport("advapi32", SetLastError = true)]
+        public static extern Boolean CloseServiceHandle(IntPtr hSCObject);
+
+        [DllImport("advapi32", SetLastError = true)]
+        public static extern IntPtr ControlService(IntPtr hService, Winsvc.dwControl dwControl, out Winsvc._SERVICE_STATUS lpServiceStatus);
+
+        [DllImport("advapi32", SetLastError = true)]
+        public static extern IntPtr ControlServiceEx(IntPtr hService, Winsvc.dwControl dwControl, Int32 dwInfoLevel, out Winsvc._SERVICE_STATUS lpServiceStatus);
+
+        [DllImport("advapi32", SetLastError = true)]
+        public static extern Boolean DeleteService(IntPtr hService);
+
+        [DllImport("advapi32", SetLastError = true)]
+        public static extern IntPtr OpenService(IntPtr hSCManager, String lpServiceName, Winsvc.dwDesiredAccess dwDesiredAccess);
+
+        [DllImport("advapi32", SetLastError = true)]
+        public static extern Boolean StartService(IntPtr hService, Int32 dwNumServiceArgs, String[] lpServiceArgVectors);
 
         ////////////////////////////////////////////////////////////////////////////////
         // Registry Functions

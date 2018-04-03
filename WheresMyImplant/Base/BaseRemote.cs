@@ -32,7 +32,7 @@ namespace WheresMyImplant
         public IntPtr VirtualAllocExChecked(IntPtr lpAddress, UInt32 dwSize)
         {
             IntPtr lpBaseAddress = Unmanaged.VirtualAllocEx(
-                hProcess, lpAddress, dwSize, Unmanaged.MEM_COMMIT, Unmanaged.PAGE_EXECUTE_READWRITE
+                hProcess, lpAddress, dwSize, Unmanaged.MEM_COMMIT, Winnt.PAGE_EXECUTE_READWRITE
             );
 
             if (IntPtr.Zero == lpBaseAddress)
@@ -281,7 +281,7 @@ namespace WheresMyImplant
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = (UInt32)((library.Length + 1) * Marshal.SizeOf(typeof(char)));
-            IntPtr lpBaseAddress = Unmanaged.VirtualAllocEx(hProcess, lpAddress, dwSize, Unmanaged.MEM_COMMIT | Unmanaged.MEM_RESERVE, Unmanaged.PAGE_READWRITE);
+            IntPtr lpBaseAddress = Unmanaged.VirtualAllocEx(hProcess, lpAddress, dwSize, Unmanaged.MEM_COMMIT | Unmanaged.MEM_RESERVE, Winnt.PAGE_READWRITE);
 
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 lpNumberOfBytesWritten = 0;
@@ -290,7 +290,7 @@ namespace WheresMyImplant
 
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 lpflOldProtect = 0;
-            Boolean virtualProtectExResult = Unmanaged.VirtualProtectEx(hProcess, lpBaseAddress, dwSize, Unmanaged.PAGE_EXECUTE_READ, ref lpflOldProtect);
+            Boolean virtualProtectExResult = Unmanaged.VirtualProtectEx(hProcess, lpBaseAddress, dwSize, Winnt.PAGE_EXECUTE_READ, ref lpflOldProtect);
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpThreadAttributes = IntPtr.Zero;

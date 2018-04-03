@@ -196,10 +196,5 @@ namespace WheresMyImplant
 
         internal const UInt32 MEM_COMMIT = 0x00001000;
         internal const UInt32 MEM_RESERVE = 0x00002000;
-
-        internal const UInt32 PAGE_READWRITE = 0x04;
-        internal const UInt32 PAGE_EXECUTE_READ = 0x20;
-        internal const UInt32 PAGE_EXECUTE_READWRITE = 0x40;
-
     }
 }
