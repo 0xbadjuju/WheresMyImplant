@@ -59,6 +59,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="C2\Beacon\HTTPWebRequestBeacon.cs" />
+    <Compile Include="C2\Beacon\WebClientBeacon.cs" />
     <Compile Include="C2\Beacon\WebServiceBeaconComs.cs" />
     <Compile Include="C2\Beacon\BeaconTask.cs" />
     <Compile Include="C2\Beacon\WebServiceBeacon.cs" />
@@ -66,6 +68,7 @@
     <Compile Include="Class1.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Collection\MiniDumpWriteDump.cs" />
     <Compile Include="Collection\ReadProcessMemory.cs" />
     <Compile Include="Credentials\CacheDump.cs" />
     <Compile Include="Credentials\RestrictedToken.cs" />
@@ -87,7 +90,9 @@
     <Compile Include="Base\BaseRemote.cs" />
     <Compile Include="Base\BaseSQL.cs" />
     <Compile Include="Credentials\LSASecrets.cs" />
+    <Compile Include="Lateral\DCom.cs" />
     <Compile Include="Lateral\PSExec.cs" />
+    <Compile Include="Lateral\WMI.cs" />
     <Compile Include="Resources\CheckCreditCard.cs" />
     <Compile Include="Resources\CheckPrivileges.cs" />
     <Compile Include="Resources\Registry.cs" />
@@ -97,12 +102,14 @@
     <Compile Include="Resources\PELoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources\Services.cs" />
+    <Compile Include="Resources\Structs\minidumpapiset.cs" />
     <Compile Include="Resources\Structs\Wincrypt.cs" />
     <Compile Include="Resources\Structs\Winnt.cs" />
     <Compile Include="Resources\Structs\Winbase.cs" />
     <Compile Include="Resources\Structs\Winsvc.cs" />
     <Compile Include="Resources\Unmanaged\advapi32.cs" />
     <Compile Include="Resources\Unmanaged\crypt32.cs" />
+    <Compile Include="Resources\Unmanaged\dbghelp.cs" />
     <Compile Include="Resources\Unmanaged\kernel32.cs" />
     <Compile Include="Resources\Unmanaged\ntdll.cs" />
     <Compile Include="Resources\Unmanaged\Unmanaged.cs" />
@@ -126,6 +133,16 @@
     <None Include="bin\Release\InstallUtil.InstallLog" />
     <None Include="bin\Release\WheresMyImplant.InstallLog" />
     <None Include="bin\Release\WheresMyImplant.InstallState" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="MMC20">
+      <Guid>{8E80422B-CAC4-472B-B272-9635F1DFEF3B}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+    </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

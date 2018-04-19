@@ -14,6 +14,8 @@ namespace WheresMyImplant
 {
     public class Winnt
     {
+        private const DWORD EXCEPTION_MAXIMUM_PARAMETERS = 15;
+
         ////////////////////////////////////////////////////////////////////////////////
         // https://msdn.microsoft.com/en-us/library/windows/desktop/aa366786(v=vs.85).aspx
         ////////////////////////////////////////////////////////////////////////////////
@@ -30,6 +32,25 @@ namespace WheresMyImplant
         public const DWORD PAGE_WRITECOMBINE = 0x400;
         public const DWORD PAGE_TARGETS_INVALID = 0x40000000;
         public const DWORD PAGE_TARGETS_NO_UPDATE = 0x40000000;
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct _EXCEPTION_POINTERS
+        {
+            public System.IntPtr ExceptionRecord;
+            public System.IntPtr ContextRecord;
+        }
+        
+        [StructLayout(LayoutKind.Sequential)]
+        struct _EXCEPTION_RECORD 
+        {
+            public DWORD ExceptionCode;
+            public DWORD ExceptionFlags;
+            public System.IntPtr hExceptionRecord;
+            public PVOID ExceptionAddress;
+            public DWORD NumberParameters;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 15)]
+            public DWORD[] ExceptionInformation;
+        }
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct _MEMORY_BASIC_INFORMATION32
@@ -55,6 +76,6 @@ namespace WheresMyImplant
             public DWORD Protect;
             public DWORD Type;
             public DWORD __alignment2;
-        }       
+        }
     }
 }

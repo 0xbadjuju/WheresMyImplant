@@ -8,3 +8,6 @@ C:\Users\0xbadjuju\Documents\GitHub\WheresMyImplant\WheresMyImplant\obj\Release\
 C:\Users\0xbadjuju\Documents\GitHub\WheresMyImplant\WheresMyImplant\obj\Release\WheresMyImplant.pdb
 C:\Users\0xbadjuju\Documents\GitHub\WheresMyImplant\WheresMyImplant\bin\Release\WheresMyImplant.dll
 C:\Users\0xbadjuju\Documents\GitHub\WheresMyImplant\WheresMyImplant\bin\Release\WheresMyImplant.pdb
+C:\Users\0xbadjuju\Documents\GitHub\WheresMyImplant\WheresMyImplant\bin\Release\Interop.MMC20.dll
+C:\Users\0xbadjuju\Documents\GitHub\WheresMyImplant\WheresMyImplant\obj\Release\Interop.MMC20.dll
+C:\Users\0xbadjuju\Documents\GitHub\WheresMyImplant\WheresMyImplant\obj\Release\WheresMyImplant.csproj.ResolveComReference.cache

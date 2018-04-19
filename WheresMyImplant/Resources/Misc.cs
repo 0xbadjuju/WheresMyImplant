@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace WheresMyImplant
@@ -119,6 +120,16 @@ namespace WheresMyImplant
             }
             Marshal.FreeHGlobal(lpBuffer);
             return System.Text.Encoding.Unicode.GetString(outputBytes);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // https://stackoverflow.com/questions/1344221/how-can-i-generate-random-alphanumeric-strings-in-c
+        ////////////////////////////////////////////////////////////////////////////////
+        internal String GenerateUuid(int length)
+        {
+            Random random = new Random();
+            const String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            return new String(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
 }

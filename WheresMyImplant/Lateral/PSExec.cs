@@ -60,10 +60,10 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public bool Connect(String machineName)
+        public Boolean Connect(String machineName)
         {
             hServiceManager = Advapi32.OpenSCManager(
-                null, null, Winsvc.dwSCManagerDesiredAccess.SC_MANAGER_CONNECT | Winsvc.dwSCManagerDesiredAccess.SC_MANAGER_CREATE_SERVICE
+                machineName, null, Winsvc.dwSCManagerDesiredAccess.SC_MANAGER_CONNECT | Winsvc.dwSCManagerDesiredAccess.SC_MANAGER_CREATE_SERVICE
             );
 
             if (IntPtr.Zero == hServiceManager)
@@ -73,12 +73,11 @@ namespace WheresMyImplant
             }
 
             Console.WriteLine("[+] Connected to {0}", machineName);
-            Console.WriteLine("[+] Recieved handle {0}", hServiceManager.ToInt64());
             return true;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        //
+        // Creates a service
         ////////////////////////////////////////////////////////////////////////////////
         public Boolean Create(String lpBinaryPathName)
         {
@@ -108,7 +107,7 @@ namespace WheresMyImplant
         }
 
         ///////////////////////////////////////////////////////////////////////////////
-        //
+        // Opens a handle to a service
         ///////////////////////////////////////////////////////////////////////////////
         public Boolean Open()
         {
@@ -126,26 +125,48 @@ namespace WheresMyImplant
         }
 
         ///////////////////////////////////////////////////////////////////////////////
-        //
+        // Starts the service, if there is a start timeout error, return true
         ///////////////////////////////////////////////////////////////////////////////
         public Boolean Start()
         {
             if (!Advapi32.StartService(hSCObject, 0, null))
             {
                 Int32 error = Marshal.GetLastWin32Error();
-                if (error != 1053)
+                if (1053 != error)
                 {
                     Console.WriteLine("[-] Failed to start service");
                     Console.WriteLine(error);
                     return false;
                 }
             }
-            Console.WriteLine("[+] Started service");
+            Console.WriteLine("[+] Service Started");
+            return true;
+        }
+
+        ///////////////////////////////////////////////////////////////////////////////
+        // Stops the service, if service is already stopped returns true
+        ///////////////////////////////////////////////////////////////////////////////
+        public Boolean Stop()
+        {
+            Winsvc._SERVICE_STATUS serviceStatus;
+            IntPtr hControlService = Advapi32.ControlService(hSCObject, Winsvc.dwControl.SERVICE_CONTROL_STOP, out serviceStatus);
+
+            if (IntPtr.Zero == hControlService)
+            {
+                Int32 error = Marshal.GetLastWin32Error();
+                if (1062 != error)
+                {
+                    Console.WriteLine("[-] Failed to stop service");
+                    Console.WriteLine(error);
+                    return false;
+                }
+            }
+            Console.WriteLine("[+] Service Stopped");
             return true;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        //
+        // Deletes the service
         ////////////////////////////////////////////////////////////////////////////////
         public Boolean Delete()
         {
