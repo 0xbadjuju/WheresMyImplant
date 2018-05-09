@@ -15,7 +15,6 @@ namespace WheresMyImplant
         public BaseRemote(UInt32 processId)
         {
             WriteOutputNeutral("Attempting to get handle on PID: " + processId);
-            UInt32 dwDesiredAccess = Unmanaged.PROCESS_CREATE_THREAD | Unmanaged.PROCESS_QUERY_INFORMATION | Unmanaged.PROCESS_VM_OPERATION | Unmanaged.PROCESS_VM_WRITE | Unmanaged.PROCESS_VM_READ;
             hProcess = Unmanaged.OpenProcess(Unmanaged.PROCESS_ALL_ACCESS, false, processId);
             if (IntPtr.Zero == hProcess)
             {
@@ -31,7 +30,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         public IntPtr VirtualAllocExChecked(IntPtr lpAddress, UInt32 dwSize)
         {
-            IntPtr lpBaseAddress = Unmanaged.VirtualAllocEx(
+            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(
                 hProcess, lpAddress, dwSize, Unmanaged.MEM_COMMIT, Winnt.PAGE_EXECUTE_READWRITE
             );
 
@@ -59,7 +58,7 @@ namespace WheresMyImplant
         )
         {
             UInt32 dwNumberOfBytesWritten = 0;
-            Boolean writeProcessMemoryResult = Unmanaged.WriteProcessMemory(
+            Boolean writeProcessMemoryResult = kernel32.WriteProcessMemory(
                 hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesWritten
             );
 
@@ -93,7 +92,7 @@ namespace WheresMyImplant
             UInt32 dwNumberOfBytesWritten = 0;
             if (IntPtr.Zero != lpBuffer)
             {
-                Boolean writeProcessMemoryResult = Unmanaged.WriteProcessMemory(
+                Boolean writeProcessMemoryResult = kernel32.WriteProcessMemory(
                     hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesWritten
                 );
 
@@ -281,16 +280,16 @@ namespace WheresMyImplant
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = (UInt32)((library.Length + 1) * Marshal.SizeOf(typeof(char)));
-            IntPtr lpBaseAddress = Unmanaged.VirtualAllocEx(hProcess, lpAddress, dwSize, Unmanaged.MEM_COMMIT | Unmanaged.MEM_RESERVE, Winnt.PAGE_READWRITE);
+            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, lpAddress, dwSize, Unmanaged.MEM_COMMIT | Unmanaged.MEM_RESERVE, Winnt.PAGE_READWRITE);
 
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 lpNumberOfBytesWritten = 0;
             IntPtr libraryPtr = Marshal.StringToHGlobalAnsi(library);
-            Boolean writeProcessMemoryResult = Unmanaged.WriteProcessMemory(hProcess, lpBaseAddress, libraryPtr, dwSize, ref lpNumberOfBytesWritten);
+            Boolean writeProcessMemoryResult = kernel32.WriteProcessMemory(hProcess, lpBaseAddress, libraryPtr, dwSize, ref lpNumberOfBytesWritten);
 
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 lpflOldProtect = 0;
-            Boolean virtualProtectExResult = Unmanaged.VirtualProtectEx(hProcess, lpBaseAddress, dwSize, Winnt.PAGE_EXECUTE_READ, ref lpflOldProtect);
+            Boolean virtualProtectExResult = kernel32.VirtualProtectEx(hProcess, lpBaseAddress, dwSize, Winnt.PAGE_EXECUTE_READ, ref lpflOldProtect);
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpThreadAttributes = IntPtr.Zero;

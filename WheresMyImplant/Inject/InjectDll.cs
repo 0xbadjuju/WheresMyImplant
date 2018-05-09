@@ -11,7 +11,7 @@ namespace WheresMyImplant
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = (UInt32)((library.Length + 1) * Marshal.SizeOf(typeof(char)));
             WriteOutputNeutral("Attempting to allocate memory");
-            IntPtr lpBaseAddress = Unmanaged.VirtualAlloc(lpAddress, dwSize, Unmanaged.MEM_COMMIT | Unmanaged.MEM_RESERVE, Winnt.PAGE_READWRITE);
+            IntPtr lpBaseAddress = kernel32.VirtualAlloc(lpAddress, dwSize, Unmanaged.MEM_COMMIT | Unmanaged.MEM_RESERVE, Winnt.PAGE_READWRITE);
             WriteOutputGood("Allocated " + dwSize + " at " + lpBaseAddress);
 
             ////////////////////////////////////////////////////////////////////////////////

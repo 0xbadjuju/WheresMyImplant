@@ -28,8 +28,6 @@ namespace WheresMyImplant
             EXTENDED_STARTUPINFO_PRESENT    = 0x00080000
         }
 
-
-
         [Flags]
         internal enum _SECURITY_IMPERSONATION_LEVEL : int
         {

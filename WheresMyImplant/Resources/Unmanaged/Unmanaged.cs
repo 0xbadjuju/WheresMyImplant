@@ -7,8 +7,6 @@ namespace WheresMyImplant
     internal class Unmanaged
     {
         ////////////////////////////////////////////////////////////////////////////////
-        [DllImport("kernel32")]
-        internal static extern IntPtr VirtualAlloc(IntPtr lpAddress, UInt32 dwSize, UInt32 flAllocationType, UInt32 flProtect);
 
         [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
         internal static extern Boolean VirtualProtect(IntPtr lpAddress, UInt32 dwSize, UInt32 flNewProtect, ref UInt32 lpflOldProtect);
@@ -22,15 +20,6 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         [DllImport("kernel32.dll")]
         internal static extern IntPtr OpenProcess(UInt32 dwDesiredAccess, Boolean bInheritHandle, UInt32 dwProcessId);
-
-        [DllImport("kernel32")]
-        internal static extern IntPtr VirtualAllocEx(IntPtr hHandle, IntPtr lpAddress, UInt32 dwSize, UInt32 flAllocationType, UInt32 flProtect);
-
-        [DllImport("kernel32")]
-        internal static extern Boolean WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, IntPtr lpBuffer, UInt32 nSize, ref UInt32 lpNumberOfBytesWritten);
-
-        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-        internal static extern Boolean VirtualProtectEx(IntPtr hHandle, IntPtr lpAddress, UInt32 dwSize, UInt32 flNewProtect, ref UInt32 lpflOldProtect);
 
         [DllImport("kernel32")]
         internal static extern IntPtr CreateRemoteThread(IntPtr hHandle, IntPtr lpThreadAttributes, UInt32 dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, UInt32 dwCreationFlags, ref UInt32 lpThreadId);
@@ -191,7 +180,6 @@ namespace WheresMyImplant
         internal const UInt32 PROCESS_VM_OPERATION = 0x0008;
         internal const UInt32 PROCESS_VM_WRITE = 0x0020;
         internal const UInt32 PROCESS_VM_READ = 0x0010;
-
         internal const UInt32 PROCESS_ALL_ACCESS = 0x1F0FFF;
 
         internal const UInt32 MEM_COMMIT = 0x00001000;

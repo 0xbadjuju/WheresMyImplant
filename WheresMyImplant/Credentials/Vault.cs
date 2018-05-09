@@ -3,12 +3,12 @@ using System.Runtime.InteropServices;
 
 namespace WheresMyImplant
 {
-    class Vault
+    class Vault : Base
     {
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public Vault()
+        public Vault() : base()
         {
         }
 

@@ -15,17 +15,17 @@ namespace WheresMyImplant
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = peLoader.sizeOfImage;
-            IntPtr lpBaseAddress = Unmanaged.VirtualAlloc(lpAddress, dwSize, Unmanaged.MEM_COMMIT, Winnt.PAGE_EXECUTE_READWRITE);
-            WriteOutputGood("Allocated Space For " + peLoader.sizeOfImage.ToString("X4") + " at " + lpBaseAddress.ToString("X4"));
+            IntPtr lpBaseAddress = kernel32.VirtualAlloc(lpAddress, dwSize, Unmanaged.MEM_COMMIT, Winnt.PAGE_EXECUTE_READWRITE);
+            WriteOutputGood(String.Format("Allocated Space For {0} at {1}", peLoader.sizeOfImage.ToString("X4"), lpBaseAddress.ToString("X4")));
 
             ////////////////////////////////////////////////////////////////////////////////
             for (Int32 i = 0; i < peLoader.imageFileHeader.NumberOfSections; i++)
             {
                 IntPtr lpBaseAddressSection = new IntPtr(lpBaseAddress.ToInt32() + peLoader.imageSectionHeaders[i].VirtualAddress);
                 UInt32 dwSizeSection = peLoader.imageSectionHeaders[i].SizeOfRawData;
-                IntPtr lpAllocatedAddress = Unmanaged.VirtualAlloc(lpBaseAddressSection, dwSizeSection, Unmanaged.MEM_COMMIT, Winnt.PAGE_EXECUTE_READWRITE);
+                IntPtr lpAllocatedAddress = kernel32.VirtualAlloc(lpBaseAddressSection, dwSizeSection, Unmanaged.MEM_COMMIT, Winnt.PAGE_EXECUTE_READWRITE);
                 Marshal.Copy(peLoader.imageBytes, (Int32)peLoader.imageSectionHeaders[i].PointerToRawData, lpAllocatedAddress, (Int32)peLoader.imageSectionHeaders[i].SizeOfRawData);
-                Console.WriteLine("Copied " + peLoader.imageSectionHeaders[i].Name + " to " + lpAllocatedAddress.ToString("X4"));
+                WriteOutputGood(String.Format("Copied {0} to {1}",  peLoader.imageSectionHeaders[i].Name, lpAllocatedAddress.ToString("X4")));
 
             }
 
@@ -104,7 +104,7 @@ namespace WheresMyImplant
                 IntPtr dllNamePTR = new IntPtr(lpBaseAddress.ToInt32() + imageImportDirectory.RvaModuleName);
                 string dllName = Marshal.PtrToStringAnsi(dllNamePTR);
                 IntPtr hModule = Unmanaged.LoadLibrary(dllName);
-                WriteOutputGood("Loaded " + dllName + " at " + hModule.ToString("X4"));
+                WriteOutputGood(String.Format("Loaded {0} at {1}", dllName, hModule.ToString("X4")));
                 ////////////////////////////////////////////////////////////////////////////////
                 IntPtr lpRvaImportAddressTable = new IntPtr(lpBaseAddress.ToInt32() + imageImportDirectory.RvaImportAddressTable);
                 while (true)
@@ -135,7 +135,7 @@ namespace WheresMyImplant
             UInt32 dwCreationFlags = 0;
             UInt32 lpThreadId = 0;
             IntPtr hThread = Unmanaged.CreateThread(lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, ref lpThreadId);
-            WriteOutputGood("Created thread " + hThread);
+            WriteOutputGood(String.Format("Created thread {0}", hThread.ToString("X4")));
             ////////////////////////////////////////////////////////////////////////////////
             Unmanaged.WaitForSingleObject(hThread, 0xFFFFFFFF);
         }

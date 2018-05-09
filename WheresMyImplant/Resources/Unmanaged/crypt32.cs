@@ -5,6 +5,7 @@ using WORD = System.UInt16;
 using DWORD = System.UInt32;
 using QWORD = System.UInt64;
 
+using LPCTSTR = System.String;
 using LPWSTR = System.Text.StringBuilder;
 
 using PVOID = System.IntPtr;
@@ -15,6 +16,9 @@ namespace WheresMyImplant
 {
     class crypt32
     {
+        public const UInt32 CRYPTPROTECT_UI_FORBIDDEN = 0x1;
+        public const UInt32 CRYPTPROTECT_LOCAL_MACHINE = 0x4;
+
         [DllImport("crypt32.dll", SetLastError=true)]
         internal static extern bool CryptUnprotectData(
             ref Wincrypt._CRYPTOAPI_BLOB pDataIn,
@@ -25,5 +29,28 @@ namespace WheresMyImplant
             DWORD dwFlag,
             ref Wincrypt._CRYPTOAPI_BLOB pDataOut
         );
+        
+        [DllImport("crypt32.dll", SetLastError = true)]
+        internal static extern bool CryptUnprotectData(
+            ref Wincrypt._CRYPTOAPI_BLOB pDataIn,
+            LPWSTR ppszDataDescr,
+            IntPtr pOptionalEntropy,
+            PVOID pvReserved,
+            IntPtr pPromptStruct,
+            DWORD dwFlag,
+            ref Wincrypt._CRYPTOAPI_BLOB pDataOut
+        );
+        
+        [DllImport("crypt32.dll", SetLastError = true)]
+        internal static extern bool CryptStringToBinary(
+            LPCTSTR pszString,
+            DWORD cchString,
+            DWORD dwFlags,
+            out IntPtr pbBinary,
+            ref DWORD pcbBinary,
+            out DWORD pdwSkip,
+            out DWORD pdwFlags
+        );
+         
     }
 }

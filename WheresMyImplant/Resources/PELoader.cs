@@ -7,11 +7,11 @@ namespace WheresMyImplant
     public class PELoader
     {
         public Boolean is64Bit;
-        internal Structs._IMAGE_DOS_HEADER imageDosHeader;
-        internal Structs._IMAGE_FILE_HEADER imageFileHeader;
-        internal Structs._IMAGE_OPTIONAL_HEADER64 imageOptionalHeader64;
-        internal Structs._IMAGE_OPTIONAL_HEADER32 imageOptionalHeader32;
-        internal Structs._IMAGE_SECTION_HEADER[] imageSectionHeaders;
+        internal Winnt._IMAGE_DOS_HEADER imageDosHeader;
+        internal Winnt._IMAGE_FILE_HEADER imageFileHeader;
+        internal Winnt._IMAGE_OPTIONAL_HEADER64 imageOptionalHeader64;
+        internal Winnt._IMAGE_OPTIONAL_HEADER32 imageOptionalHeader32;
+        internal Winnt._IMAGE_SECTION_HEADER[] imageSectionHeaders;
         public byte[] imageBytes;
         public UInt32 sizeOfImage;
         public UInt32 imageBase;
@@ -28,7 +28,7 @@ namespace WheresMyImplant
         {
             FileStream fileStream = new FileStream(libary, System.IO.FileMode.Open, System.IO.FileAccess.Read);
             BinaryReader binaryReader = new BinaryReader(fileStream);
-            imageDosHeader = FromBinaryReader<Structs._IMAGE_DOS_HEADER>(binaryReader);
+            imageDosHeader = FromBinaryReader<Winnt._IMAGE_DOS_HEADER>(binaryReader);
             fileStream.Seek(imageDosHeader.e_lfanew, SeekOrigin.Begin);
             ReadHeaders(ref binaryReader);
             fileStream.Close();
@@ -39,7 +39,7 @@ namespace WheresMyImplant
         {
             MemoryStream memoryStream = new MemoryStream(fileBytes, 0, fileBytes.Length);
             BinaryReader binaryReader = new BinaryReader(memoryStream);
-            imageDosHeader = FromBinaryReader<Structs._IMAGE_DOS_HEADER>(binaryReader);
+            imageDosHeader = FromBinaryReader<Winnt._IMAGE_DOS_HEADER>(binaryReader);
             memoryStream.Seek(imageDosHeader.e_lfanew, SeekOrigin.Begin);
             ReadHeaders(ref binaryReader);
             memoryStream.Close();
@@ -49,12 +49,12 @@ namespace WheresMyImplant
         private void ReadHeaders(ref BinaryReader binaryReader)
         {
             binaryReader.ReadUInt32();
-            imageFileHeader = FromBinaryReader<Structs._IMAGE_FILE_HEADER>(binaryReader);
+            imageFileHeader = FromBinaryReader<Winnt._IMAGE_FILE_HEADER>(binaryReader);
 
             switch (imageFileHeader.Machine)
             {
                 case 0x14c:
-                    imageOptionalHeader32 = FromBinaryReader<Structs._IMAGE_OPTIONAL_HEADER32>(binaryReader);
+                    imageOptionalHeader32 = FromBinaryReader<Winnt._IMAGE_OPTIONAL_HEADER32>(binaryReader);
                     sizeOfImage = imageOptionalHeader32.SizeOfImage;
                     baseRelocationTableAddress = (Int32)imageOptionalHeader32.ImageDataDirectory[(Int32)Structs.IMAGE_DATA_DIRECTORY_OPTIONS.BaseRelocationTable].VirtualAddress;
                     importTableAddress = (Int32)imageOptionalHeader32.ImageDataDirectory[(Int32)Structs.IMAGE_DATA_DIRECTORY_OPTIONS.ImportTable].VirtualAddress;
@@ -64,7 +64,7 @@ namespace WheresMyImplant
                     is64Bit = false;
                     break;
                 case 0x8664:
-                    imageOptionalHeader64 = FromBinaryReader<Structs._IMAGE_OPTIONAL_HEADER64>(binaryReader);
+                    imageOptionalHeader64 = FromBinaryReader<Winnt._IMAGE_OPTIONAL_HEADER64>(binaryReader);
                     sizeOfImage = imageOptionalHeader64.SizeOfImage;
                     baseRelocationTableAddress = (Int32)imageOptionalHeader64.ImageDataDirectory[(Int32)Structs.IMAGE_DATA_DIRECTORY_OPTIONS.BaseRelocationTable].VirtualAddress;
                     importTableAddress = (Int32)imageOptionalHeader64.ImageDataDirectory[(Int32)Structs.IMAGE_DATA_DIRECTORY_OPTIONS.ImportTable].VirtualAddress;
@@ -76,10 +76,10 @@ namespace WheresMyImplant
                 default:
                     return;
             };
-            imageSectionHeaders = new Structs._IMAGE_SECTION_HEADER[imageFileHeader.NumberOfSections];
+            imageSectionHeaders = new Winnt._IMAGE_SECTION_HEADER[imageFileHeader.NumberOfSections];
             for (int i = 0; i < imageFileHeader.NumberOfSections; ++i)
             {
-                imageSectionHeaders[i] = FromBinaryReader<Structs._IMAGE_SECTION_HEADER>(binaryReader);
+                imageSectionHeaders[i] = FromBinaryReader<Winnt._IMAGE_SECTION_HEADER>(binaryReader);
             }
             binaryReader.Close();
         }

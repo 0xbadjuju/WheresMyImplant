@@ -45,6 +45,7 @@
     <Reference Include="System.Net">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Security" />
     <Reference Include="System.ServiceModel">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
@@ -75,11 +76,13 @@
     <Compile Include="Credentials\SAM.cs" />
     <Compile Include="Credentials\Tokens.cs" />
     <Compile Include="Credentials\VaultCLI.cs" />
-    <Compile Include="Credentials\Wireless.cs" />
+    <Compile Include="Credentials\WirelessProfiles.cs" />
     <Compile Include="Empire\Empire.Agent.Coms.cs" />
     <Compile Include="Empire\Empire.Agent.cs" />
     <Compile Include="Empire\Empire.Agent.Jobs.cs" />
     <Compile Include="Empire\Empire.Agent.Stager.cs" />
+    <Compile Include="Inject\HollowProcess.cs" />
+    <Compile Include="Inject\HollowProcess32.cs" />
     <Compile Include="Inject\InjectDll.cs" />
     <Compile Include="Inject\InjectDllRemote.cs" />
     <Compile Include="Inject\InjectPE.cs" />
@@ -103,10 +106,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources\Services.cs" />
     <Compile Include="Resources\Structs\minidumpapiset.cs" />
+    <Compile Include="Resources\Structs\Subauth.cs" />
     <Compile Include="Resources\Structs\Wincrypt.cs" />
     <Compile Include="Resources\Structs\Winnt.cs" />
     <Compile Include="Resources\Structs\Winbase.cs" />
     <Compile Include="Resources\Structs\Winsvc.cs" />
+    <Compile Include="Resources\Structs\Winternl.cs" />
     <Compile Include="Resources\Unmanaged\advapi32.cs" />
     <Compile Include="Resources\Unmanaged\crypt32.cs" />
     <Compile Include="Resources\Unmanaged\dbghelp.cs" />
@@ -114,6 +119,7 @@
     <Compile Include="Resources\Unmanaged\ntdll.cs" />
     <Compile Include="Resources\Unmanaged\Unmanaged.cs" />
     <Compile Include="Resources\Unmanaged\vaultcli.cs" />
+    <Compile Include="Resources\Unmanaged\wlanapi.cs" />
     <Compile Include="Run\RunCommandPrompt.cs" />
     <Compile Include="Run\RunPowerShell.cs" />
     <Compile Include="Resources\Structs.cs" />

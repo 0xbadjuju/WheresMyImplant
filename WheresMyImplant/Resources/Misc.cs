@@ -1,7 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace WheresMyImplant
 {
@@ -86,40 +89,10 @@ namespace WheresMyImplant
             return version;
         }
 
-        ////////////////////////////////////////////////////////////////////////////////
-        // Decrypts an input string via the DPAPI
-        ////////////////////////////////////////////////////////////////////////////////
-        public static String DPAPIDecrypt(String input)
+        public static string Base64Decode(String encodedString)
         {
-            Byte[] outputBytes = new Byte[0];
-            Byte[] inputBytes = System.Text.Encoding.Unicode.GetBytes(input);
-            IntPtr lpBuffer = Marshal.AllocHGlobal(inputBytes.Length);
-            Marshal.Copy(inputBytes, 0, lpBuffer, inputBytes.Length);
-
-            Wincrypt._CRYPTOAPI_BLOB pDataIn = new Wincrypt._CRYPTOAPI_BLOB();
-            pDataIn.cbData = (UInt32)inputBytes.Length;
-            pDataIn.pbData = lpBuffer;
-
-            Wincrypt._CRYPTOAPI_BLOB pOptionalEntropy = new Wincrypt._CRYPTOAPI_BLOB();
-
-            Wincrypt._CRYPTPROTECT_PROMPTSTRUCT pPromptStruct = new Wincrypt._CRYPTPROTECT_PROMPTSTRUCT();
-            pPromptStruct.cbSize = (UInt32)Marshal.SizeOf(typeof(Wincrypt._CRYPTPROTECT_PROMPTSTRUCT));
-            pPromptStruct.dwPromptFlags = 0;
-            pPromptStruct.hwndApp = IntPtr.Zero;
-            pPromptStruct.szPrompt = String.Empty;
-
-            Wincrypt._CRYPTOAPI_BLOB pDataOut = new Wincrypt._CRYPTOAPI_BLOB();
-            if (crypt32.CryptUnprotectData(ref pDataIn, null, ref pOptionalEntropy, IntPtr.Zero, ref pPromptStruct, 0, ref pDataOut))
-            {
-                outputBytes = new Byte[pDataOut.cbData];
-                Marshal.Copy(pDataOut.pbData, outputBytes, 0, (Int32)pDataOut.cbData);
-            }
-            else
-            {
-                Console.WriteLine(Marshal.GetLastWin32Error());
-            }
-            Marshal.FreeHGlobal(lpBuffer);
-            return System.Text.Encoding.Unicode.GetString(outputBytes);
+            byte[] data = Convert.FromBase64String(encodedString);
+            return System.Text.Encoding.UTF8.GetString(data);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -130,6 +103,17 @@ namespace WheresMyImplant
             Random random = new Random();
             const String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
             return new String(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        public static void PrintStruct<T>(T imageDosHeader)
+        {
+            System.Reflection.FieldInfo[] fields = imageDosHeader.GetType().GetFields();
+            Console.WriteLine("==========");
+            foreach (var xInfo in fields)
+            {
+                Console.WriteLine("Field {0,-20}", xInfo.GetValue(imageDosHeader).ToString());
+            }
+            Console.WriteLine("==========");
         }
     }
 }
