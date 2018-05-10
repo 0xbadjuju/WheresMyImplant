@@ -81,8 +81,8 @@
     <Compile Include="Empire\Empire.Agent.cs" />
     <Compile Include="Empire\Empire.Agent.Jobs.cs" />
     <Compile Include="Empire\Empire.Agent.Stager.cs" />
+    <Compile Include="Inject\HijackThread.cs" />
     <Compile Include="Inject\HollowProcess.cs" />
-    <Compile Include="Inject\HollowProcess32.cs" />
     <Compile Include="Inject\InjectDll.cs" />
     <Compile Include="Inject\InjectDllRemote.cs" />
     <Compile Include="Inject\InjectPE.cs" />

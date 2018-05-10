@@ -30,11 +30,17 @@ namespace WheresMyImplant
         [DllImport("kernel32.dll", SetLastError=true)]
         internal static extern IntPtr GetCurrentProcess();
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        internal static extern void GetNativeSystemInfo(out Winbase._SYSTEM_INFO lpSystemInfo);
+
         [DllImport("kernel32.dll", SetLastError=true)]
-        public static extern bool GetThreadContext(IntPtr hThread, IntPtr lpContext);
+        internal static extern bool GetThreadContext(IntPtr hThread, IntPtr lpContext);
 
         [DllImport("kernel32.dll", SetLastError=true)]
         internal static extern void GetSystemInfo(out Winbase._SYSTEM_INFO lpSystemInfo);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        internal static extern Boolean IsWow64Process(IntPtr hProcess, out Boolean Wow64Process);
 
         [DllImport("kernel32.dll", SetLastError=true)]
         internal static extern IntPtr OpenProcess(UInt32 dwDesiredAccess, Boolean bInheritHandle, UInt32 dwProcessId);
@@ -43,7 +49,7 @@ namespace WheresMyImplant
         internal static extern Boolean OpenProcessToken(IntPtr hProcess, UInt32 dwDesiredAccess, out IntPtr hToken);
 
         [DllImport("kernel32.dll", SetLastError=true)]
-        public static extern IntPtr OpenThread(uint dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
+        internal static extern IntPtr OpenThread(uint dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
 
         [DllImport("kernel32.dll", SetLastError=true)]
         internal static extern Boolean OpenThreadToken(IntPtr ThreadHandle, UInt32 DesiredAccess, Boolean OpenAsSelf, ref IntPtr TokenHandle);

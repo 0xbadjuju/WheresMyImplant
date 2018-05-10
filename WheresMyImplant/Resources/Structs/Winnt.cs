@@ -283,12 +283,35 @@ namespace WheresMyImplant
             public WORD[] e_res2;
             public DWORD e_lfanew; //Maybe Int64?
         };
-        
-        //20 Bytes
+
+        //http://www.exploit-monday.com/2012/04/64-bit-process-replacement-in.html
+        public enum IMAGE_FILE_MACHINE : ushort
+        {
+            I386 = 0x014c,
+            IA64 = 0x0200,
+            AMD64 = 0x8664,
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        internal struct _IMAGE_NT_HEADERS
+        {
+            public DWORD Signature;                         
+            public _IMAGE_FILE_HEADER FileHeader;           
+            public _IMAGE_OPTIONAL_HEADER OptionalHeader;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        internal struct _IMAGE_NT_HEADERS64
+        {
+            public DWORD Signature;
+            public _IMAGE_FILE_HEADER FileHeader;
+            public _IMAGE_OPTIONAL_HEADER64 OptionalHeader;
+        }
+
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         internal struct _IMAGE_FILE_HEADER
         {
-            public WORD Machine;
+            public IMAGE_FILE_MACHINE Machine;
             public WORD NumberOfSections;
             public DWORD TimeDateStamp;
             public DWORD PointerToSymbolTable;
@@ -298,23 +321,7 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        internal struct _IMAGE_NT_HEADERS
-        {
-            public DWORD Signature;                         //4 Bytes
-            public _IMAGE_FILE_HEADER FileHeader;           //20 Bytes
-            public _IMAGE_OPTIONAL_HEADER32 OptionalHeader; //32 234 Bytes
-        };
-
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        internal struct _IMAGE_NT_HEADERS64
-        {
-            public DWORD Signature;
-            public _IMAGE_FILE_HEADER FileHeader;
-            public _IMAGE_OPTIONAL_HEADER64 OptionalHeader;
-        };
-
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        internal struct _IMAGE_OPTIONAL_HEADER32
+        internal struct _IMAGE_OPTIONAL_HEADER
         {
             public WORD Magic;
             public byte MajorLinkerVersion;

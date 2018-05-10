@@ -9,8 +9,8 @@ namespace WheresMyImplant
         public Boolean is64Bit;
         internal Winnt._IMAGE_DOS_HEADER imageDosHeader;
         internal Winnt._IMAGE_FILE_HEADER imageFileHeader;
+        internal Winnt._IMAGE_OPTIONAL_HEADER imageOptionalHeader32;
         internal Winnt._IMAGE_OPTIONAL_HEADER64 imageOptionalHeader64;
-        internal Winnt._IMAGE_OPTIONAL_HEADER32 imageOptionalHeader32;
         internal Winnt._IMAGE_SECTION_HEADER[] imageSectionHeaders;
         public byte[] imageBytes;
         public UInt32 sizeOfImage;
@@ -53,8 +53,8 @@ namespace WheresMyImplant
 
             switch (imageFileHeader.Machine)
             {
-                case 0x14c:
-                    imageOptionalHeader32 = FromBinaryReader<Winnt._IMAGE_OPTIONAL_HEADER32>(binaryReader);
+                case Winnt.IMAGE_FILE_MACHINE.I386:
+                    imageOptionalHeader32 = FromBinaryReader<Winnt._IMAGE_OPTIONAL_HEADER>(binaryReader);
                     sizeOfImage = imageOptionalHeader32.SizeOfImage;
                     baseRelocationTableAddress = (Int32)imageOptionalHeader32.ImageDataDirectory[(Int32)Structs.IMAGE_DATA_DIRECTORY_OPTIONS.BaseRelocationTable].VirtualAddress;
                     importTableAddress = (Int32)imageOptionalHeader32.ImageDataDirectory[(Int32)Structs.IMAGE_DATA_DIRECTORY_OPTIONS.ImportTable].VirtualAddress;
@@ -63,7 +63,7 @@ namespace WheresMyImplant
                     Console.WriteLine("EntryPoint = {0}", imageOptionalHeader32.AddressOfEntryPoint.ToString("X4"));
                     is64Bit = false;
                     break;
-                case 0x8664:
+                case Winnt.IMAGE_FILE_MACHINE.AMD64:
                     imageOptionalHeader64 = FromBinaryReader<Winnt._IMAGE_OPTIONAL_HEADER64>(binaryReader);
                     sizeOfImage = imageOptionalHeader64.SizeOfImage;
                     baseRelocationTableAddress = (Int32)imageOptionalHeader64.ImageDataDirectory[(Int32)Structs.IMAGE_DATA_DIRECTORY_OPTIONS.BaseRelocationTable].VirtualAddress;

@@ -77,10 +77,20 @@ namespace WheresMyImplant
             // PPROC_THREAD_ATTRIBUTE_LIST lpAttributeList;
         };
 
+        internal enum INFO_PROCESSOR_ARCHITECTURE : ushort
+        {
+            PROCESSOR_ARCHITECTURE_INTEL = 0,
+            PROCESSOR_ARCHITECTURE_ARM = 5,
+            PROCESSOR_ARCHITECTURE_IA64 = 6,
+            PROCESSOR_ARCHITECTURE_AMD64 = 9,
+            PROCESSOR_ARCHITECTURE_ARM64 = 12,
+            PROCESSOR_ARCHITECTURE_UNKNOWN = 0xffff
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         internal struct _SYSTEM_INFO 
         {
-            public WORD wProcessorArchitecture;
+            public INFO_PROCESSOR_ARCHITECTURE wProcessorArchitecture;
             public WORD wReserved;
             public DWORD dwPageSize;
             public LPVOID lpMinimumApplicationAddress;

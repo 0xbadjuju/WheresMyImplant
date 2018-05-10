@@ -337,7 +337,19 @@ namespace WheresMyImplant
                 return String.Empty;
             }
 
-            if (!hp.ReadNTHeaders64())
+            if (!hp.GetTargetArch())
+            {
+                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
+                return String.Empty;
+            }
+
+            if (!hp.GetContext())
+            {
+                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
+                return String.Empty;
+            }
+
+            if (!hp.ReadNTHeaders())
             {
                 Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
                 return String.Empty;
