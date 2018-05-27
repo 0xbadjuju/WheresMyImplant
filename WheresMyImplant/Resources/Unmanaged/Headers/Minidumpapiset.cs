@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 using WORD = System.UInt16;
 using DWORD = System.UInt32;
@@ -14,10 +15,11 @@ using ULONG64 = System.UInt64;
 
 using BOOL = System.Boolean;
 
-namespace Unmanaged
+namespace Unmanaged.Headers
 {
-    sealed class minidumpapiset
+    sealed class Minidumpapiset
     {
+        [Flags]
         public enum _MINIDUMP_TYPE
         {
             MiniDumpNormal = 0x00000000,
@@ -48,31 +50,31 @@ namespace Unmanaged
         [StructLayout(LayoutKind.Sequential)]
         public struct _MINIDUMP_CALLBACK_INFORMATION
         {
-            bool CallbackRoutine;
-            PVOID CallbackParam;
+            public bool CallbackRoutine;
+            public PVOID CallbackParam;
         }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct _MINIDUMP_EXCEPTION_INFORMATION
         {
-            DWORD ThreadId;
-            System.IntPtr ExceptionPointers;
-            BOOL ClientPointers;
+            public DWORD ThreadId;
+            public System.IntPtr ExceptionPointers;
+            public BOOL ClientPointers;
         }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct _MINIDUMP_USER_STREAM
         {
-            ULONG32 Type;
-            ULONG BufferSize;
-            PVOID Buffer;
+            public ULONG32 Type;
+            public ULONG BufferSize;
+            public PVOID Buffer;
         }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct _MINIDUMP_USER_STREAM_INFORMATION
         {
-            ULONG UserStreamCount;
-            _MINIDUMP_USER_STREAM UserStreamArray;
+            public ULONG UserStreamCount;
+            public _MINIDUMP_USER_STREAM UserStreamArray;
         }
     }
 }

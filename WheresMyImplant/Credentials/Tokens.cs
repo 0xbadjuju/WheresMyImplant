@@ -8,7 +8,8 @@ using System.Security;
 using System.Security.Principal;
 using System.Text;
 
-using Unmanaged;
+using Unmanaged.Headers;
+using Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {

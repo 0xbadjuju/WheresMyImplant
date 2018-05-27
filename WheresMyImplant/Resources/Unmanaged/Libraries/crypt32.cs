@@ -12,14 +12,27 @@ using PVOID = System.IntPtr;
 using LPVOID = System.IntPtr;
 using DWORD_PTR = System.IntPtr;
 
-namespace Unmanaged
+using Unmanaged.Headers;
+
+namespace Unmanaged.Libraries
 {
     sealed class crypt32
     {
         public const UInt32 CRYPTPROTECT_UI_FORBIDDEN = 0x1;
         public const UInt32 CRYPTPROTECT_LOCAL_MACHINE = 0x4;
 
-        [DllImport("crypt32.dll", SetLastError=true)]
+        [DllImport("crypt32.dll", SetLastError = true)]
+        public static extern bool CryptStringToBinary(
+            LPCTSTR pszString,
+            DWORD cchString,
+            DWORD dwFlags,
+            out IntPtr pbBinary,
+            ref DWORD pcbBinary,
+            out DWORD pdwSkip,
+            out DWORD pdwFlags
+        );
+
+        [DllImport("crypt32.dll", SetLastError = true)]
         public static extern bool CryptUnprotectData(
             ref Wincrypt._CRYPTOAPI_BLOB pDataIn,
             LPWSTR ppszDataDescr,
@@ -30,7 +43,7 @@ namespace Unmanaged
             ref Wincrypt._CRYPTOAPI_BLOB pDataOut
         );
         
-        [DllImport("crypt32.dll", SetLastError=true)]
+        [DllImport("crypt32.dll", SetLastError = true)]
         public static extern bool CryptUnprotectData(
             ref Wincrypt._CRYPTOAPI_BLOB pDataIn,
             LPWSTR ppszDataDescr,
@@ -40,17 +53,5 @@ namespace Unmanaged
             DWORD dwFlag,
             ref Wincrypt._CRYPTOAPI_BLOB pDataOut
         );
-        
-        [DllImport("crypt32.dll", SetLastError=true)]
-        public static extern bool CryptStringToBinary(
-            LPCTSTR pszString,
-            DWORD cchString,
-            DWORD dwFlags,
-            out IntPtr pbBinary,
-            ref DWORD pcbBinary,
-            out DWORD pdwSkip,
-            out DWORD pdwFlags
-        );
-         
     }
 }

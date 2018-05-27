@@ -8,7 +8,8 @@ using System.Security;
 using System.Security.Principal;
 using System.Text;
 
-using Unmanaged;
+using Unmanaged.Headers;
+using Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
@@ -77,11 +78,11 @@ namespace WheresMyImplant
                 WriteOutputGood("Initialized SID : "+ pSID.ToInt32());
             }
 
-            Winnt.SID_AND_ATTRIBUTES sidAndAttributes = new Winnt.SID_AND_ATTRIBUTES();
+            Winnt._SID_AND_ATTRIBUTES sidAndAttributes = new Winnt._SID_AND_ATTRIBUTES();
             sidAndAttributes.Sid = pSID;
             sidAndAttributes.Attributes = Constants.SE_GROUP_INTEGRITY_32;
 
-            Winnt.TOKEN_MANDATORY_LABEL tokenMandatoryLabel = new Winnt.TOKEN_MANDATORY_LABEL();
+            Winnt._TOKEN_MANDATORY_LABEL tokenMandatoryLabel = new Winnt._TOKEN_MANDATORY_LABEL();
             tokenMandatoryLabel.Label = sidAndAttributes;
             Int32 tokenMandatoryLableSize = Marshal.SizeOf(tokenMandatoryLabel);
 

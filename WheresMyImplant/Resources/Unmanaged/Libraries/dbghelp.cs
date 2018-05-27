@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 using BOOLEAN = System.Boolean;
 
@@ -17,7 +18,9 @@ using ULONG64 = System.UInt64;
 
 using BOOL = System.Boolean;
 
-namespace Unmanaged
+using Unmanaged.Headers;
+
+namespace Unmanaged.Libraries
 {
     sealed class dbghelp
     {
@@ -25,7 +28,7 @@ namespace Unmanaged
         public struct _LOADED_IMAGE {
             public string ModuleName;
             public HANDLE hFile;
-            public System.IntPtr MappedAddress;
+            public IntPtr MappedAddress;
             public Winnt._IMAGE_NT_HEADERS FileHeader;
             public Winnt._IMAGE_SECTION_HEADER LastRvaSection;
             public ULONG NumberOfSections;
@@ -34,27 +37,27 @@ namespace Unmanaged
             public BOOLEAN fSystemImage;
             public BOOLEAN fDOSImage;
             public BOOLEAN fReadOnly;
-            public System.IntPtr Version;
+            public IntPtr Version;
             public Winternl._LIST_ENTRY Links;
             public ULONG SizeOfImage;
         }
 
-        [DllImport("dbghelp.dll", SetLastError=true)]
-        public static extern bool MiniDumpCallback(
+        [DllImport("dbghelp.dll", SetLastError = true)]
+        public static extern Boolean MiniDumpCallback(
             PVOID CallbackParam,
-            System.IntPtr CallbackInput,
-            System.IntPtr CallbackOutput
+            IntPtr CallbackInput,
+            IntPtr CallbackOutput
         );
 
-        [DllImport("dbghelp.dll", SetLastError=true)]
-        public static extern bool MiniDumpWriteDump(
+        [DllImport("dbghelp.dll", SetLastError = true)]
+        public static extern Boolean MiniDumpWriteDump(
             HANDLE hProcess,
             DWORD ProcessId,
             HANDLE hFile,
-            minidumpapiset._MINIDUMP_TYPE DumpType,
-            System.IntPtr ExceptionParam,
-            System.IntPtr UserStreamParam,
-            System.IntPtr CallbackParam
+            Minidumpapiset._MINIDUMP_TYPE DumpType,
+            IntPtr ExceptionParam,
+            IntPtr UserStreamParam,
+            IntPtr CallbackParam
         );
     }
 }

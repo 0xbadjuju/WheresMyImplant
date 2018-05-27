@@ -1,10 +1,20 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Unmanaged
+namespace Unmanaged.Headers
 {
     sealed class WinCred
     {
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _CREDENTIAL_ATTRIBUTE
+        {
+            String Keyword;
+            Int32 Flags;
+            Int32 ValueSize;
+            IntPtr Value;
+        }
+
+        [Flags]
         public enum CRED_FLAGS : uint
         {
             NONE = 0x0,
@@ -12,6 +22,7 @@ namespace Unmanaged
             USERNAME_TARGET = 0x4
         }
 
+        [Flags]
         public enum CRED_TYPE : uint
         {
             Generic = 1,
@@ -24,6 +35,7 @@ namespace Unmanaged
             MaximumEx = Maximum + 1000,
         }
 
+        [Flags]
         public enum CRED_PERSIST : uint
         {
             Session = 1,

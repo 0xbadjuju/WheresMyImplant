@@ -2,7 +2,8 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-using Unmanaged;
+using Unmanaged.Headers;
+using Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {

@@ -10,7 +10,7 @@ using QWORD = System.UInt64;
 using LPVOID = System.IntPtr;
 using DWORD_PTR = System.IntPtr;
 
-namespace Unmanaged
+namespace Unmanaged.Headers
 {
     sealed class Winbase
     {
@@ -26,6 +26,17 @@ namespace Unmanaged
             CREATE_SUSPENDED = 0x00000004,
             CREATE_UNICODE_ENVIRONMENT = 0x00000400,
             EXTENDED_STARTUPINFO_PRESENT = 0x00080000
+        }
+
+        [Flags]
+        public enum INFO_PROCESSOR_ARCHITECTURE : ushort
+        {
+            PROCESSOR_ARCHITECTURE_INTEL = 0,
+            PROCESSOR_ARCHITECTURE_ARM = 5,
+            PROCESSOR_ARCHITECTURE_IA64 = 6,
+            PROCESSOR_ARCHITECTURE_AMD64 = 9,
+            PROCESSOR_ARCHITECTURE_ARM64 = 12,
+            PROCESSOR_ARCHITECTURE_UNKNOWN = 0xffff
         }
 
         //https://msdn.microsoft.com/en-us/library/windows/desktop/ms684873(v=vs.85).aspx
@@ -76,16 +87,6 @@ namespace Unmanaged
             _STARTUPINFO StartupInfo;
             // PPROC_THREAD_ATTRIBUTE_LIST lpAttributeList;
         };
-
-        public enum INFO_PROCESSOR_ARCHITECTURE : ushort
-        {
-            PROCESSOR_ARCHITECTURE_INTEL = 0,
-            PROCESSOR_ARCHITECTURE_ARM = 5,
-            PROCESSOR_ARCHITECTURE_IA64 = 6,
-            PROCESSOR_ARCHITECTURE_AMD64 = 9,
-            PROCESSOR_ARCHITECTURE_ARM64 = 12,
-            PROCESSOR_ARCHITECTURE_UNKNOWN = 0xffff
-        }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct _SYSTEM_INFO 

@@ -11,7 +11,7 @@ using LPVOID = System.IntPtr;
 using DWORD_PTR = System.IntPtr;
 using SIZE_T = System.IntPtr;
 
-namespace Unmanaged
+namespace Unmanaged.Headers
 {
     sealed class Winnt
     {
@@ -76,113 +76,6 @@ namespace Unmanaged
         };
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct _LUID_AND_ATTRIBUTES
-        {
-            public _LUID Luid;
-            public UInt32 Attributes;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct _LUID
-        {
-            public UInt32 LowPart;
-            public UInt32 HighPart;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct SID_AND_ATTRIBUTES
-        {
-            public IntPtr Sid;
-            public UInt32 Attributes;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct TOKEN_MANDATORY_LABEL
-        {
-            public SID_AND_ATTRIBUTES Label;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct _TOKEN_PRIVILEGES
-        {
-            public UInt32 PrivilegeCount;
-            public _LUID_AND_ATTRIBUTES Privileges;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct _TOKEN_PRIVILEGES_ARRAY
-        {
-            public UInt32 PrivilegeCount;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 30)]
-            public _LUID_AND_ATTRIBUTES[] Privileges;
-        }
-
-        [Flags]
-        public enum TOKEN_TYPE
-        {
-            TokenPrimary = 1,
-            TokenImpersonation
-        }
-
-        [Flags]
-        public enum _SECURITY_IMPERSONATION_LEVEL : int
-        {
-            SecurityAnonymous = 0,
-            SecurityIdentification = 1,
-            SecurityImpersonation = 2,
-            SecurityDelegation = 3
-        };
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct _SID_IDENTIFIER_AUTHORITY
-        {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6, ArraySubType = UnmanagedType.I1)]
-            public byte[] Value;
-        }
-
-        public enum CONTEXT_FLAGS : uint
-        {
-            CONTEXT_i386 = 0x10000,
-            CONTEXT_i486 = 0x10000,   //  same as i386
-            CONTEXT_CONTROL = CONTEXT_i386 | 0x0001, // SS:SP, CS:IP, FLAGS, BP
-            CONTEXT_INTEGER = CONTEXT_i386 | 0x0002, // AX, BX, CX, DX, SI, DI
-            CONTEXT_SEGMENTS = CONTEXT_i386 | 0x0004, // DS, ES, FS, GS
-            CONTEXT_FLOATING_POINT = CONTEXT_i386 | 0x0008, // 387 state
-            CONTEXT_DEBUG_REGISTERS = CONTEXT_i386 | 0x0010, // DB 0-3,6,7
-            CONTEXT_EXTENDED_REGISTERS = CONTEXT_i386 | 0x0020, // cpu specific extensions
-            CONTEXT_FULL = CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS,
-            CONTEXT_ALL = CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS | CONTEXT_FLOATING_POINT | CONTEXT_DEBUG_REGISTERS | CONTEXT_EXTENDED_REGISTERS
-        }
-
-        public enum CONTEXT_FLAGS64 : uint
-        {
-            CONTEXT_AMD64 = 0x100000,
-            CONTEXT_CONTROL = CONTEXT_AMD64 | 0x01, // SS:SP, CS:IP, FLAGS, BP
-            CONTEXT_INTEGER = CONTEXT_AMD64 | 0x02, // AX, BX, CX, DX, SI, DI
-            CONTEXT_SEGMENTS = CONTEXT_AMD64 | 0x04, // DS, ES, FS, GS
-            CONTEXT_FLOATING_POINT = CONTEXT_AMD64 | 0x08, // 387 state
-            CONTEXT_DEBUG_REGISTERS = CONTEXT_AMD64 | 0x10, // DB 0-3,6,7
-            CONTEXT_EXTENDED_REGISTERS = CONTEXT_AMD64 | 0x20, // cpu specific extensions
-            CONTEXT_FULL = 1048587,//CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS,
-            CONTEXT_ALL = CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS | CONTEXT_FLOATING_POINT | CONTEXT_DEBUG_REGISTERS | CONTEXT_EXTENDED_REGISTERS
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct _FLOATING_SAVE_AREA
-        {
-            public DWORD ControlWord;
-            public DWORD StatusWord;
-            public DWORD TagWord;
-            public DWORD ErrorOffset;
-            public DWORD ErrorSelector;
-            public DWORD DataOffset;
-            public DWORD DataSelector;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 80)]
-            public byte[] RegisterArea;
-            public DWORD Cr0NpxState;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
         public struct CONTEXT
         {
             public CONTEXT_FLAGS ContextFlags; //set this to an appropriate value 
@@ -217,44 +110,7 @@ namespace Unmanaged
             // Retrieved by CONTEXT_EXTENDED_REGISTERS 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 512)]
             public byte[] ExtendedRegisters;
-        } 
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct _M128A
-        {
-            public ulong High;
-            public long Low;
         }
-
-        
-        [StructLayout(LayoutKind.Sequential)]
-        public struct _XMM_SAVE_AREA32
-        {
-            public WORD ControlWord;
-            public WORD StatusWord;
-            public byte TagWord;
-            public byte Reserved1;
-            public WORD ErrorOpcode;
-            public DWORD ErrorOffset;
-            public WORD ErrorSelector;
-            public WORD Reserved2;
-            public DWORD DataOffset;
-            public WORD DataSelector;
-            public WORD Reserved3;
-            public WORD MxCsr;
-            public WORD MxCsr_Mask;
-
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
-            public _M128A[] FloatRegisters;
-
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-            public _M128A[] XmmRegisters;
-
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 96)]
-            public byte[] Reserved4;
-        }
-        
-
 
         [StructLayout(LayoutKind.Sequential)]
         public struct CONTEXT64
@@ -316,15 +172,44 @@ namespace Unmanaged
             public ulong LastExceptionFromRip;
         }
 
+        [Flags]
+        public enum CONTEXT_FLAGS : uint
+        {
+            CONTEXT_i386 = 0x10000,
+            CONTEXT_i486 = 0x10000,   //  same as i386
+            CONTEXT_CONTROL = CONTEXT_i386 | 0x0001, // SS:SP, CS:IP, FLAGS, BP
+            CONTEXT_INTEGER = CONTEXT_i386 | 0x0002, // AX, BX, CX, DX, SI, DI
+            CONTEXT_SEGMENTS = CONTEXT_i386 | 0x0004, // DS, ES, FS, GS
+            CONTEXT_FLOATING_POINT = CONTEXT_i386 | 0x0008, // 387 state
+            CONTEXT_DEBUG_REGISTERS = CONTEXT_i386 | 0x0010, // DB 0-3,6,7
+            CONTEXT_EXTENDED_REGISTERS = CONTEXT_i386 | 0x0020, // cpu specific extensions
+            CONTEXT_FULL = CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS,
+            CONTEXT_ALL = CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS | CONTEXT_FLOATING_POINT | CONTEXT_DEBUG_REGISTERS | CONTEXT_EXTENDED_REGISTERS
+        }
+
+        [Flags]
+        public enum CONTEXT_FLAGS64 : uint
+        {
+            CONTEXT_AMD64 = 0x100000,
+            CONTEXT_CONTROL = CONTEXT_AMD64 | 0x01, // SS:SP, CS:IP, FLAGS, BP
+            CONTEXT_INTEGER = CONTEXT_AMD64 | 0x02, // AX, BX, CX, DX, SI, DI
+            CONTEXT_SEGMENTS = CONTEXT_AMD64 | 0x04, // DS, ES, FS, GS
+            CONTEXT_FLOATING_POINT = CONTEXT_AMD64 | 0x08, // 387 state
+            CONTEXT_DEBUG_REGISTERS = CONTEXT_AMD64 | 0x10, // DB 0-3,6,7
+            CONTEXT_EXTENDED_REGISTERS = CONTEXT_AMD64 | 0x20, // cpu specific extensions
+            CONTEXT_FULL = 1048587,//CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS,
+            CONTEXT_ALL = CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS | CONTEXT_FLOATING_POINT | CONTEXT_DEBUG_REGISTERS | CONTEXT_EXTENDED_REGISTERS
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         public struct _EXCEPTION_POINTERS
         {
             public System.IntPtr ExceptionRecord;
             public System.IntPtr ContextRecord;
         }
-        
+
         [StructLayout(LayoutKind.Sequential)]
-        struct _EXCEPTION_RECORD 
+        struct _EXCEPTION_RECORD
         {
             public DWORD ExceptionCode;
             public DWORD ExceptionFlags;
@@ -333,6 +218,21 @@ namespace Unmanaged
             public DWORD NumberParameters;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 15)]
             public DWORD[] ExceptionInformation;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _FLOATING_SAVE_AREA
+        {
+            public DWORD ControlWord;
+            public DWORD StatusWord;
+            public DWORD TagWord;
+            public DWORD ErrorOffset;
+            public DWORD ErrorSelector;
+            public DWORD DataOffset;
+            public DWORD DataSelector;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 80)]
+            public byte[] RegisterArea;
+            public DWORD Cr0NpxState;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -368,6 +268,18 @@ namespace Unmanaged
             public DWORD e_lfanew; //Maybe Int64?
         };
 
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct _IMAGE_FILE_HEADER
+        {
+            public IMAGE_FILE_MACHINE Machine;
+            public WORD NumberOfSections;
+            public DWORD TimeDateStamp;
+            public DWORD PointerToSymbolTable;
+            public DWORD NumberOfSymbols;
+            public WORD SizeOfOptionalHeader;
+            public WORD Characteristics;
+        }
+
         //http://www.exploit-monday.com/2012/04/64-bit-process-replacement-in.html
         public enum IMAGE_FILE_MACHINE : ushort
         {
@@ -379,8 +291,8 @@ namespace Unmanaged
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct _IMAGE_NT_HEADERS
         {
-            public DWORD Signature;                         
-            public _IMAGE_FILE_HEADER FileHeader;           
+            public DWORD Signature;
+            public _IMAGE_FILE_HEADER FileHeader;
             public _IMAGE_OPTIONAL_HEADER OptionalHeader;
         }
 
@@ -390,18 +302,6 @@ namespace Unmanaged
             public DWORD Signature;
             public _IMAGE_FILE_HEADER FileHeader;
             public _IMAGE_OPTIONAL_HEADER64 OptionalHeader;
-        }
-
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct _IMAGE_FILE_HEADER
-        {
-            public IMAGE_FILE_MACHINE Machine;
-            public WORD NumberOfSections;
-            public DWORD TimeDateStamp;
-            public DWORD PointerToSymbolTable;
-            public DWORD NumberOfSymbols;
-            public WORD SizeOfOptionalHeader;
-            public WORD Characteristics;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -494,7 +394,28 @@ namespace Unmanaged
         };
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct _MEMORY_BASIC_INFORMATION32
+        public struct _LUID
+        {
+            public UInt32 LowPart;
+            public UInt32 HighPart;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _LUID_AND_ATTRIBUTES
+        {
+            public _LUID Luid;
+            public UInt32 Attributes;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _M128A
+        {
+            public ulong High;
+            public long Low;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _MEMORY_BASIC_INFORMATION
         {
             public DWORD BaseAddress;
             public DWORD AllocationBase;
@@ -506,7 +427,7 @@ namespace Unmanaged
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct _MEMORY_BASIC_INFORMATION64 
+        public struct _MEMORY_BASIC_INFORMATION64
         {
             public ULONGLONG BaseAddress;
             public ULONGLONG AllocationBase;
@@ -517,6 +438,13 @@ namespace Unmanaged
             public DWORD Protect;
             public DWORD Type;
             public DWORD __alignment2;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _SID_AND_ATTRIBUTES
+        {
+            public IntPtr Sid;
+            public UInt32 Attributes;
         }
 
         [Flags]
@@ -571,6 +499,77 @@ namespace Unmanaged
             TokenSecurityAttributes,
             TokenIsRestricted,
             MaxTokenInfoClass
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _TOKEN_MANDATORY_LABEL
+        {
+            public _SID_AND_ATTRIBUTES Label;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _TOKEN_PRIVILEGES
+        {
+            public UInt32 PrivilegeCount;
+            public _LUID_AND_ATTRIBUTES Privileges;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _TOKEN_PRIVILEGES_ARRAY
+        {
+            public UInt32 PrivilegeCount;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 30)]
+            public _LUID_AND_ATTRIBUTES[] Privileges;
+        }
+
+        [Flags]
+        public enum TOKEN_TYPE
+        {
+            TokenPrimary = 1,
+            TokenImpersonation
+        }
+
+        [Flags]
+        public enum _SECURITY_IMPERSONATION_LEVEL : int
+        {
+            SecurityAnonymous = 0,
+            SecurityIdentification = 1,
+            SecurityImpersonation = 2,
+            SecurityDelegation = 3
+        };
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _SID_IDENTIFIER_AUTHORITY
+        {
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6, ArraySubType = UnmanagedType.I1)]
+            public byte[] Value;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _XMM_SAVE_AREA32
+        {
+            public WORD ControlWord;
+            public WORD StatusWord;
+            public byte TagWord;
+            public byte Reserved1;
+            public WORD ErrorOpcode;
+            public DWORD ErrorOffset;
+            public WORD ErrorSelector;
+            public WORD Reserved2;
+            public DWORD DataOffset;
+            public WORD DataSelector;
+            public WORD Reserved3;
+            public WORD MxCsr;
+            public WORD MxCsr_Mask;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
+            public _M128A[] FloatRegisters;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+            public _M128A[] XmmRegisters;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 96)]
+            public byte[] Reserved4;
         }
     }
 }

@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32;
 
-using Unmanaged;
+using Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {

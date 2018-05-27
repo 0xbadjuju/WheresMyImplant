@@ -1,7 +1,8 @@
 ﻿using System;
 using System.IO;
 
-using Unmanaged;
+using Unmanaged.Headers;
+using Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
@@ -24,7 +25,7 @@ namespace WheresMyImplant
                             proc.Handle,
                             dwProcessId,
                             file.SafeFileHandle.DangerousGetHandle(),
-                            minidumpapiset._MINIDUMP_TYPE.MiniDumpWithFullMemory,
+                            Minidumpapiset._MINIDUMP_TYPE.MiniDumpWithFullMemory,
                             IntPtr.Zero,
                             IntPtr.Zero,
                             IntPtr.Zero))

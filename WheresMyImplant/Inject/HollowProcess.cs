@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-using Unmanaged;
+using Unmanaged.Headers;
+using Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
@@ -109,8 +110,8 @@ namespace WheresMyImplant
 
             ////////////////////////////////////////////////////////////////////////////////
             Console.WriteLine("PEB Base Address:   0x{0}", processBasicInformation.PebBaseAddress.ToString("X4"));
-            Winternl.PEB64 peb;
-            UInt32 pebSize = (UInt32)Marshal.SizeOf(typeof(Winternl.PEB64));
+            Winternl._PEB64 peb;
+            UInt32 pebSize = (UInt32)Marshal.SizeOf(typeof(Winternl._PEB64));
             IntPtr buffer = Marshal.AllocHGlobal((Int32)pebSize);
             try
             {
@@ -124,7 +125,7 @@ namespace WheresMyImplant
                 {
                     return false;
                 }
-                peb = (Winternl.PEB64)Marshal.PtrToStructure(buffer, typeof(Winternl.PEB64));
+                peb = (Winternl._PEB64)Marshal.PtrToStructure(buffer, typeof(Winternl._PEB64));
                 targetImageBaseAddress = peb.ImageBaseAddress;
                 Console.WriteLine("Image Base Address: 0x{0}", targetImageBaseAddress.ToString("X4"));
             }

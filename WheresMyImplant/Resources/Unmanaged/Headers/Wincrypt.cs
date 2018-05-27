@@ -14,7 +14,7 @@ using LPVOID = System.IntPtr;
 using DWORD_PTR = System.IntPtr;
 using SIZE_T = System.IntPtr;
 
-namespace Unmanaged
+namespace Unmanaged.Headers
 {
     sealed class Wincrypt
     {

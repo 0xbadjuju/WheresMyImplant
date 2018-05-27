@@ -3,7 +3,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 
-using Unmanaged;
+using Unmanaged.Headers;
+using Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {

@@ -2,7 +2,9 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Unmanaged
+using Unmanaged.Headers;
+
+namespace Unmanaged.Libraries
 {
     sealed class kernel32
     {
@@ -17,10 +19,10 @@ namespace Unmanaged
         public const UInt32 MEM_RESERVE = 0x00002000;
 
         ////////////////////////////////////////////////////////////////////////////////
-        [DllImport("kernel32.dll", SetLastError=true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean CloseHandle(IntPtr hProcess);
 
-        [DllImport("kernel32.dll", SetLastError=true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean CreateProcess(
             String lpApplicationName,
             String lpCommandLine, 
@@ -34,32 +36,32 @@ namespace Unmanaged
             out Winbase._PROCESS_INFORMATION lpProcessInformation
             );
 
-        [DllImport("kernel32")]
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern IntPtr CreateRemoteThread(IntPtr hHandle, IntPtr lpThreadAttributes, UInt32 dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, UInt32 dwCreationFlags, ref UInt32 lpThreadId);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern IntPtr CreateThread(IntPtr lpThreadAttributes, UInt32 dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, UInt32 dwCreationFlags, ref UInt32 lpThreadId);
 
-        [DllImport("kernel32.dll", SetLastError=true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern IntPtr GetCurrentThread();
 
-        [DllImport("kernel32.dll", SetLastError=true)]
-        public static extern IntPtr GetCurrentProcess();
-
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern void GetNativeSystemInfo(out Winbase._SYSTEM_INFO lpSystemInfo);
+        public static extern IntPtr GetCurrentProcess();
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern IntPtr GetModuleHandle(string lpModuleName);
 
-        [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern void GetNativeSystemInfo(out Winbase._SYSTEM_INFO lpSystemInfo);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
         public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
-        [DllImport("kernel32.dll", SetLastError=true)]
-        public static extern bool GetThreadContext(IntPtr hThread, IntPtr lpContext);
-
-        [DllImport("kernel32.dll", SetLastError=true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern void GetSystemInfo(out Winbase._SYSTEM_INFO lpSystemInfo);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool GetThreadContext(IntPtr hThread, IntPtr lpContext);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean IsWow64Process(IntPtr hProcess, out Boolean Wow64Process);
@@ -67,28 +69,28 @@ namespace Unmanaged
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern IntPtr LoadLibrary(string lpFileName);
 
-        [DllImport("kernel32.dll", SetLastError=true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern IntPtr OpenProcess(UInt32 dwDesiredAccess, Boolean bInheritHandle, UInt32 dwProcessId);
 
-        [DllImport("kernel32.dll", SetLastError=true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean OpenProcessToken(IntPtr hProcess, UInt32 dwDesiredAccess, out IntPtr hToken);
 
-        [DllImport("kernel32.dll", SetLastError=true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern IntPtr OpenThread(uint dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
 
-        [DllImport("kernel32.dll", SetLastError=true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean OpenThreadToken(IntPtr ThreadHandle, UInt32 DesiredAccess, Boolean OpenAsSelf, ref IntPtr TokenHandle);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, IntPtr lpBuffer, UInt32 nSize, ref UInt32 lpNumberOfBytesRead);
 
-        [DllImport("kernel32.dll", SetLastError=true, EntryPoint = "ReadProcessMemory")]
+        [DllImport("kernel32.dll", SetLastError = true, EntryPoint = "ReadProcessMemory")]
         public static extern Boolean ReadProcessMemory64(IntPtr hProcess, UInt64 lpBaseAddress, IntPtr lpBuffer, UInt64 nSize, ref UInt32 lpNumberOfBytesRead);
 
-        [DllImport("kernel32.dll", SetLastError=true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern UInt32 ResumeThread(IntPtr hThread);
 
-        [DllImport("kernel32.dll", SetLastError=true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean SetThreadContext(IntPtr hThread, IntPtr lpContext);
 
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -103,16 +105,16 @@ namespace Unmanaged
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean VirtualProtectEx(IntPtr hHandle, IntPtr lpAddress, UInt32 dwSize, UInt32 flNewProtect, ref UInt32 lpflOldProtect);
 
-        [DllImport("kernel32.dll", SetLastError=true, EntryPoint="VirtualQueryEx")]
-        public static extern Int32 VirtualQueryEx32(IntPtr hProcess, IntPtr lpAddress, out Winnt._MEMORY_BASIC_INFORMATION32 lpBuffer, UInt32 dwLength);
+        [DllImport("kernel32.dll", SetLastError = true, EntryPoint="VirtualQueryEx")]
+        public static extern Int32 VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress, out Winnt._MEMORY_BASIC_INFORMATION lpBuffer, UInt32 dwLength);
 
-        [DllImport("kernel32.dll", SetLastError=true, EntryPoint="VirtualQueryEx")]
+        [DllImport("kernel32.dll", SetLastError = true, EntryPoint="VirtualQueryEx")]
         public static extern Int32 VirtualQueryEx64(IntPtr hProcess, IntPtr lpAddress, out Winnt._MEMORY_BASIC_INFORMATION64 lpBuffer, UInt32 dwLength);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean WaitForSingleObject(IntPtr hProcess, UInt32 nSize);
 
-        [DllImport("kernel32")]
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern UInt32 WaitForSingleObjectEx(IntPtr hProcess, IntPtr hHandle, UInt32 dwMilliseconds);
 
         [DllImport("kernel32.dll", SetLastError = true)]

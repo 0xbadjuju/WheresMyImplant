@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 
-using Unmanaged;
+using Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
