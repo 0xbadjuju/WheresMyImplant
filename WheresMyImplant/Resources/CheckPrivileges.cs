@@ -3,16 +3,18 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 
+using Unmanaged;
+
 namespace WheresMyImplant
 {
     class CheckPrivileges : Base
     {            
-        public Boolean croak = false;
+        internal Boolean croak = false;
 
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean GetSystem()
+        internal Boolean GetSystem()
         {
             WindowsIdentity currentIdentity = WindowsIdentity.GetCurrent();
             if (!currentIdentity.IsSystem)
@@ -52,7 +54,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //https://blogs.msdn.microsoft.com/cjacks/2006/10/08/how-to-determine-if-a-user-is-a-member-of-the-administrators-group-with-uac-enabled-on-windows-vista/
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean CheckAdministrator(WindowsIdentity currentIdentity)
+        internal Boolean CheckAdministrator(WindowsIdentity currentIdentity)
         {
             if ((new WindowsPrincipal(currentIdentity)).IsInRole(WindowsBuiltInRole.Administrator))
             {
@@ -65,27 +67,27 @@ namespace WheresMyImplant
             IntPtr tokenInformation = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(UInt32)));
             UInt32 returnLength;
 
-            Boolean result = Unmanaged.GetTokenInformation(
+            Boolean result = advapi32.GetTokenInformation(
                 hToken,
-                Enums._TOKEN_INFORMATION_CLASS.TokenElevationType,
+                Winnt._TOKEN_INFORMATION_CLASS.TokenElevationType,
                 tokenInformation,
                 tokenInformationLength,
                 out returnLength
             );
 
-            switch ((Enums.TOKEN_ELEVATION_TYPE)Marshal.ReadInt32(tokenInformation))
+            switch ((Winnt.TOKEN_ELEVATION_TYPE)Marshal.ReadInt32(tokenInformation))
             {
-                case Enums.TOKEN_ELEVATION_TYPE.TokenElevationTypeDefault:
+                case Winnt.TOKEN_ELEVATION_TYPE.TokenElevationTypeDefault:
                     WriteOutputBad("TokenElevationTypeDefault");
                     WriteOutputNeutral("Token: Not Split");
                     WriteOutputNeutral("ProcessIntegrity: Medium/Low");
                     return false;
-                case Enums.TOKEN_ELEVATION_TYPE.TokenElevationTypeFull:
+                case Winnt.TOKEN_ELEVATION_TYPE.TokenElevationTypeFull:
                     WriteOutputGood("TokenElevationTypeFull");
                     WriteOutputNeutral("Token: Split");
                     WriteOutputNeutral("ProcessIntegrity: High");
                     return true;
-                case Enums.TOKEN_ELEVATION_TYPE.TokenElevationTypeLimited:
+                case Winnt.TOKEN_ELEVATION_TYPE.TokenElevationTypeLimited:
                     WriteOutputNeutral("TokenElevationTypeLimited");
                     WriteOutputNeutral("Token: Split - ProcessIntegrity: Medium/Low");
                     WriteOutputNeutral("Hint: Try to Bypass UAC");

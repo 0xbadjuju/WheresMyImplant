@@ -12,15 +12,15 @@ using PVOID = System.IntPtr;
 using LPVOID = System.IntPtr;
 using DWORD_PTR = System.IntPtr;
 
-namespace WheresMyImplant
+namespace Unmanaged
 {
-    class crypt32
+    sealed class crypt32
     {
         public const UInt32 CRYPTPROTECT_UI_FORBIDDEN = 0x1;
         public const UInt32 CRYPTPROTECT_LOCAL_MACHINE = 0x4;
 
         [DllImport("crypt32.dll", SetLastError=true)]
-        internal static extern bool CryptUnprotectData(
+        public static extern bool CryptUnprotectData(
             ref Wincrypt._CRYPTOAPI_BLOB pDataIn,
             LPWSTR ppszDataDescr,
             ref Wincrypt._CRYPTOAPI_BLOB pOptionalEntropy,
@@ -30,8 +30,8 @@ namespace WheresMyImplant
             ref Wincrypt._CRYPTOAPI_BLOB pDataOut
         );
         
-        [DllImport("crypt32.dll", SetLastError = true)]
-        internal static extern bool CryptUnprotectData(
+        [DllImport("crypt32.dll", SetLastError=true)]
+        public static extern bool CryptUnprotectData(
             ref Wincrypt._CRYPTOAPI_BLOB pDataIn,
             LPWSTR ppszDataDescr,
             IntPtr pOptionalEntropy,
@@ -41,8 +41,8 @@ namespace WheresMyImplant
             ref Wincrypt._CRYPTOAPI_BLOB pDataOut
         );
         
-        [DllImport("crypt32.dll", SetLastError = true)]
-        internal static extern bool CryptStringToBinary(
+        [DllImport("crypt32.dll", SetLastError=true)]
+        public static extern bool CryptStringToBinary(
             LPCTSTR pszString,
             DWORD cchString,
             DWORD dwFlags,

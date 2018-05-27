@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
+using Unmanaged;
+
 namespace WheresMyImplant
 {
     //https://github.com/idan1288/ProcessHollowing32-64/blob/master/ProcessHollowing/ProcessHollowing.c
@@ -32,7 +34,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public HollowProcess()
+        internal HollowProcess()
         {
             lpProcessInformation = new Winbase._PROCESS_INFORMATION();
         }
@@ -40,7 +42,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // Creates a suspended process, and then opens a handle to the process
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean CreateSuspendedProcess(String lpApplicationName)
+        internal Boolean CreateSuspendedProcess(String lpApplicationName)
         {
             String lpCommandLine = lpApplicationName;
             Winbase._SECURITY_ATTRIBUTES lpProcessAttributes = new Winbase._SECURITY_ATTRIBUTES();
@@ -73,7 +75,7 @@ namespace WheresMyImplant
         // Reads the PEB Base Address from NtQueryInformationProcess then reads the PEB
         // to get the image base address
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean ReadPEB()
+        internal Boolean ReadPEB()
         {
             UInt32 processInformationLength = (UInt32)Marshal.SizeOf(typeof(ntdll._PROCESS_BASIC_INFORMATION));
             IntPtr processInformation = Marshal.AllocHGlobal((Int32)processInformationLength);
@@ -81,7 +83,7 @@ namespace WheresMyImplant
             try
             {
                 UInt32 returnLength = 0;
-                Int32 returnStatus = ntdll.NtQueryInformationProcess(
+                UInt32 returnStatus = ntdll.NtQueryInformationProcess(
                     lpProcessInformation.hProcess,
                     ntdll.PROCESSINFOCLASS.ProcessBasicInformation,
                     processInformation,
@@ -141,7 +143,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // Reads the Imagef File Headers from the Image Base Address
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean GetTargetArch()
+        internal Boolean GetTargetArch()
         {
             Winbase._SYSTEM_INFO systemInfo;
             kernel32.GetNativeSystemInfo(out systemInfo);
@@ -229,7 +231,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // Reads the NT Headers from the Image Base Address
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean ReadNTHeaders()
+        internal Boolean ReadNTHeaders()
         {
             Int32 nSize = 0;
             IntPtr buffer = IntPtr.Zero;
@@ -296,7 +298,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // Reads in the image to be injected
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean ReadSourceImage(String sourceImage)
+        internal Boolean ReadSourceImage(String sourceImage)
         {
             String file = System.IO.Path.GetFullPath(sourceImage);
             if (!System.IO.File.Exists(file))
@@ -327,7 +329,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // Todo Fix the Page_Execute_Read_Write
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean RemapImage()
+        internal Boolean RemapImage()
         {
             Console.WriteLine("NtUnmapViewOfSection: 0x{0}", targetImageBaseAddress.ToString("X4"));
             UInt32 result = ntdll.NtUnmapViewOfSection(lpProcessInformation.hProcess, targetImageBaseAddress);
@@ -342,7 +344,7 @@ namespace WheresMyImplant
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean RemapImage32()
+        internal Boolean RemapImage32()
         {
             Console.WriteLine("Allocating 0x{0} bytes at 0x{1} - 0x{2}", image.Length.ToString("X4"), targetImageBaseAddress.ToString("X4"), (image.Length + targetImageBaseAddress.ToInt64()).ToString("X4"));
             //allocatedTargetAddress = kernel32.VirtualAllocEx(lpProcessInformation.hProcess, targetImageBaseAddress, imageNTHeader.OptionalHeader.SizeOfImage, 0x00003000, Winnt.PAGE_EXECUTE_READWRITE);
@@ -399,7 +401,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // Unmaps the target image from memory allocs a more memory
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean RemapImage64()
+        internal Boolean RemapImage64()
         {
             ////////////////////////////////////////////////////////////////////////////////
             Console.WriteLine("Allocating 0x{0} bytes at 0x{1} - 0x{2}", image.Length.ToString("X4"), targetImageBaseAddress.ToString("X4"), (image.Length + targetImageBaseAddress.ToInt64()).ToString("X4"));
@@ -442,7 +444,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean ResumeProcess()
+        internal Boolean ResumeProcess()
         {
             return is32Bit ? ResumeProcess32() : ResumeProcess64();
         }
@@ -454,7 +456,7 @@ namespace WheresMyImplant
         // offsetof(Ebx) = 164
         // offsetof(Eax) = 176
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean ResumeProcess32()
+        internal Boolean ResumeProcess32()
         {
             return false;
         }
@@ -466,7 +468,7 @@ namespace WheresMyImplant
         // offsetof(Rdx) = 136
         // offsetof(Rcx) = 128
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean ResumeProcess64()
+        internal Boolean ResumeProcess64()
         {
             Console.WriteLine("\nUpdating Thread Context");
 

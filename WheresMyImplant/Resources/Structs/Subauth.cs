@@ -4,12 +4,12 @@ using USHORT = System.UInt16;
 
 using PWSTR = System.IntPtr;
 
-namespace WheresMyImplant
+namespace Unmanaged
 {
-    class Subauth
+    sealed class Subauth
     {
         [StructLayout(LayoutKind.Sequential)]
-        internal struct _LSA_UNICODE_STRING
+        public struct _LSA_UNICODE_STRING
         {
             USHORT Length;
             USHORT MaximumLength;

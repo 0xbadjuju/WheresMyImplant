@@ -2,29 +2,52 @@
 using System.IO;
 using System.Runtime.InteropServices;
 
+using Unmanaged;
+
 namespace WheresMyImplant
 {
-    public class PELoader
+    [Flags]
+    internal enum IMAGE_DATA_DIRECTORY_OPTIONS : int
     {
-        public Boolean is64Bit;
+        ExportTable = 0,
+        ImportTable = 1,
+        ResourceTable = 2,
+        ExceptionTable = 3,
+        CertificateTable = 4,
+        BaseRelocationTable = 5,
+        Debug = 6,
+        Architecture = 7,
+        GlobalPtr = 8,
+        TLSTable = 9,
+        LoadConfigTable = 10,
+        BoundImport = 11,
+        IAT = 12,
+        DelayImportDescriptor = 13,
+        CLRRuntimeHeader = 14,
+        Reserved = 15
+    }
+
+    internal class PELoader
+    {
+        internal Boolean is64Bit;
         internal Winnt._IMAGE_DOS_HEADER imageDosHeader;
         internal Winnt._IMAGE_FILE_HEADER imageFileHeader;
         internal Winnt._IMAGE_OPTIONAL_HEADER imageOptionalHeader32;
         internal Winnt._IMAGE_OPTIONAL_HEADER64 imageOptionalHeader64;
         internal Winnt._IMAGE_SECTION_HEADER[] imageSectionHeaders;
-        public byte[] imageBytes;
-        public UInt32 sizeOfImage;
-        public UInt32 imageBase;
-        public Int32 baseRelocationTableAddress;
-        public Int32 importTableAddress;
-        public Int32 addressOfEntryPoint;
+        internal byte[] imageBytes;
+        internal UInt32 sizeOfImage;
+        internal UInt32 imageBase;
+        internal Int32 baseRelocationTableAddress;
+        internal Int32 importTableAddress;
+        internal Int32 addressOfEntryPoint;
 
         //https://github.com/mattifestation/PIC_Bindshell/blob/master/lib/PowerShell/Get-PEHeader.ps1
         //https://gist.github.com/subTee/2cb7973b677f37d32f04
         //https://www.microsoft.com/en-us/download/confirmation.aspx?id=19509
         //http://www.csn.ul.ie/~caolan/pub/winresdump/winresdump/doc/pefile.html
 
-        public PELoader(string libary)
+        internal PELoader(string libary)
         {
             FileStream fileStream = new FileStream(libary, System.IO.FileMode.Open, System.IO.FileAccess.Read);
             BinaryReader binaryReader = new BinaryReader(fileStream);
@@ -35,7 +58,7 @@ namespace WheresMyImplant
             imageBytes = System.IO.File.ReadAllBytes(libary);
         }
 
-        public PELoader(byte[] fileBytes)
+        internal PELoader(byte[] fileBytes)
         {
             MemoryStream memoryStream = new MemoryStream(fileBytes, 0, fileBytes.Length);
             BinaryReader binaryReader = new BinaryReader(memoryStream);
@@ -56,8 +79,8 @@ namespace WheresMyImplant
                 case Winnt.IMAGE_FILE_MACHINE.I386:
                     imageOptionalHeader32 = FromBinaryReader<Winnt._IMAGE_OPTIONAL_HEADER>(binaryReader);
                     sizeOfImage = imageOptionalHeader32.SizeOfImage;
-                    baseRelocationTableAddress = (Int32)imageOptionalHeader32.ImageDataDirectory[(Int32)Structs.IMAGE_DATA_DIRECTORY_OPTIONS.BaseRelocationTable].VirtualAddress;
-                    importTableAddress = (Int32)imageOptionalHeader32.ImageDataDirectory[(Int32)Structs.IMAGE_DATA_DIRECTORY_OPTIONS.ImportTable].VirtualAddress;
+                    baseRelocationTableAddress = (Int32)imageOptionalHeader32.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.BaseRelocationTable].VirtualAddress;
+                    importTableAddress = (Int32)imageOptionalHeader32.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.ImportTable].VirtualAddress;
                     addressOfEntryPoint = (Int32)imageOptionalHeader32.AddressOfEntryPoint;
                     Console.WriteLine("ImageBase = {0}", imageOptionalHeader32.ImageBase.ToString("X4"));
                     Console.WriteLine("EntryPoint = {0}", imageOptionalHeader32.AddressOfEntryPoint.ToString("X4"));
@@ -66,8 +89,8 @@ namespace WheresMyImplant
                 case Winnt.IMAGE_FILE_MACHINE.AMD64:
                     imageOptionalHeader64 = FromBinaryReader<Winnt._IMAGE_OPTIONAL_HEADER64>(binaryReader);
                     sizeOfImage = imageOptionalHeader64.SizeOfImage;
-                    baseRelocationTableAddress = (Int32)imageOptionalHeader64.ImageDataDirectory[(Int32)Structs.IMAGE_DATA_DIRECTORY_OPTIONS.BaseRelocationTable].VirtualAddress;
-                    importTableAddress = (Int32)imageOptionalHeader64.ImageDataDirectory[(Int32)Structs.IMAGE_DATA_DIRECTORY_OPTIONS.ImportTable].VirtualAddress;
+                    baseRelocationTableAddress = (Int32)imageOptionalHeader64.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.BaseRelocationTable].VirtualAddress;
+                    importTableAddress = (Int32)imageOptionalHeader64.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.ImportTable].VirtualAddress;
                     addressOfEntryPoint = (Int32)imageOptionalHeader64.AddressOfEntryPoint;
                     Console.WriteLine("ImageBase = {0}", imageOptionalHeader64.ImageBase.ToString("X4"));
                     Console.WriteLine("EntryPoint = {0}", imageOptionalHeader64.AddressOfEntryPoint.ToString("X4"));

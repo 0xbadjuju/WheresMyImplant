@@ -8,12 +8,12 @@ using System.Text;
 
 namespace WheresMyImplant
 {
-    public class Misc
+    internal class Misc
     {
         ////////////////////////////////////////////////////////////////////////////////
         // 
         ////////////////////////////////////////////////////////////////////////////////
-        public static byte[] Combine(byte[] byte1, byte[] byte2)
+        internal static byte[] Combine(byte[] byte1, byte[] byte2)
         {
             Int32 dwSize = byte1.Length + byte2.Length;
             MemoryStream memoryStream = new MemoryStream(new byte[dwSize], 0, dwSize, true, true);
@@ -26,7 +26,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // 
         ////////////////////////////////////////////////////////////////////////////////
-        public static byte[] RC4Encrypt(byte[] RC4Key, byte[] data)
+        internal static byte[] RC4Encrypt(byte[] RC4Key, byte[] data)
         {
             byte[] output = new byte[data.Length];
             byte[] s = new byte[256];
@@ -63,7 +63,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public static Boolean Is64BitOs()
+        internal static Boolean Is64BitOs()
         {
             if (Directory.Exists(@"C:\Program Files (x86)\"))
             {
@@ -80,7 +80,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public static double GetOSVersion()
+        internal static double GetOSVersion()
         {
             double version = 0.0;
             System.OperatingSystem system = Environment.OSVersion;
@@ -89,7 +89,10 @@ namespace WheresMyImplant
             return version;
         }
 
-        public static string Base64Decode(String encodedString)
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal static string Base64Decode(String encodedString)
         {
             byte[] data = Convert.FromBase64String(encodedString);
             return System.Text.Encoding.UTF8.GetString(data);
@@ -105,7 +108,10 @@ namespace WheresMyImplant
             return new String(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
-        public static void PrintStruct<T>(T imageDosHeader)
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal static void PrintStruct<T>(T imageDosHeader)
         {
             System.Reflection.FieldInfo[] fields = imageDosHeader.GetType().GetFields();
             Console.WriteLine("==========");
@@ -114,6 +120,14 @@ namespace WheresMyImplant
                 Console.WriteLine("Field {0,-20}", xInfo.GetValue(imageDosHeader).ToString());
             }
             Console.WriteLine("==========");
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal static string GetError()
+        {
+            return new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message;
         }
     }
 }

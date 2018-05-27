@@ -5,7 +5,7 @@ using System.Text;
 
 namespace WheresMyImplant
 {
-    public class Base
+    internal abstract class Base 
     {
         protected StringBuilder stringBuilder = new StringBuilder();
 
@@ -31,7 +31,7 @@ namespace WheresMyImplant
             stringBuilder.Append("[-] " + errorMessage + "\n");
         }
 
-        public string GetOutput()
+        internal string GetOutput()
         {
             return stringBuilder.ToString().Trim();
         }

@@ -14,7 +14,7 @@ namespace WheresMyImplant
     {
         //Because why not
         //https://github.com/jaredcatkinson/EvilNetConnectionWMIProvider/blob/master/EvilNetConnectionWMIProvider/EvilNetConnectionWMIProvider.cs
-        public RunPowerShell(string command)
+        internal RunPowerShell(string command)
         {
             Runspace runspace = RunspaceFactory.CreateRunspace();
             runspace.Open();

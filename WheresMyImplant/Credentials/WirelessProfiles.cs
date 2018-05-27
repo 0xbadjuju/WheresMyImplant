@@ -13,7 +13,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public WirelessProfiles() : base()
+        internal WirelessProfiles() : base()
         {
             interfaces = Directory.GetDirectories(@"C:\ProgramData\Microsoft\Wlansvc\Profiles\Interfaces\");
         }
@@ -21,7 +21,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public void GetProfiles()
+        internal void GetProfiles()
         {
             WriteOutput(String.Format("{0,-20} {1,-63}", "SSID", "PSK"));
             WriteOutput(String.Format("{0,-20} {1,-63}", "----", "---"));
@@ -47,7 +47,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // Decrypts an input string via the DPAPI
         ////////////////////////////////////////////////////////////////////////////////
-        public static String DPAPIDecrypt(String input)
+        internal static String DPAPIDecrypt(String input)
         {
             Char[] array = input.ToCharArray();
             Int32 hold;

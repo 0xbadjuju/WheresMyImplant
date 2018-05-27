@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 using WORD = System.UInt16;
 using DWORD = System.UInt32;
@@ -10,9 +11,9 @@ using LPVOID = System.IntPtr;
 using DWORD_PTR = System.IntPtr;
 using SIZE_T = System.IntPtr;
 
-namespace WheresMyImplant
+namespace Unmanaged
 {
-    public class Winnt
+    sealed class Winnt
     {
         private const DWORD EXCEPTION_MAXIMUM_PARAMETERS = 15;
 
@@ -32,6 +33,112 @@ namespace WheresMyImplant
         public const DWORD PAGE_WRITECOMBINE = 0x400;
         public const DWORD PAGE_TARGETS_INVALID = 0x40000000;
         public const DWORD PAGE_TARGETS_NO_UPDATE = 0x40000000;
+
+        [Flags]
+        public enum ACCESS_MASK : uint
+        {
+            DELETE = 0x00010000,
+            READ_CONTROL = 0x00020000,
+            WRITE_DAC = 0x00040000,
+            WRITE_OWNER = 0x00080000,
+            SYNCHRONIZE = 0x00100000,
+            STANDARD_RIGHTS_REQUIRED = 0x000F0000,
+            STANDARD_RIGHTS_READ = 0x00020000,
+            STANDARD_RIGHTS_WRITE = 0x00020000,
+            STANDARD_RIGHTS_EXECUTE = 0x00020000,
+            STANDARD_RIGHTS_ALL = 0x001F0000,
+            SPECIFIC_RIGHTS_ALL = 0x0000FFF,
+            ACCESS_SYSTEM_SECURITY = 0x01000000,
+            MAXIMUM_ALLOWED = 0x02000000,
+            GENERIC_READ = 0x80000000,
+            GENERIC_WRITE = 0x40000000,
+            GENERIC_EXECUTE = 0x20000000,
+            GENERIC_ALL = 0x10000000,
+            DESKTOP_READOBJECTS = 0x00000001,
+            DESKTOP_CREATEWINDOW = 0x00000002,
+            DESKTOP_CREATEMENU = 0x00000004,
+            DESKTOP_HOOKCONTROL = 0x00000008,
+            DESKTOP_JOURNALRECORD = 0x00000010,
+            DESKTOP_JOURNALPLAYBACK = 0x00000020,
+            DESKTOP_ENUMERATE = 0x00000040,
+            DESKTOP_WRITEOBJECTS = 0x00000080,
+            DESKTOP_SWITCHDESKTOP = 0x00000100,
+            WINSTA_ENUMDESKTOPS = 0x00000001,
+            WINSTA_READATTRIBUTES = 0x00000002,
+            WINSTA_ACCESSCLIPBOARD = 0x00000004,
+            WINSTA_CREATEDESKTOP = 0x00000008,
+            WINSTA_WRITEATTRIBUTES = 0x00000010,
+            WINSTA_ACCESSGLOBALATOMS = 0x00000020,
+            WINSTA_EXITWINDOWS = 0x00000040,
+            WINSTA_ENUMERATE = 0x00000100,
+            WINSTA_READSCREEN = 0x00000200,
+            WINSTA_ALL_ACCESS = 0x0000037F
+        };
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _LUID_AND_ATTRIBUTES
+        {
+            public _LUID Luid;
+            public UInt32 Attributes;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _LUID
+        {
+            public UInt32 LowPart;
+            public UInt32 HighPart;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SID_AND_ATTRIBUTES
+        {
+            public IntPtr Sid;
+            public UInt32 Attributes;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct TOKEN_MANDATORY_LABEL
+        {
+            public SID_AND_ATTRIBUTES Label;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _TOKEN_PRIVILEGES
+        {
+            public UInt32 PrivilegeCount;
+            public _LUID_AND_ATTRIBUTES Privileges;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _TOKEN_PRIVILEGES_ARRAY
+        {
+            public UInt32 PrivilegeCount;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 30)]
+            public _LUID_AND_ATTRIBUTES[] Privileges;
+        }
+
+        [Flags]
+        public enum TOKEN_TYPE
+        {
+            TokenPrimary = 1,
+            TokenImpersonation
+        }
+
+        [Flags]
+        public enum _SECURITY_IMPERSONATION_LEVEL : int
+        {
+            SecurityAnonymous = 0,
+            SecurityIdentification = 1,
+            SecurityImpersonation = 2,
+            SecurityDelegation = 3
+        };
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _SID_IDENTIFIER_AUTHORITY
+        {
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6, ArraySubType = UnmanagedType.I1)]
+            public byte[] Value;
+        }
 
         public enum CONTEXT_FLAGS : uint
         {
@@ -198,29 +305,6 @@ namespace WheresMyImplant
 
             public _XMM_SAVE_AREA32 FltSave;
 
-            /*
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
-            public _M128A[] Header;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
-            public _M128A[] Legacy;
-            public _M128A Xmm0;
-            public _M128A Xmm1;
-            public _M128A Xmm2;
-            public _M128A Xmm3;
-            public _M128A Xmm4;
-            public _M128A Xmm5;
-            public _M128A Xmm6;
-            public _M128A Xmm7;
-            public _M128A Xmm8;
-            public _M128A Xmm9;
-            public _M128A Xmm10;
-            public _M128A Xmm11;
-            public _M128A Xmm12;
-            public _M128A Xmm13;
-            public _M128A Xmm14;
-            public _M128A Xmm15;
-             */
-
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 26)]
             public _M128A[] VectorRegister;
             public ulong VectorControl;
@@ -233,7 +317,7 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct _EXCEPTION_POINTERS
+        public struct _EXCEPTION_POINTERS
         {
             public System.IntPtr ExceptionRecord;
             public System.IntPtr ContextRecord;
@@ -252,14 +336,14 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        internal struct _IMAGE_DATA_DIRECTORY
+        public struct _IMAGE_DATA_DIRECTORY
         {
             public DWORD VirtualAddress;
             public DWORD Size;
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        internal struct _IMAGE_DOS_HEADER
+        public struct _IMAGE_DOS_HEADER
         {
             public WORD e_magic;
             public WORD e_cblp;
@@ -293,7 +377,7 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        internal struct _IMAGE_NT_HEADERS
+        public struct _IMAGE_NT_HEADERS
         {
             public DWORD Signature;                         
             public _IMAGE_FILE_HEADER FileHeader;           
@@ -301,7 +385,7 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        internal struct _IMAGE_NT_HEADERS64
+        public struct _IMAGE_NT_HEADERS64
         {
             public DWORD Signature;
             public _IMAGE_FILE_HEADER FileHeader;
@@ -309,7 +393,7 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        internal struct _IMAGE_FILE_HEADER
+        public struct _IMAGE_FILE_HEADER
         {
             public IMAGE_FILE_MACHINE Machine;
             public WORD NumberOfSections;
@@ -321,7 +405,7 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        internal struct _IMAGE_OPTIONAL_HEADER
+        public struct _IMAGE_OPTIONAL_HEADER
         {
             public WORD Magic;
             public byte MajorLinkerVersion;
@@ -358,7 +442,7 @@ namespace WheresMyImplant
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        internal struct _IMAGE_OPTIONAL_HEADER64
+        public struct _IMAGE_OPTIONAL_HEADER64
         {
             public WORD Magic;
             public byte MajorLinkerVersion;
@@ -394,7 +478,7 @@ namespace WheresMyImplant
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        internal struct _IMAGE_SECTION_HEADER
+        public struct _IMAGE_SECTION_HEADER
         {
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
             public char[] Name;
@@ -410,7 +494,7 @@ namespace WheresMyImplant
         };
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct _MEMORY_BASIC_INFORMATION32
+        public struct _MEMORY_BASIC_INFORMATION32
         {
             public DWORD BaseAddress;
             public DWORD AllocationBase;
@@ -422,7 +506,7 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct _MEMORY_BASIC_INFORMATION64 
+        public struct _MEMORY_BASIC_INFORMATION64 
         {
             public ULONGLONG BaseAddress;
             public ULONGLONG AllocationBase;
@@ -433,6 +517,60 @@ namespace WheresMyImplant
             public DWORD Protect;
             public DWORD Type;
             public DWORD __alignment2;
+        }
+
+        [Flags]
+        public enum TOKEN_ELEVATION_TYPE
+        {
+            TokenElevationTypeDefault = 1,
+            TokenElevationTypeFull,
+            TokenElevationTypeLimited
+        }
+
+        [Flags]
+        public enum _TOKEN_INFORMATION_CLASS
+        {
+            TokenUser = 1,
+            TokenGroups,
+            TokenPrivileges,
+            TokenOwner,
+            TokenPrimaryGroup,
+            TokenDefaultDacl,
+            TokenSource,
+            TokenType,
+            TokenImpersonationLevel,
+            TokenStatistics,
+            TokenRestrictedSids,
+            TokenSessionId,
+            TokenGroupsAndPrivileges,
+            TokenSessionReference,
+            TokenSandBoxInert,
+            TokenAuditPolicy,
+            TokenOrigin,
+            TokenElevationType,
+            TokenLinkedToken,
+            TokenElevation,
+            TokenHasRestrictions,
+            TokenAccessInformation,
+            TokenVirtualizationAllowed,
+            TokenVirtualizationEnabled,
+            TokenIntegrityLevel,
+            TokenUIAccess,
+            TokenMandatoryPolicy,
+            TokenLogonSid,
+            TokenIsAppContainer,
+            TokenCapabilities,
+            TokenAppContainerSid,
+            TokenAppContainerNumber,
+            TokenUserClaimAttributes,
+            TokenDeviceClaimAttributes,
+            TokenRestrictedUserClaimAttributes,
+            TokenRestrictedDeviceClaimAttributes,
+            TokenDeviceGroups,
+            TokenRestrictedDeviceGroups,
+            TokenSecurityAttributes,
+            TokenIsRestricted,
+            MaxTokenInfoClass
         }
     }
 }

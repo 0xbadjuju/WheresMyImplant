@@ -15,7 +15,7 @@ namespace WheresMyImplant
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public Services(String serviceName)
+        internal Services(String serviceName)
         {
             this.serviceName = serviceName;
             service = new ServiceController(serviceName);
@@ -23,7 +23,7 @@ namespace WheresMyImplant
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean StartService()
+        internal Boolean StartService()
         {
             WriteOutputNeutral("Starting Service " + serviceName);
             if (service.Status == ServiceControllerStatus.Running)
@@ -51,7 +51,7 @@ namespace WheresMyImplant
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean StopService()
+        internal Boolean StopService()
         {
             WriteOutputGood("Stopping Service " + serviceName);
             if (service.CanStop)
@@ -101,7 +101,7 @@ namespace WheresMyImplant
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public UInt32 GetServiceProcessId()
+        internal UInt32 GetServiceProcessId()
         {
             List<ManagementObject> systemProcesses = new List<ManagementObject>();
             ManagementScope scope = new ManagementScope("\\\\.\\root\\cimv2");

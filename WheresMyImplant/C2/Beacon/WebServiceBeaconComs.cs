@@ -19,7 +19,7 @@ namespace WheresMyImplant
     }
 
     ////////////////////////////////////////////////////////////////////////////////
-    public class WebServiceBeaconComs
+    internal class WebServiceBeaconComs
     {
         private static BasicHttpBinding httpBinding = new BasicHttpBinding();
 

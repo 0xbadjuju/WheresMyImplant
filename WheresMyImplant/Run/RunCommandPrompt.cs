@@ -10,9 +10,7 @@ namespace WheresMyImplant
 {
     class RunCommandPrompt : Base
     {
-        private StringBuilder stringBuilder = new StringBuilder();
-
-        public RunCommandPrompt(string command, string parameters)
+        internal RunCommandPrompt(string command, string parameters)
         {
             Process process = new Process();
             process.StartInfo.UseShellExecute = false;

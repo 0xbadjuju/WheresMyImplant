@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace WheresMyImplant
+namespace Unmanaged
 {
-    class vaultcli
+    sealed class vaultcli
     {
         [DllImport("vaultcli.dll", CharSet = CharSet.Auto)]
         public static extern Boolean VaultEnumerateItems(

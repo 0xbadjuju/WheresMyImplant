@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
+using Unmanaged;
+
 namespace WheresMyImplant
 {
-    public class InjectDll : Base
+    internal class InjectDll : Base
     {
         InjectDll(string library)
         {
@@ -11,7 +13,7 @@ namespace WheresMyImplant
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = (UInt32)((library.Length + 1) * Marshal.SizeOf(typeof(char)));
             WriteOutputNeutral("Attempting to allocate memory");
-            IntPtr lpBaseAddress = kernel32.VirtualAlloc(lpAddress, dwSize, Unmanaged.MEM_COMMIT | Unmanaged.MEM_RESERVE, Winnt.PAGE_READWRITE);
+            IntPtr lpBaseAddress = kernel32.VirtualAlloc(lpAddress, dwSize, kernel32.MEM_COMMIT | kernel32.MEM_RESERVE, Winnt.PAGE_READWRITE);
             WriteOutputGood("Allocated " + dwSize + " at " + lpBaseAddress);
 
             ////////////////////////////////////////////////////////////////////////////////
@@ -25,7 +27,7 @@ namespace WheresMyImplant
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 lpflOldProtect = 0;
             WriteOutputNeutral("Attempting to Alter Memory Protections to PAGE_EXECUTE_READ");
-            Boolean virtualProtectExResult = Unmanaged.VirtualProtect(lpBaseAddress, dwSize, Winnt.PAGE_EXECUTE_READ, ref lpflOldProtect);
+            Boolean virtualProtectExResult = kernel32.VirtualProtect(lpBaseAddress, dwSize, Winnt.PAGE_EXECUTE_READ, ref lpflOldProtect);
             if (virtualProtectExResult)
             {
                 WriteOutputGood("Set Memory Protection to PAGE_EXECUTE_READ");

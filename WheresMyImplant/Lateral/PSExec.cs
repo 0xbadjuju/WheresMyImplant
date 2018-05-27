@@ -2,9 +2,11 @@
 using System.Linq;
 using System.Runtime.InteropServices;
 
+using Unmanaged;
+
 namespace WheresMyImplant
 {
-    class PSExec : IDisposable
+    sealed class PSExec : IDisposable
     {
         String serviceName;
         IntPtr hServiceManager;
@@ -48,7 +50,7 @@ namespace WheresMyImplant
             disposed = true;
             if (IntPtr.Zero != hSCObject)
             {
-                Advapi32.CloseServiceHandle(hSCObject);
+                advapi32.CloseServiceHandle(hSCObject);
             }
 
             if (IntPtr.Zero != hServiceManager)
@@ -60,9 +62,9 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean Connect(String machineName)
+        internal Boolean Connect(String machineName)
         {
-            hServiceManager = Advapi32.OpenSCManager(
+            hServiceManager = advapi32.OpenSCManager(
                 machineName, null, Winsvc.dwSCManagerDesiredAccess.SC_MANAGER_CONNECT | Winsvc.dwSCManagerDesiredAccess.SC_MANAGER_CREATE_SERVICE
             );
 
@@ -79,11 +81,11 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // Creates a service
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean Create(String lpBinaryPathName)
+        internal Boolean Create(String lpBinaryPathName)
         {
             Console.WriteLine("[*] Creating service {0}", serviceName);
             //Console.WriteLine(lpBinaryPathName);
-            IntPtr hSCObject = Advapi32.CreateService(
+            IntPtr hSCObject = advapi32.CreateService(
                 hServiceManager,
                 serviceName, serviceName,
                 Winsvc.dwDesiredAccess.SERVICE_ALL_ACCESS,
@@ -101,7 +103,7 @@ namespace WheresMyImplant
                 return false;
             }
 
-            Advapi32.CloseServiceHandle(hSCObject);
+            advapi32.CloseServiceHandle(hSCObject);
             Console.WriteLine("[+] Created service");
             return true;
         }
@@ -109,9 +111,9 @@ namespace WheresMyImplant
         ///////////////////////////////////////////////////////////////////////////////
         // Opens a handle to a service
         ///////////////////////////////////////////////////////////////////////////////
-        public Boolean Open()
+        internal Boolean Open()
         {
-            hSCObject = Advapi32.OpenService(hServiceManager, serviceName, Winsvc.dwDesiredAccess.SERVICE_ALL_ACCESS);
+            hSCObject = advapi32.OpenService(hServiceManager, serviceName, Winsvc.dwDesiredAccess.SERVICE_ALL_ACCESS);
 
             if (IntPtr.Zero == hSCObject)
             {
@@ -127,9 +129,9 @@ namespace WheresMyImplant
         ///////////////////////////////////////////////////////////////////////////////
         // Starts the service, if there is a start timeout error, return true
         ///////////////////////////////////////////////////////////////////////////////
-        public Boolean Start()
+        internal Boolean Start()
         {
-            if (!Advapi32.StartService(hSCObject, 0, null))
+            if (!advapi32.StartService(hSCObject, 0, null))
             {
                 Int32 error = Marshal.GetLastWin32Error();
                 if (1053 != error)
@@ -146,10 +148,10 @@ namespace WheresMyImplant
         ///////////////////////////////////////////////////////////////////////////////
         // Stops the service, if service is already stopped returns true
         ///////////////////////////////////////////////////////////////////////////////
-        public Boolean Stop()
+        internal Boolean Stop()
         {
             Winsvc._SERVICE_STATUS serviceStatus;
-            IntPtr hControlService = Advapi32.ControlService(hSCObject, Winsvc.dwControl.SERVICE_CONTROL_STOP, out serviceStatus);
+            IntPtr hControlService = advapi32.ControlService(hSCObject, Winsvc.dwControl.SERVICE_CONTROL_STOP, out serviceStatus);
 
             if (IntPtr.Zero == hControlService)
             {
@@ -168,9 +170,9 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // Deletes the service
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean Delete()
+        internal Boolean Delete()
         {
-            if (!Advapi32.DeleteService(hSCObject))
+            if (!advapi32.DeleteService(hSCObject))
             {
                 Console.WriteLine("[-] Failed to delete service");
                 Console.WriteLine(Marshal.GetLastWin32Error());

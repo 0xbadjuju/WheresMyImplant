@@ -5,17 +5,19 @@ using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 
+using Unmanaged;
+
 namespace WheresMyImplant
 {
-    class BaseRemote : Base
+    internal abstract class BaseRemote : Base
     {
         private IntPtr hProcess;
 
         ////////////////////////////////////////////////////////////////////////////////
-        public BaseRemote(UInt32 processId)
+        internal BaseRemote(UInt32 processId)
         {
             WriteOutputNeutral("Attempting to get handle on PID: " + processId);
-            hProcess = Unmanaged.OpenProcess(Unmanaged.PROCESS_ALL_ACCESS, false, processId);
+            hProcess = kernel32.OpenProcess(kernel32.PROCESS_ALL_ACCESS, false, processId);
             if (IntPtr.Zero == hProcess)
             {
                 WriteOutputBad("Unable to get process handle");
@@ -28,10 +30,10 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public IntPtr VirtualAllocExChecked(IntPtr lpAddress, UInt32 dwSize)
+        internal IntPtr VirtualAllocExChecked(IntPtr lpAddress, UInt32 dwSize)
         {
             IntPtr lpBaseAddress = kernel32.VirtualAllocEx(
-                hProcess, lpAddress, dwSize, Unmanaged.MEM_COMMIT, Winnt.PAGE_EXECUTE_READWRITE
+                hProcess, lpAddress, dwSize, kernel32.MEM_COMMIT, Winnt.PAGE_EXECUTE_READWRITE
             );
 
             if (IntPtr.Zero == lpBaseAddress)
@@ -50,7 +52,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean WriteProcessMemoryChecked(
+        internal Boolean WriteProcessMemoryChecked(
             IntPtr lpBaseAddress,
             IntPtr lpBuffer,
             UInt32 dwSize,
@@ -82,7 +84,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean WriteProcessMemoryUnChecked(
+        internal Boolean WriteProcessMemoryUnChecked(
             IntPtr lpBaseAddress,
             IntPtr lpBuffer,
             UInt32 dwSize,
@@ -113,7 +115,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean ReadProcessMemoryChecked(
+        internal Boolean ReadProcessMemoryChecked(
             IntPtr lpBaseAddress,
             IntPtr lpBuffer,
             UInt32 dwSize,
@@ -121,7 +123,7 @@ namespace WheresMyImplant
         )
         {
             UInt32 dwNumberOfBytesRead = 0;
-            Boolean readProcessMemoryResult = Unmanaged.ReadProcessMemory(
+            Boolean readProcessMemoryResult = kernel32.ReadProcessMemory(
                 hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesRead
             );
 
@@ -147,7 +149,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean ReadProcessMemoryUnChecked(
+        internal Boolean ReadProcessMemoryUnChecked(
             IntPtr lpBaseAddress,
             IntPtr lpBuffer,
             UInt32 dwSize,
@@ -155,7 +157,7 @@ namespace WheresMyImplant
         )
         {
             UInt32 dwNumberOfBytesRead = 0;
-            Boolean readProcessMemoryResult = Unmanaged.ReadProcessMemory(
+            Boolean readProcessMemoryResult = kernel32.ReadProcessMemory(
                 hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesRead
             );
 
@@ -171,22 +173,19 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public IntPtr CreateRemoteThreadChecked(IntPtr lpStartAddress, IntPtr lpParameter)
+        internal IntPtr CreateRemoteThreadChecked(IntPtr lpStartAddress, IntPtr lpParameter)
         {
             IntPtr lpThreadAttributes = IntPtr.Zero;
             UInt32 dwStackSize = 0;
             UInt32 dwCreationFlags = 0;
             UInt32 lpThreadId = 0;
-            IntPtr hThread = Unmanaged.CreateRemoteThread(
-                hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, ref lpThreadId
-            );
-
+            IntPtr hThread = kernel32.CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, ref lpThreadId);
             WriteOutputGood("Thread Created " + lpThreadId);
             return hThread;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public T PtrToStructureRemote<T>(IntPtr pointer)
+        internal T PtrToStructureRemote<T>(IntPtr pointer)
         {
             UInt32 imageSizeOfStruct = (UInt32)Marshal.SizeOf(typeof(T));
             byte[] structBuffer = new byte[imageSizeOfStruct];
@@ -199,7 +198,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Int16 ReadInt16Remote(IntPtr pointer, Int32 offset)
+        internal Int16 ReadInt16Remote(IntPtr pointer, Int32 offset)
         {
             Int16 integer = 0;
             GCHandle pinnedInteger = GCHandle.Alloc(integer, GCHandleType.Pinned);
@@ -215,7 +214,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Int32 PtrToInt32Remote(IntPtr pointer)
+        internal Int32 PtrToInt32Remote(IntPtr pointer)
         {
             Int32 integer = 0;
             GCHandle pinnedInteger = GCHandle.Alloc(integer, GCHandleType.Pinned);
@@ -226,7 +225,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Int64 ReadInt64Remote(IntPtr pointer)
+        internal Int64 ReadInt64Remote(IntPtr pointer)
         {
             Int64 integer = 0;
             GCHandle pinnedInteger = GCHandle.Alloc(integer, GCHandleType.Pinned);
@@ -238,7 +237,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean WriteInt64Remote(IntPtr pointer, Int64 value)
+        internal Boolean WriteInt64Remote(IntPtr pointer, Int64 value)
         {
             GCHandle pinnedInteger = GCHandle.Alloc(value, GCHandleType.Pinned);
             IntPtr lpInteger = new IntPtr((Int64)pinnedInteger.AddrOfPinnedObject());
@@ -253,7 +252,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public string PtrToStringAnsiRemote(IntPtr pointer)
+        internal string PtrToStringAnsiRemote(IntPtr pointer)
         {
             int offset = 0;
             string stringResult = "";
@@ -271,16 +270,16 @@ namespace WheresMyImplant
             return stringResult;
         }
 
-        public IntPtr LoadLibraryRemote(string library)
+        internal IntPtr LoadLibraryRemote(string library)
         {
             ////////////////////////////////////////////////////////////////////////////////
-            IntPtr hmodule = Unmanaged.GetModuleHandle("kernel32.dll");
-            IntPtr loadLibraryAddr = Unmanaged.GetProcAddress(hmodule, "LoadLibraryA");
+            IntPtr hmodule = kernel32.GetModuleHandle("kernel32.dll");
+            IntPtr loadLibraryAddr = kernel32.GetProcAddress(hmodule, "LoadLibraryA");
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = (UInt32)((library.Length + 1) * Marshal.SizeOf(typeof(char)));
-            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, lpAddress, dwSize, Unmanaged.MEM_COMMIT | Unmanaged.MEM_RESERVE, Winnt.PAGE_READWRITE);
+            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, lpAddress, dwSize, kernel32.MEM_COMMIT | kernel32.MEM_RESERVE, Winnt.PAGE_READWRITE);
 
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 lpNumberOfBytesWritten = 0;
@@ -297,13 +296,13 @@ namespace WheresMyImplant
             IntPtr lpParameter = IntPtr.Zero;
             UInt32 dwCreationFlags = 0;
             UInt32 threadId = 0;
-            IntPtr hThread = Unmanaged.CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, loadLibraryAddr, lpBaseAddress, dwCreationFlags, ref threadId);
+            IntPtr hThread = kernel32.CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, loadLibraryAddr, lpBaseAddress, dwCreationFlags, ref threadId);
             return hThread;
         }
 
-        public void WaitForSingleObjectExRemote(IntPtr hThread)
+        internal void WaitForSingleObjectExRemote(IntPtr hThread)
         {
-            Unmanaged.WaitForSingleObjectEx(hProcess, hThread, 0xFFFFFFFF);
+            kernel32.WaitForSingleObjectEx(hProcess, hThread, 0xFFFFFFFF);
         }
     }
 }

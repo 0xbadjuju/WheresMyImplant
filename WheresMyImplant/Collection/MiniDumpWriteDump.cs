@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 
+using Unmanaged;
+
 namespace WheresMyImplant
 {
     class MiniDumpWriteDump : Base

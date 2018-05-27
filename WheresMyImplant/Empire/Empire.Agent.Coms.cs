@@ -19,12 +19,12 @@ namespace WheresMyImplant
         private String sessionKey { get; set; }
         private Byte[] sessionKeyBytes { get; set; }
 
-        public Int32 agentDelay {get; set;}
-        public Int32 agentJitter { get; set; }
-        public Int32 sleepTime { get; set; }
+        internal Int32 agentDelay {get; set;}
+        internal Int32 agentJitter { get; set; }
+        internal Int32 sleepTime { get; set; }
 
-        public Int32 missedCheckins { get; set; }
-        public Int32 lostLimit { get; set; }
+        internal Int32 missedCheckins { get; set; }
+        internal Int32 lostLimit { get; set; }
 
         private Int32 ServerIndex = 0;
         private String[] controlServers { get; set; }
@@ -318,16 +318,16 @@ namespace WheresMyImplant
         // Working
         ////////////////////////////////////////////////////////////////////////////////
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct PACKET
+        internal struct PACKET
         {
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
-            public UInt16 type;
-            public UInt16 totalPackets;
-            public UInt16 packetNumber;
-            public UInt16 taskId;
-            public UInt32 length;
-            public String data;
-            public String remaining;
+            internal UInt16 type;
+            internal UInt16 totalPackets;
+            internal UInt16 packetNumber;
+            internal UInt16 taskId;
+            internal UInt32 length;
+            internal String data;
+            internal String remaining;
         };
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -362,7 +362,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Byte[] task41(PACKET packet)
+        internal Byte[] task41(PACKET packet)
         {
             try
             {
@@ -501,7 +501,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Byte[] task101(Coms.PACKET packet)
+        internal Byte[] task101(Coms.PACKET packet)
         {
             String prefix = packet.data.Substring(0, 15);
             String extension = packet.data.Substring(15, 5);
@@ -510,7 +510,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Byte[] task120(Coms.PACKET packet)
+        internal Byte[] task120(Coms.PACKET packet)
         {
             Random random = new Random();
             Byte[] initializationVector = new Byte[16];
@@ -520,7 +520,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Byte[] task121(Coms.PACKET packet)
+        internal Byte[] task121(Coms.PACKET packet)
         {
             Byte[] scriptBytes = EmpireStager.aesDecrypt(sessionKey, jobTracking.importedScript);
             String script = Encoding.UTF8.GetString(scriptBytes);

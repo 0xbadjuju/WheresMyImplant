@@ -17,7 +17,7 @@ namespace WheresMyImplant
         private NamedPipeServerStream namedPipeServerStream;
         private Dictionary<String, Type> mapping = new Dictionary<String, Type>();
 
-        public SMBServer()
+        internal SMBServer()
         {
             SecurityIdentifier sid = new SecurityIdentifier(WellKnownSidType.AuthenticatedUserSid, null);
             PipeAccessRule access = new PipeAccessRule(sid, PipeAccessRights.ReadWrite, AccessControlType.Allow);
@@ -73,7 +73,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public SMBServer(String pipeName)
+        internal SMBServer(String pipeName)
         {
             SecurityIdentifier sid = new SecurityIdentifier(WellKnownSidType.AuthenticatedUserSid, null);
             PipeAccessRule access = new PipeAccessRule(sid, PipeAccessRights.ReadWrite, AccessControlType.Allow);

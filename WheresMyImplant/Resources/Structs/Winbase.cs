@@ -10,13 +10,13 @@ using QWORD = System.UInt64;
 using LPVOID = System.IntPtr;
 using DWORD_PTR = System.IntPtr;
 
-namespace WheresMyImplant
+namespace Unmanaged
 {
-    public class Winbase
+    sealed class Winbase
     {
         //https://msdn.microsoft.com/en-us/library/windows/desktop/ms682434(v=vs.85).aspx
         [Flags]
-        internal enum CREATION_FLAGS : uint
+        public enum CREATION_FLAGS : uint
         {
             NONE = 0x0,
             CREATE_DEFAULT_ERROR_MODE = 0x04000000,
@@ -30,7 +30,7 @@ namespace WheresMyImplant
 
         //https://msdn.microsoft.com/en-us/library/windows/desktop/ms684873(v=vs.85).aspx
         [StructLayout(LayoutKind.Sequential)]
-        internal struct _PROCESS_INFORMATION
+        public struct _PROCESS_INFORMATION
         {
             public IntPtr hProcess;
             public IntPtr hThread;
@@ -39,7 +39,7 @@ namespace WheresMyImplant
         };
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct _SECURITY_ATTRIBUTES
+        public struct _SECURITY_ATTRIBUTES
         {
             public DWORD nLength;
             public LPVOID lpSecurityDescriptor;
@@ -47,7 +47,7 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct _STARTUPINFO
+        public struct _STARTUPINFO
         {
             public UInt32 cb;
             public String lpReserved;
@@ -71,13 +71,13 @@ namespace WheresMyImplant
 
         //https://msdn.microsoft.com/en-us/library/windows/desktop/ms686331(v=vs.85).aspx
         [StructLayout(LayoutKind.Sequential)]
-        internal struct _STARTUPINFOEX
+        public struct _STARTUPINFOEX
         {
             _STARTUPINFO StartupInfo;
             // PPROC_THREAD_ATTRIBUTE_LIST lpAttributeList;
         };
 
-        internal enum INFO_PROCESSOR_ARCHITECTURE : ushort
+        public enum INFO_PROCESSOR_ARCHITECTURE : ushort
         {
             PROCESSOR_ARCHITECTURE_INTEL = 0,
             PROCESSOR_ARCHITECTURE_ARM = 5,
@@ -88,7 +88,7 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct _SYSTEM_INFO 
+        public struct _SYSTEM_INFO 
         {
             public INFO_PROCESSOR_ARCHITECTURE wProcessorArchitecture;
             public WORD wReserved;

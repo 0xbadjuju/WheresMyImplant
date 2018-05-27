@@ -100,13 +100,13 @@
     <Compile Include="Resources\CheckPrivileges.cs" />
     <Compile Include="Resources\Registry.cs" />
     <Compile Include="Resources\Constants.cs" />
-    <Compile Include="Resources\Enums.cs" />
     <Compile Include="Resources\Misc.cs" />
     <Compile Include="Resources\PELoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources\Services.cs" />
     <Compile Include="Resources\Structs\minidumpapiset.cs" />
     <Compile Include="Resources\Structs\Subauth.cs" />
+    <Compile Include="Resources\Structs\WinCred.cs" />
     <Compile Include="Resources\Structs\Wincrypt.cs" />
     <Compile Include="Resources\Structs\Winnt.cs" />
     <Compile Include="Resources\Structs\Winbase.cs" />
@@ -117,12 +117,10 @@
     <Compile Include="Resources\Unmanaged\dbghelp.cs" />
     <Compile Include="Resources\Unmanaged\kernel32.cs" />
     <Compile Include="Resources\Unmanaged\ntdll.cs" />
-    <Compile Include="Resources\Unmanaged\Unmanaged.cs" />
     <Compile Include="Resources\Unmanaged\vaultcli.cs" />
     <Compile Include="Resources\Unmanaged\wlanapi.cs" />
     <Compile Include="Run\RunCommandPrompt.cs" />
     <Compile Include="Run\RunPowerShell.cs" />
-    <Compile Include="Resources\Structs.cs" />
     <Compile Include="Run\RunXPCmdShell.cs" />
     <Compile Include="C2\Implant\WebService.cs" />
     <Compile Include="Credentials\Vault.cs" />

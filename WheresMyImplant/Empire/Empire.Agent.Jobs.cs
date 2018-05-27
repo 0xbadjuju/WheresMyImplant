@@ -8,13 +8,13 @@ using System.Threading;
 namespace WheresMyImplant
 {
     ////////////////////////////////////////////////////////////////////////////////
-    public class JobTracking
+    internal class JobTracking
     {
-        public Dictionary<String, Job> jobs;
-        public Byte[] importedScript { get; set; }
+        internal Dictionary<String, Job> jobs;
+        internal Byte[] importedScript { get; set; }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public JobTracking()
+        internal JobTracking()
         {
             jobs = new Dictionary<String, Job>();
         }
@@ -78,14 +78,14 @@ namespace WheresMyImplant
     }
 
     ////////////////////////////////////////////////////////////////////////////////
-    public class Job
+    internal class Job
     {
         private Thread thread {get; set;}
         private String command { get; set;}
         private static String output = "";
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Job(String command)
+        internal Job(String command)
         {
             this.command = command;
             Thread thread = new Thread(() => runPowerShell(command));
@@ -93,7 +93,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public static void runPowerShell(String command)
+        internal static void runPowerShell(String command)
         {
             Runspace runspace = RunspaceFactory.CreateRunspace();
             runspace.Open();
@@ -122,7 +122,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean isCompleted()
+        internal Boolean isCompleted()
         {
             if (thread != null)
             {
@@ -135,13 +135,13 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public String getOutput()
+        internal String getOutput()
         {
             return output;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public void killThread()
+        internal void killThread()
         {
             thread.Abort();
         }

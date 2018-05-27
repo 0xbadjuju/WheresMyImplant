@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace WheresMyImplant
+namespace Unmanaged
 {
-    class ntdll
+    sealed class ntdll
     {
-        internal enum PROCESSINFOCLASS
+        public enum PROCESSINFOCLASS
         {
             ProcessBasicInformation = 0,
             ProcessDebugPort = 7,
@@ -16,7 +16,7 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential, Pack=1)]
-        internal struct _PROCESS_BASIC_INFORMATION {
+        public struct _PROCESS_BASIC_INFORMATION {
             public IntPtr Reserved1;
             public IntPtr PebBaseAddress;
             public IntPtr AffinityMask;
@@ -26,7 +26,7 @@ namespace WheresMyImplant
         }
 
         [DllImport("ntdll.dll", SetLastError=true)]
-        internal static extern Int32 NtFilterToken(
+        public static extern UInt32 NtFilterToken(
             IntPtr TokenHandle,
             UInt32 Flags,
             IntPtr SidsToDisable,
@@ -35,14 +35,14 @@ namespace WheresMyImplant
             ref IntPtr hToken
         );
 
-        [DllImport("ntdll.dll", SetLastError = true)]
-        internal static extern Int32 NtGetContextThread(
+        [DllImport("ntdll.dll", SetLastError=true)]
+        public static extern UInt32 NtGetContextThread(
             IntPtr ProcessHandle,
             IntPtr lpContext
         );
 
         [DllImport("ntdll.dll", SetLastError=true)]
-        internal static extern Int32 NtQueryInformationProcess(
+        public static extern UInt32 NtQueryInformationProcess(
             IntPtr ProcessHandle,
             PROCESSINFOCLASS ProcessInformationClass,
             IntPtr ProcessInformation,
@@ -51,15 +51,15 @@ namespace WheresMyImplant
         );
 
         [DllImport("ntdll.dll", SetLastError=true)]
-        internal static extern Int32 NtSetInformationToken(
+        public static extern UInt32 NtSetInformationToken(
             IntPtr TokenHandle,
             Int32 TokenInformationClass,
-            ref Structs.TOKEN_MANDATORY_LABEL TokenInformation,
+            ref Winnt.TOKEN_MANDATORY_LABEL TokenInformation,
             Int32 TokenInformationLength
         );
 
-        [DllImport("ntdll.dll", SetLastError = true)]
-        internal static extern UInt32 NtUnmapViewOfSection(
+        [DllImport("ntdll.dll", SetLastError=true)]
+        public static extern UInt32 NtUnmapViewOfSection(
             IntPtr hProcess,
             IntPtr baseAddress
         );

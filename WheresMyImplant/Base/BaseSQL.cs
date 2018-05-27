@@ -4,12 +4,12 @@ using System.Text;
 
 namespace WheresMyImplant
 {
-    class BaseSQL : Base
+    internal abstract class BaseSQL : Base
     {
         protected string connectionString;
 
         ////////////////////////////////////////////////////////////////////////////////
-        public BaseSQL(string server, string database, string username, string password)
+        internal BaseSQL(string server, string database, string username, string password)
         {
             if (null == username)
             {

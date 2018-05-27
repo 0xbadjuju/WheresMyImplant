@@ -6,7 +6,6 @@ using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.Reflection;
 
-
 namespace WheresMyImplant
 {
     [ServiceContract]
@@ -26,7 +25,7 @@ namespace WheresMyImplant
     }
 
     //[ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall)]
-    internal class ServiceEndpoint : IServiceEndpoint
+    public class ServiceEndpoint : IServiceEndpoint
     {
         ////////////////////////////////////////////////////////////////////////////////
         //

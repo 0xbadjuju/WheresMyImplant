@@ -12,7 +12,7 @@ namespace WheresMyImplant
 {
     class RunXPCmdShell : BaseSQL
     {
-        public RunXPCmdShell(string server, string database, string username, string password, string command) : base(server, database, username, password)
+        internal RunXPCmdShell(string server, string database, string username, string password, string command) : base(server, database, username, password)
         {
             Boolean sp_configure_advanced = false;
             Boolean sp_configure_cmdshell = false;

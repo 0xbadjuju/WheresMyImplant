@@ -1,14 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 
-using System.IO;
+using Unmanaged;
 
 namespace WheresMyImplant
 {
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    internal struct IMAGE_BASE_RELOCATION
+    {
+        internal UInt32 VirtualAdress;
+        internal UInt32 SizeOfBlock;
+    }
+
+    //https://msdn.microsoft.com/en-us/library/ms809762.aspx
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    internal struct _IMAGE_IMPORT_DIRECTORY
+    {
+        internal UInt32 RvaImportLookupTable;
+        internal UInt32 TimeDateStamp;
+        internal UInt32 ForwarderChain;
+        internal UInt32 RvaModuleName;
+        internal UInt32 RvaImportAddressTable;
+    }
+
     class InjectPERemote : BaseRemote
     {
         private const UInt32 PROCESS_CREATE_THREAD = 0x0002;
@@ -24,16 +43,16 @@ namespace WheresMyImplant
         private const UInt32 PAGE_EXECUTE_READ = 0x20;
         private const UInt32 PAGE_EXECUTE_READWRITE = 0x40;
 
-        public PELoader peLoader;
-        public string parameters;
+        internal PELoader peLoader;
+        internal string parameters;
 
-        public InjectPERemote(UInt32 processId, PELoader peLoaderNew, string parametersNew) : base(processId)
+        internal InjectPERemote(UInt32 processId, PELoader peLoaderNew, string parametersNew) : base(processId)
         {
             peLoader = peLoaderNew;
             parameters = parametersNew;
         }
 
-        public void execute()
+        internal void execute()
         {
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpBaseAddress = VirtualAllocExChecked(new IntPtr(0), peLoader.sizeOfImage);
@@ -51,8 +70,8 @@ namespace WheresMyImplant
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpRelocationTable = new IntPtr(lpBaseAddress.ToInt64() + peLoader.baseRelocationTableAddress);
-            Structs.IMAGE_BASE_RELOCATION relocationEntry = PtrToStructureRemote<Structs.IMAGE_BASE_RELOCATION>(lpRelocationTable);
-            UInt32 imageSizeOfBaseRelocation = (UInt32)Marshal.SizeOf(typeof(Structs.IMAGE_BASE_RELOCATION));
+            IMAGE_BASE_RELOCATION relocationEntry = PtrToStructureRemote<IMAGE_BASE_RELOCATION>(lpRelocationTable);
+            UInt32 imageSizeOfBaseRelocation = (UInt32)Marshal.SizeOf(typeof(IMAGE_BASE_RELOCATION));
             Int32 sizeofNextBlock = (Int32)relocationEntry.SizeOfBlock;
             IntPtr offset = lpRelocationTable;
             
@@ -60,7 +79,7 @@ namespace WheresMyImplant
             while (true)
             {
                 IntPtr lpNextRelocationEntry = new IntPtr(lpRelocationTable.ToInt64() + (Int64)sizeofNextBlock);
-                Structs.IMAGE_BASE_RELOCATION relocationNextEntry = PtrToStructureRemote<Structs.IMAGE_BASE_RELOCATION>(lpNextRelocationEntry);
+                IMAGE_BASE_RELOCATION relocationNextEntry = PtrToStructureRemote<IMAGE_BASE_RELOCATION>(lpNextRelocationEntry);
                 IntPtr destinationAddress = new IntPtr(lpBaseAddress.ToInt64() + (Int32)relocationEntry.VirtualAdress);
                 Int32 entries = (Int32)((relocationEntry.SizeOfBlock - imageSizeOfBaseRelocation) / 2);
                 
@@ -98,7 +117,7 @@ namespace WheresMyImplant
             ////////////////////////////////////////////////////////////////////////////////
             //http://sandsprite.com/CodeStuff/Understanding_imports.html
             ////////////////////////////////////////////////////////////////////////////////
-            Int32 sizeOfStruct = Marshal.SizeOf(typeof(Structs._IMAGE_IMPORT_DIRECTORY));
+            Int32 sizeOfStruct = Marshal.SizeOf(typeof(_IMAGE_IMPORT_DIRECTORY));
             Int32 multiplier = 0;
             Process localProcess = Process.GetCurrentProcess();
             IntPtr lpLocalBaseAddress = localProcess.MainModule.BaseAddress;
@@ -109,7 +128,7 @@ namespace WheresMyImplant
             {
                 Int32 dwImportTableAddressOffset = ((sizeOfStruct * multiplier++) + peLoader.importTableAddress);
                 IntPtr lpImportAddressTable = new IntPtr(lpBaseAddress.ToInt64() + dwImportTableAddressOffset);
-                Structs._IMAGE_IMPORT_DIRECTORY imageImportDirectory = PtrToStructureRemote<Structs._IMAGE_IMPORT_DIRECTORY>(lpImportAddressTable);
+                _IMAGE_IMPORT_DIRECTORY imageImportDirectory = PtrToStructureRemote<_IMAGE_IMPORT_DIRECTORY>(lpImportAddressTable);
                 if (0 == imageImportDirectory.RvaImportAddressTable) 
                 { 
                     break; 
@@ -118,7 +137,7 @@ namespace WheresMyImplant
 				////////////////////////////////////////////////////////////////////////////////
 				IntPtr dllNamePTR = new IntPtr(lpBaseAddress.ToInt64() + imageImportDirectory.RvaModuleName);
                 string dllName = PtrToStringAnsiRemote(dllNamePTR).Replace("\0", "");
-                IntPtr lpLocalModuleAddress = Unmanaged.LoadLibrary(dllName);
+                IntPtr lpLocalModuleAddress = kernel32.LoadLibrary(dllName);
                 IntPtr lpModuleBaseAddress = LoadLibraryRemote(dllName);
                 WaitForSingleObjectExRemote(lpModuleBaseAddress);
                 WriteOutputGood("Loaded " + dllName);
@@ -137,8 +156,8 @@ namespace WheresMyImplant
                     {
                         IntPtr lpDllFunctionName = (new IntPtr(lpBaseAddress.ToInt64() + dwRvaImportAddressTable + 2));
                         string dllFunctionName = PtrToStringAnsiRemote(lpDllFunctionName).Replace("\0", "");
-                        IntPtr hModule = Unmanaged.GetModuleHandle(dllName);
-                        IntPtr lpLocalFunctionAddress = Unmanaged.GetProcAddress(hModule, dllFunctionName);
+                        IntPtr hModule = kernel32.GetModuleHandle(dllName);
+                        IntPtr lpLocalFunctionAddress = kernel32.GetProcAddress(hModule, dllFunctionName);
                         IntPtr lpRelativeFunctionAddress = new IntPtr(lpLocalFunctionAddress.ToInt64() - lpLocalBaseAddress.ToInt64());
                         IntPtr lpFunctionAddress = new IntPtr(lpRemoteBaseAddress.ToInt64() + lpRelativeFunctionAddress.ToInt64());
                         WriteOutputGood("\tLoaded Function " + dllFunctionName);

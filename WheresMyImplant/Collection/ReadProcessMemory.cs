@@ -3,6 +3,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
+using Unmanaged;
+
 namespace WheresMyImplant
 {
     class ReadProcessMemory : Base
@@ -28,7 +30,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal Boolean OpenProcess()
         {
-            hProcess = kernel32.OpenProcess(Unmanaged.PROCESS_QUERY_INFORMATION | Unmanaged.PROCESS_VM_READ, false, (UInt32)processID);
+            hProcess = kernel32.OpenProcess(kernel32.PROCESS_QUERY_INFORMATION | kernel32.PROCESS_VM_READ, false, (UInt32)processID);
             if (IntPtr.Zero == hProcess)
             {
                 Console.WriteLine("[-] Unable to OpenProcess {0}", processID);

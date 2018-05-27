@@ -7,11 +7,11 @@ using QWORD = System.UInt64;
 using LPVOID = System.IntPtr;
 using DWORD_PTR = System.IntPtr;
 
-namespace WheresMyImplant
+namespace Unmanaged
 {
-    class Winsvc
+    sealed class Winsvc
     {
-        internal enum dwSCManagerDesiredAccess : uint
+        public enum dwSCManagerDesiredAccess : uint
         {
             SC_MANAGER_ALL_ACCESS = 0xF003F,
             SC_MANAGER_CREATE_SERVICE = 0x0002,
@@ -22,7 +22,7 @@ namespace WheresMyImplant
             SC_MANAGER_QUERY_LOCK_STATUS = 0x0010
         }
         
-        internal enum dwDesiredAccess : uint
+        public enum dwDesiredAccess : uint
         {
             SERVICE_QUERY_CONFIG = 0x0001,
             SERVICE_CHANGE_CONFIG = 0x0002,
@@ -36,7 +36,7 @@ namespace WheresMyImplant
             SERVICE_ALL_ACCESS = 0xF01FF
         }
         
-        internal enum dwServiceType : uint
+        public enum dwServiceType : uint
         {
             SERVICE_KERNEL_DRIVER = 0x00000001,
             SERVICE_FILE_SYSTEM_DRIVER = 0x00000002,
@@ -49,7 +49,7 @@ namespace WheresMyImplant
             SERVICE_INTERACTIVE_PROCESS = 0x00000100
         }
         
-        internal enum dwStartType : uint
+        public enum dwStartType : uint
         {
             SERVICE_BOOT_START = 0x00000000,
             SERVICE_SYSTEM_START = 0x00000001,
@@ -58,7 +58,7 @@ namespace WheresMyImplant
             SERVICE_DISABLED = 0x00000004
         }
 
-        internal enum dwErrorControl : uint
+        public enum dwErrorControl : uint
         {
             SERVICE_ERROR_IGNORE = 0x00000000,
             SERVICE_ERROR_NORMAL = 0x00000001,
@@ -66,7 +66,7 @@ namespace WheresMyImplant
             SERVICE_ERROR_CRITICAL = 0x00000003
         }
 
-        internal enum dwCurrentState : uint
+        public enum dwCurrentState : uint
         {
             SERVICE_STOPPED = 0x00000001,
             SERVICE_START_PENDING = 0x00000002,
@@ -77,7 +77,7 @@ namespace WheresMyImplant
             SERVICE_PAUSED = 0x00000007
         }
 
-        internal enum dwControlsAccepted : uint
+        public enum dwControlsAccepted : uint
         {
             SERVICE_ACCEPT_STOP = 0x00000001,
             SERVICE_ACCEPT_PAUSE_CONTINUE = 0x00000002,
@@ -94,7 +94,7 @@ namespace WheresMyImplant
             SERVICE_ACCEPT_USERMODEREBOOT = 0x00000800
         }
 
-        internal enum dwControl : uint
+        public enum dwControl : uint
         {
             SERVICE_CONTROL_STOP = 0x00000001,
             SERVICE_CONTROL_PAUSE = 0x00000002,
@@ -108,15 +108,15 @@ namespace WheresMyImplant
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct _SERVICE_STATUS
+        public struct _SERVICE_STATUS
         {
-            dwServiceType dwServiceType;
-            dwCurrentState dwCurrentState;
-            dwControlsAccepted dwControlsAccepted;
-            DWORD dwWin32ExitCode;
-            DWORD dwServiceSpecificExitCode;
-            DWORD dwCheckPoint;
-            DWORD dwWaitHint;
+            public dwServiceType dwServiceType;
+            public dwCurrentState dwCurrentState;
+            public dwControlsAccepted dwControlsAccepted;
+            public DWORD dwWin32ExitCode;
+            public DWORD dwServiceSpecificExitCode;
+            public DWORD dwCheckPoint;
+            public DWORD dwWaitHint;
         }
     }
 }

