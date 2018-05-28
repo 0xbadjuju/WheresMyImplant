@@ -173,7 +173,7 @@ namespace Unmanaged.Libraries
             ref int lpcbData
         );
 
-        
+        [DllImport("advapi32.dll", SetLastError = true)]
         public static extern Int32 RegQueryInfoKey(
             UIntPtr hKey,
             StringBuilder lpClass,
