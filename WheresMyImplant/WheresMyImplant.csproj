@@ -93,9 +93,7 @@
     <Compile Include="Base\BaseRemote.cs" />
     <Compile Include="Base\BaseSQL.cs" />
     <Compile Include="Credentials\LSASecrets.cs" />
-    <Compile Include="Lateral\DCom.cs" />
     <Compile Include="Lateral\PSExec.cs" />
-    <Compile Include="Lateral\WMI.cs" />
     <Compile Include="Resources\CheckCreditCard.cs" />
     <Compile Include="Resources\CheckPrivileges.cs" />
     <Compile Include="Resources\Registry.cs" />
