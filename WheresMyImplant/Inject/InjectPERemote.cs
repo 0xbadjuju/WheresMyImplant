@@ -135,8 +135,8 @@ namespace WheresMyImplant
                 }
 
 				////////////////////////////////////////////////////////////////////////////////
-				IntPtr dllNamePTR = new IntPtr(lpBaseAddress.ToInt64() + imageImportDirectory.RvaModuleName);
-                string dllName = PtrToStringAnsiRemote(dllNamePTR).Replace("\0", "");
+				IntPtr dllNamePtr = new IntPtr(lpBaseAddress.ToInt64() + imageImportDirectory.RvaModuleName);
+                String dllName = PtrToStringAnsiRemote(dllNamePtr).Replace("\0", "");
                 IntPtr lpLocalModuleAddress = kernel32.LoadLibrary(dllName);
                 IntPtr lpModuleBaseAddress = LoadLibraryRemote(dllName);
                 WaitForSingleObjectExRemote(lpModuleBaseAddress);
@@ -152,20 +152,18 @@ namespace WheresMyImplant
                     {
                         break;
                     }
-                    else
-                    {
-                        IntPtr lpDllFunctionName = (new IntPtr(lpBaseAddress.ToInt64() + dwRvaImportAddressTable + 2));
-                        string dllFunctionName = PtrToStringAnsiRemote(lpDllFunctionName).Replace("\0", "");
-                        IntPtr hModule = kernel32.GetModuleHandle(dllName);
-                        IntPtr lpLocalFunctionAddress = kernel32.GetProcAddress(hModule, dllFunctionName);
-                        IntPtr lpRelativeFunctionAddress = new IntPtr(lpLocalFunctionAddress.ToInt64() - lpLocalBaseAddress.ToInt64());
-                        IntPtr lpFunctionAddress = new IntPtr(lpRemoteBaseAddress.ToInt64() + lpRelativeFunctionAddress.ToInt64());
-                        WriteOutputGood("\tLoaded Function " + dllFunctionName);
-                        //baseRemote.WriteProcessMemoryUnChecked(lpRvaImportAddressTable, lpFunctionAddress, sizeof(Int64),"");
 
-                        WriteInt64Remote(lpRvaImportAddressTable, (Int64)lpFunctionAddress);
-                        lpRvaImportAddressTable = new IntPtr(lpRvaImportAddressTable.ToInt64() + sizeof(Int64));
-                    }
+                    IntPtr lpDllFunctionName = (new IntPtr(lpBaseAddress.ToInt64() + dwRvaImportAddressTable + 2));
+                    String dllFunctionName = PtrToStringAnsiRemote(lpDllFunctionName).Replace("\0", "");
+                    IntPtr hModule = kernel32.GetModuleHandle(dllName);
+                    IntPtr lpLocalFunctionAddress = kernel32.GetProcAddress(hModule, dllFunctionName);
+                    IntPtr lpRelativeFunctionAddress = new IntPtr(lpLocalFunctionAddress.ToInt64() - lpLocalBaseAddress.ToInt64());
+                    IntPtr lpFunctionAddress = new IntPtr(lpRemoteBaseAddress.ToInt64() + lpRelativeFunctionAddress.ToInt64());
+                    WriteOutputGood("\tLoaded Function " + dllFunctionName);
+                    //baseRemote.WriteProcessMemoryUnChecked(lpRvaImportAddressTable, lpFunctionAddress, sizeof(Int64),"");
+
+                    WriteInt64Remote(lpRvaImportAddressTable, (Int64)lpFunctionAddress);
+                    lpRvaImportAddressTable = new IntPtr(lpRvaImportAddressTable.ToInt64() + sizeof(Int64));
                 }
             }
 
