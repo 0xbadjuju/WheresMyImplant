@@ -27,7 +27,7 @@ namespace WheresMyImplant
         protected void WriteOutputBad(string output)
         {
             stringBuilder.Append(String.Format("[-] {0} 0x{1:X}\n", output, Marshal.GetLastWin32Error()));
-            string errorMessage = new Win32Exception(Marshal.GetLastWin32Error()).Message;
+            String errorMessage = new Win32Exception(Marshal.GetLastWin32Error()).Message;
             stringBuilder.Append("[-] " + errorMessage + "\n");
         }
 

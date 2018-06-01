@@ -514,10 +514,9 @@ namespace WheresMyImplant
         [ManagementTask]
         public static String DumpVaultCLI()
         {
-            StringBuilder output = new StringBuilder();
             VaultCLI vault = new VaultCLI();
             vault.EnumerateVaults();
-            return output.ToString();
+            return vault.GetOutput();
         }
 
         [ManagementTask]
