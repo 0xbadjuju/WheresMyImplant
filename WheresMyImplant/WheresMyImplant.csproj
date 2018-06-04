@@ -83,8 +83,8 @@
     <Compile Include="Empire\Empire.Agent.Stager.cs" />
     <Compile Include="Inject\HijackThread.cs" />
     <Compile Include="Inject\HollowProcess.cs" />
-    <Compile Include="Inject\InjectDll.cs" />
-    <Compile Include="Inject\InjectDllRemote.cs" />
+    <Compile Include="Inject\Dll\LoadDll.cs" />
+    <Compile Include="Inject\Dll\LoadDllRemote.cs" />
     <Compile Include="Inject\InjectPE.cs" />
     <Compile Include="Inject\InjectPERemote.cs" />
     <Compile Include="Inject\InjectShellCode.cs" />
@@ -118,6 +118,7 @@
     <Compile Include="Resources\Unmanaged\Libraries\ntdll.cs" />
     <Compile Include="Resources\Unmanaged\Libraries\vaultcli.cs" />
     <Compile Include="Resources\Unmanaged\Libraries\wlanapi.cs" />
+    <Compile Include="Resources\WMI.cs" />
     <Compile Include="Run\RunCommandPrompt.cs" />
     <Compile Include="Run\RunPowerShell.cs" />
     <Compile Include="Run\RunXPCmdShell.cs" />

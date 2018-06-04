@@ -10,7 +10,7 @@ using System.Reflection;
 
 namespace WheresMyImplant
 {
-    class RunPowerShell : Base
+    sealed class RunPowerShell : Base
     {
         //Because why not
         //https://github.com/jaredcatkinson/EvilNetConnectionWMIProvider/blob/master/EvilNetConnectionWMIProvider/EvilNetConnectionWMIProvider.cs
@@ -31,7 +31,6 @@ namespace WheresMyImplant
             {
                 WriteOutput(obj.ToString());
             }
-            
         }
     }
 }
