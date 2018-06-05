@@ -6,6 +6,9 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 
+using Unmanaged.Headers;
+using Unmanaged.Libraries;
+
 namespace WheresMyImplant
 {
     internal class Misc
@@ -128,6 +131,52 @@ namespace WheresMyImplant
         internal static string GetError()
         {
             return new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        public static IntPtr GetModuleAddress(String module, UInt32 processId, ref UInt32 dwSize)
+        {
+            IntPtr hModule = IntPtr.Zero;
+            IntPtr hSnapshot = IntPtr.Zero;
+            try
+            {
+                hSnapshot = kernel32.CreateToolhelp32Snapshot(TiHelp32.TH32CS_SNAPMODULE | TiHelp32.TH32CS_SNAPMODULE32, processId);
+                if (IntPtr.Zero == hSnapshot)
+                {
+                    return hModule;
+                }
+
+                TiHelp32.tagMODULEENTRY32 moduleEntry = new TiHelp32.tagMODULEENTRY32();
+                moduleEntry.dwSize = (UInt32)Marshal.SizeOf(moduleEntry);
+                if (!kernel32.Module32First(hSnapshot, ref moduleEntry))
+                {
+                    return hModule;
+                }
+
+                do
+                {
+                    if (moduleEntry.szModule == module)
+                    {
+                        hModule = moduleEntry.modBaseAddr;
+                        dwSize = moduleEntry.modBaseSize;
+                    }
+
+                    moduleEntry = new TiHelp32.tagMODULEENTRY32();
+                    moduleEntry.dwSize = (UInt32)Marshal.SizeOf(moduleEntry);
+                }
+                while (kernel32.Module32Next(hSnapshot, ref moduleEntry));
+            }
+            catch (Exception)
+            {
+                return hModule;
+            }
+            finally
+            {
+                kernel32.CloseHandle(hSnapshot);
+            }
+            return hModule;
         }
     }
 }

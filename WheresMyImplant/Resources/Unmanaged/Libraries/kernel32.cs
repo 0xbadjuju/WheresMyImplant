@@ -43,6 +43,9 @@ namespace Unmanaged.Libraries
         public static extern IntPtr CreateThread(IntPtr lpThreadAttributes, UInt32 dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, UInt32 dwCreationFlags, ref UInt32 lpThreadId);
 
         [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern IntPtr CreateToolhelp32Snapshot(UInt32 dwFlags, UInt32 th32ProcessID);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern IntPtr GetCurrentThread();
 
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -66,8 +69,20 @@ namespace Unmanaged.Libraries
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean IsWow64Process(IntPtr hProcess, out Boolean Wow64Process);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean Module32First(IntPtr hSnapshot, ref TiHelp32.tagMODULEENTRY32 lpme);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean Module32Next(IntPtr hSnapshot, ref TiHelp32.tagMODULEENTRY32 lpme);
+
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern IntPtr LoadLibrary(string lpFileName);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean Process32First(IntPtr hSnapshot, ref TiHelp32.tagPROCESSENTRY32 lppe);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean Process32Next(IntPtr hSnapshot, ref TiHelp32.tagPROCESSENTRY32 lppe);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern IntPtr OpenProcess(UInt32 dwDesiredAccess, Boolean bInheritHandle, UInt32 dwProcessId);
