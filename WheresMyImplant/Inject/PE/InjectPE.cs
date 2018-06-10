@@ -12,22 +12,15 @@ namespace WheresMyImplant
 {
     class InjectPE : Base
     {
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        internal struct IMAGE_BASE_RELOCATION
-        {
-            internal UInt32 VirtualAdress;
-            internal UInt32 SizeOfBlock;
-        }
-
         //https://msdn.microsoft.com/en-us/library/ms809762.aspx
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         internal struct _IMAGE_IMPORT_DIRECTORY
         {
-            internal UInt32 RvaImportLookupTable;
-            internal UInt32 TimeDateStamp;
-            internal UInt32 ForwarderChain;
-            internal UInt32 RvaModuleName;
-            internal UInt32 RvaImportAddressTable;
+            public UInt32 RvaImportLookupTable;
+            public UInt32 TimeDateStamp;
+            public UInt32 ForwarderChain;
+            public UInt32 RvaModuleName;
+            public UInt32 RvaImportAddressTable;
         }
 
         internal InjectPE(PELoader peLoader, string parameters)
@@ -36,7 +29,7 @@ namespace WheresMyImplant
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = peLoader.sizeOfImage;
             IntPtr lpBaseAddress = kernel32.VirtualAlloc(lpAddress, dwSize, kernel32.MEM_COMMIT, Winnt.PAGE_EXECUTE_READWRITE);
-            WriteOutputGood(String.Format("Allocated Space For {0} at {1}", peLoader.sizeOfImage.ToString("X4"), lpBaseAddress.ToString("X4")));
+            WriteOutputGood(String.Format("Allocated {0} bytes at 0x{1}", peLoader.sizeOfImage.ToString("X4"), lpBaseAddress.ToString("X4")));
 
             ////////////////////////////////////////////////////////////////////////////////
             for (Int32 i = 0; i < peLoader.imageFileHeader.NumberOfSections; i++)
@@ -45,24 +38,23 @@ namespace WheresMyImplant
                 UInt32 dwSizeSection = peLoader.imageSectionHeaders[i].SizeOfRawData;
                 IntPtr lpAllocatedAddress = kernel32.VirtualAlloc(lpBaseAddressSection, dwSizeSection, kernel32.MEM_COMMIT, Winnt.PAGE_EXECUTE_READWRITE);
                 Marshal.Copy(peLoader.imageBytes, (Int32)peLoader.imageSectionHeaders[i].PointerToRawData, lpAllocatedAddress, (Int32)peLoader.imageSectionHeaders[i].SizeOfRawData);
-                WriteOutputGood(String.Format("Copied {0} to {1}",  peLoader.imageSectionHeaders[i].Name, lpAllocatedAddress.ToString("X4")));
-
+                WriteOutputGood(String.Format("Copied {0} to 0x{1}",  peLoader.imageSectionHeaders[i].Name, lpAllocatedAddress.ToString("X4")));
             }
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr relocationTable = new IntPtr(lpBaseAddress.ToInt32() + peLoader.baseRelocationTableAddress);
-            IMAGE_BASE_RELOCATION relocationEntry = (IMAGE_BASE_RELOCATION)Marshal.PtrToStructure(relocationTable, typeof(IMAGE_BASE_RELOCATION));
+            Winnt._IMAGE_BASE_RELOCATION relocationEntry = (Winnt._IMAGE_BASE_RELOCATION)Marshal.PtrToStructure(relocationTable, typeof(Winnt._IMAGE_BASE_RELOCATION));
 
-            Int32 sizeOfRelocationStruct = Marshal.SizeOf(typeof(IMAGE_BASE_RELOCATION));
+            Int32 sizeOfRelocationStruct = Marshal.SizeOf(typeof(Winnt._IMAGE_BASE_RELOCATION));
             Int32 sizeofNextBlock = (Int32)relocationEntry.SizeOfBlock;
             IntPtr offset = relocationTable;
 
             ////////////////////////////////////////////////////////////////////////////////
             while (true)
             {
-                IMAGE_BASE_RELOCATION relocationNextEntry = new IMAGE_BASE_RELOCATION();
+                Winnt._IMAGE_BASE_RELOCATION relocationNextEntry = new Winnt._IMAGE_BASE_RELOCATION();
                 IntPtr lpNextRelocationEntry = new IntPtr(relocationTable.ToInt32() + (Int32)sizeofNextBlock);
-                relocationNextEntry = (IMAGE_BASE_RELOCATION)Marshal.PtrToStructure(lpNextRelocationEntry, typeof(IMAGE_BASE_RELOCATION));
+                relocationNextEntry = (Winnt._IMAGE_BASE_RELOCATION)Marshal.PtrToStructure(lpNextRelocationEntry, typeof(Winnt._IMAGE_BASE_RELOCATION));
                 IntPtr destinationAddress = new IntPtr(lpBaseAddress.ToInt32() + (Int32)relocationEntry.VirtualAdress);
 
                 ////////////////////////////////////////////////////////////////////////////////
@@ -134,15 +126,11 @@ namespace WheresMyImplant
                     {
                         break;
                     }
-                    else
-                    {
-                        IntPtr lpDllFunctionName = (new IntPtr(lpBaseAddress.ToInt32() + dwRvaImportAddressTable + 2));
-                        string dllFunctionName = Marshal.PtrToStringAnsi(lpDllFunctionName);
-                        IntPtr functionAddress = kernel32.GetProcAddress(hModule, dllFunctionName);
-                        Marshal.WriteInt64(lpRvaImportAddressTable, (Int64)functionAddress);
-                        lpRvaImportAddressTable = new IntPtr(lpRvaImportAddressTable.ToInt32() + 8);
-
-                    }
+                    IntPtr lpDllFunctionName = (new IntPtr(lpBaseAddress.ToInt32() + dwRvaImportAddressTable + 2));
+                    string dllFunctionName = Marshal.PtrToStringAnsi(lpDllFunctionName);
+                    IntPtr functionAddress = kernel32.GetProcAddress(hModule, dllFunctionName);
+                    Marshal.WriteInt64(lpRvaImportAddressTable, (Int64)functionAddress);
+                    lpRvaImportAddressTable = new IntPtr(lpRvaImportAddressTable.ToInt32() + 8);
                 }
             }
             ////////////////////////////////////////////////////////////////////////////////

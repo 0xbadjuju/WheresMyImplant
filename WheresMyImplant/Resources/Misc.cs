@@ -2,6 +2,7 @@
 using System.IO;
 using System.Globalization;
 using System.Linq;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -131,6 +132,70 @@ namespace WheresMyImplant
         internal static string GetError()
         {
             return new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal static Byte[] QueryWMIFS(String wmiClass, String fileName)
+        {
+            ConnectionOptions options = new ConnectionOptions();
+            options.Impersonation = System.Management.ImpersonationLevel.Impersonate;
+            ManagementScope scope = new ManagementScope(@"\\.\root\cimv2", options);
+            scope.Connect();
+
+            String query = String.Format("SELECT Index FROM {0} WHERE FileName = \'{1}\'", wmiClass, fileName);
+            ObjectQuery queryIndexCount = new ObjectQuery(query);
+            ManagementObjectSearcher searcherIndexCount = new ManagementObjectSearcher(scope, queryIndexCount);
+            ManagementObjectCollection queryIndexCollection = searcherIndexCount.Get();
+            Int32 indexCount = queryIndexCollection.Count;
+
+            String EncodedText = "";
+            for (Int32 i = 0; i < indexCount; i++)
+            {
+                String query2 = String.Format("SELECT FileStore FROM {0} WHERE FileName = \'{1}\' AND Index = \'{1}\'", wmiClass, fileName, i);
+                ObjectQuery queryFilePart = new ObjectQuery();
+                ManagementObjectSearcher searcherFilePart = new ManagementObjectSearcher(scope, queryFilePart);
+                ManagementObjectCollection queryCollection = searcherFilePart.Get();
+                foreach (ManagementObject filePart in queryCollection)
+                {
+                    EncodedText += filePart["FileStore"].ToString();
+                }
+            }
+            return System.Convert.FromBase64String(EncodedText);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal static Byte[] QueryWMIFS(String wmiClass, String fileName, String system, String username, String password)
+        {
+            ConnectionOptions options = new ConnectionOptions();
+            options.Username = username;
+            options.Password = password;
+            options.Impersonation = System.Management.ImpersonationLevel.Impersonate;
+            ManagementScope scope = new ManagementScope(@"\\.\root\cimv2", options);
+            scope.Connect();
+
+            String query = String.Format("SELECT Index FROM {0} WHERE FileName = \'{1}\'", wmiClass, fileName);
+            ObjectQuery queryIndexCount = new ObjectQuery(query);
+            ManagementObjectSearcher searcherIndexCount = new ManagementObjectSearcher(scope, queryIndexCount);
+            ManagementObjectCollection queryIndexCollection = searcherIndexCount.Get();
+            Int32 indexCount = queryIndexCollection.Count;
+
+            String EncodedText = "";
+            for (Int32 i = 0; i < indexCount; i++)
+            {
+                String query2 = String.Format("SELECT FileStore FROM {0} WHERE FileName = \'{1}\' AND Index = \'{1}\'", wmiClass, fileName, i);
+                ObjectQuery queryFilePart = new ObjectQuery();
+                ManagementObjectSearcher searcherFilePart = new ManagementObjectSearcher(scope, queryFilePart);
+                ManagementObjectCollection queryCollection = searcherFilePart.Get();
+                foreach (ManagementObject filePart in queryCollection)
+                {
+                    EncodedText += filePart["FileStore"].ToString();
+                }
+            }
+            return System.Convert.FromBase64String(EncodedText);
         }
 
         ////////////////////////////////////////////////////////////////////////////////

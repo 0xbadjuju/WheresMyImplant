@@ -6,17 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 
+using Unmanaged.Headers;
 using Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal struct IMAGE_BASE_RELOCATION
-    {
-        internal UInt32 VirtualAdress;
-        internal UInt32 SizeOfBlock;
-    }
-
     //https://msdn.microsoft.com/en-us/library/ms809762.aspx
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal struct _IMAGE_IMPORT_DIRECTORY
@@ -70,8 +64,8 @@ namespace WheresMyImplant
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpRelocationTable = new IntPtr(lpBaseAddress.ToInt64() + peLoader.baseRelocationTableAddress);
-            IMAGE_BASE_RELOCATION relocationEntry = PtrToStructureRemote<IMAGE_BASE_RELOCATION>(lpRelocationTable);
-            UInt32 imageSizeOfBaseRelocation = (UInt32)Marshal.SizeOf(typeof(IMAGE_BASE_RELOCATION));
+            Winnt._IMAGE_BASE_RELOCATION relocationEntry = PtrToStructureRemote<Winnt._IMAGE_BASE_RELOCATION>(lpRelocationTable);
+            UInt32 imageSizeOfBaseRelocation = (UInt32)Marshal.SizeOf(typeof(Winnt._IMAGE_BASE_RELOCATION));
             Int32 sizeofNextBlock = (Int32)relocationEntry.SizeOfBlock;
             IntPtr offset = lpRelocationTable;
             
@@ -79,7 +73,7 @@ namespace WheresMyImplant
             while (true)
             {
                 IntPtr lpNextRelocationEntry = new IntPtr(lpRelocationTable.ToInt64() + (Int64)sizeofNextBlock);
-                IMAGE_BASE_RELOCATION relocationNextEntry = PtrToStructureRemote<IMAGE_BASE_RELOCATION>(lpNextRelocationEntry);
+                Winnt._IMAGE_BASE_RELOCATION relocationNextEntry = PtrToStructureRemote<Winnt._IMAGE_BASE_RELOCATION>(lpNextRelocationEntry);
                 IntPtr destinationAddress = new IntPtr(lpBaseAddress.ToInt64() + (Int32)relocationEntry.VirtualAdress);
                 Int32 entries = (Int32)((relocationEntry.SizeOfBlock - imageSizeOfBaseRelocation) / 2);
                 

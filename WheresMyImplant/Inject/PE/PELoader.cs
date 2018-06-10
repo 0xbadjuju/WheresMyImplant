@@ -6,38 +6,38 @@ using Unmanaged.Headers;
 
 namespace WheresMyImplant
 {
-    [Flags]
-    internal enum IMAGE_DATA_DIRECTORY_OPTIONS : int
+    internal sealed class PELoader : Base, IDisposable
     {
-        ExportTable = 0,
-        ImportTable = 1,
-        ResourceTable = 2,
-        ExceptionTable = 3,
-        CertificateTable = 4,
-        BaseRelocationTable = 5,
-        Debug = 6,
-        Architecture = 7,
-        GlobalPtr = 8,
-        TLSTable = 9,
-        LoadConfigTable = 10,
-        BoundImport = 11,
-        IAT = 12,
-        DelayImportDescriptor = 13,
-        CLRRuntimeHeader = 14,
-        Reserved = 15
-    }
+        [Flags]
+        private enum IMAGE_DATA_DIRECTORY_OPTIONS : int
+        {
+            ExportTable = 0,
+            ImportTable = 1,
+            ResourceTable = 2,
+            ExceptionTable = 3,
+            CertificateTable = 4,
+            BaseRelocationTable = 5,
+            Debug = 6,
+            Architecture = 7,
+            GlobalPtr = 8,
+            TLSTable = 9,
+            LoadConfigTable = 10,
+            BoundImport = 11,
+            IAT = 12,
+            DelayImportDescriptor = 13,
+            CLRRuntimeHeader = 14,
+            Reserved = 15
+        }
 
-    internal class PELoader
-    {
         internal Boolean is64Bit;
-        internal Winnt._IMAGE_DOS_HEADER imageDosHeader;
+        private Winnt._IMAGE_DOS_HEADER imageDosHeader;
         internal Winnt._IMAGE_FILE_HEADER imageFileHeader;
         internal Winnt._IMAGE_OPTIONAL_HEADER imageOptionalHeader32;
         internal Winnt._IMAGE_OPTIONAL_HEADER64 imageOptionalHeader64;
         internal Winnt._IMAGE_SECTION_HEADER[] imageSectionHeaders;
-        internal byte[] imageBytes;
+        internal Byte[] imageBytes;
         internal UInt32 sizeOfImage;
-        internal UInt32 imageBase;
+        private UInt32 imageBase;
         internal Int32 baseRelocationTableAddress;
         internal Int32 importTableAddress;
         internal Int32 addressOfEntryPoint;
@@ -47,28 +47,38 @@ namespace WheresMyImplant
         //https://www.microsoft.com/en-us/download/confirmation.aspx?id=19509
         //http://www.csn.ul.ie/~caolan/pub/winresdump/winresdump/doc/pefile.html
 
-        internal PELoader(string libary)
+        internal PELoader()
         {
-            FileStream fileStream = new FileStream(libary, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-            BinaryReader binaryReader = new BinaryReader(fileStream);
-            imageDosHeader = FromBinaryReader<Winnt._IMAGE_DOS_HEADER>(binaryReader);
-            fileStream.Seek(imageDosHeader.e_lfanew, SeekOrigin.Begin);
-            ReadHeaders(ref binaryReader);
-            fileStream.Close();
-            imageBytes = System.IO.File.ReadAllBytes(libary);
+            
         }
 
-        internal PELoader(byte[] fileBytes)
+        internal void Execute(String library)
         {
-            MemoryStream memoryStream = new MemoryStream(fileBytes, 0, fileBytes.Length);
-            BinaryReader binaryReader = new BinaryReader(memoryStream);
-            imageDosHeader = FromBinaryReader<Winnt._IMAGE_DOS_HEADER>(binaryReader);
-            memoryStream.Seek(imageDosHeader.e_lfanew, SeekOrigin.Begin);
-            ReadHeaders(ref binaryReader);
-            memoryStream.Close();
-            imageBytes = fileBytes;
+            using (FileStream fileStream = new FileStream(library, FileMode.Open, FileAccess.Read))
+            {
+                BinaryReader binaryReader = new BinaryReader(fileStream);
+                imageDosHeader = FromBinaryReader<Winnt._IMAGE_DOS_HEADER>(binaryReader);
+                fileStream.Seek(imageDosHeader.e_lfanew, SeekOrigin.Begin);
+                ReadHeaders(ref binaryReader);
+                imageBytes = File.ReadAllBytes(library);
+            }
         }
 
+        internal void Execute(Byte[] fileBytes)
+        {
+            using (MemoryStream memoryStream = new MemoryStream(fileBytes, 0, fileBytes.Length))
+            {
+                BinaryReader binaryReader = new BinaryReader(memoryStream);
+                imageDosHeader = FromBinaryReader<Winnt._IMAGE_DOS_HEADER>(binaryReader);
+                memoryStream.Seek(imageDosHeader.e_lfanew, SeekOrigin.Begin);
+                ReadHeaders(ref binaryReader);
+                imageBytes = fileBytes;
+            }
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
         private void ReadHeaders(ref BinaryReader binaryReader)
         {
             binaryReader.ReadUInt32();
@@ -82,8 +92,8 @@ namespace WheresMyImplant
                     baseRelocationTableAddress = (Int32)imageOptionalHeader32.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.BaseRelocationTable].VirtualAddress;
                     importTableAddress = (Int32)imageOptionalHeader32.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.ImportTable].VirtualAddress;
                     addressOfEntryPoint = (Int32)imageOptionalHeader32.AddressOfEntryPoint;
-                    Console.WriteLine("ImageBase = {0}", imageOptionalHeader32.ImageBase.ToString("X4"));
-                    Console.WriteLine("EntryPoint = {0}", imageOptionalHeader32.AddressOfEntryPoint.ToString("X4"));
+                    WriteOutputGood(String.Format("ImageBase: 0x{0}", imageOptionalHeader32.ImageBase.ToString("X4")));
+                    WriteOutputGood(String.Format("EntryPoint: 0x{0}", imageOptionalHeader32.AddressOfEntryPoint.ToString("X4")));
                     is64Bit = false;
                     break;
                 case Winnt.IMAGE_FILE_MACHINE.AMD64:
@@ -92,8 +102,8 @@ namespace WheresMyImplant
                     baseRelocationTableAddress = (Int32)imageOptionalHeader64.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.BaseRelocationTable].VirtualAddress;
                     importTableAddress = (Int32)imageOptionalHeader64.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.ImportTable].VirtualAddress;
                     addressOfEntryPoint = (Int32)imageOptionalHeader64.AddressOfEntryPoint;
-                    Console.WriteLine("ImageBase = {0}", imageOptionalHeader64.ImageBase.ToString("X4"));
-                    Console.WriteLine("EntryPoint = {0}", imageOptionalHeader64.AddressOfEntryPoint.ToString("X4"));
+                    WriteOutputGood(String.Format("ImageBase: 0x{0}", imageOptionalHeader64.ImageBase.ToString("X4")));
+                    WriteOutputGood(String.Format("EntryPoint: 0x{0}", imageOptionalHeader64.AddressOfEntryPoint.ToString("X4")));
                     is64Bit = true;
                     break;
                 default:
@@ -107,16 +117,35 @@ namespace WheresMyImplant
             binaryReader.Close();
         }
 
-        //https://social.msdn.microsoft.com/Forums/vstudio/en-US/9bdf0eb7-a003-4880-a441-4ce06cf80cbf/whats-the-easiest-way-to-parse-windows-pe-files?forum=csharpgeneral
+        ////////////////////////////////////////////////////////////////////////////////
+        // https://social.msdn.microsoft.com/Forums/vstudio/en-US/9bdf0eb7-a003-4880-a441-4ce06cf80cbf/whats-the-easiest-way-to-parse-windows-pe-files?forum=csharpgeneral
+        ////////////////////////////////////////////////////////////////////////////////
         private static T FromBinaryReader<T>(BinaryReader binaryReader) where T : struct
         {
             byte[] bytes = binaryReader.ReadBytes(Marshal.SizeOf(typeof(T)));
 
             GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
-            var theStructure = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
-            handle.Free();
+            try
+            {
+                return (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+            }
+            catch (Exception)
+            {
+                return default(T);
+            }
+            finally
+            {
+                handle.Free();
+            }
+        }
 
-            return theStructure;
+        ~PELoader()
+        {
+        }
+
+        public void Dispose()
+        {
+
         }
     }
 }

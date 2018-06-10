@@ -236,6 +236,13 @@ namespace Unmanaged.Headers
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct _IMAGE_BASE_RELOCATION
+        {
+            public UInt32 VirtualAdress;
+            public UInt32 SizeOfBlock;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct _IMAGE_DATA_DIRECTORY
         {
             public DWORD VirtualAddress;
