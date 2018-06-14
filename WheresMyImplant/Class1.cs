@@ -620,6 +620,9 @@ namespace WheresMyImplant
                 smbClient.NegotiateSMB2();
                 smbClient.NTLMSSPNegotiate();
                 smbClient.Authenticate(domain, username, hash);
+                smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "IPC$"));
+                smbClient.IoctlRequest(String.Format(@"\{0}\{1}", target, "c$"));
+                smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "c$"));
                 output = smbClient.GetOutput();
             }
             return output;

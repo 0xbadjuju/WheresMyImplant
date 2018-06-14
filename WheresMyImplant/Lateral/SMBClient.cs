@@ -15,11 +15,12 @@ namespace WheresMyImplant
         UInt32 messageId = 0x1;
         Byte[] treeId = { 0x00, 0x00, 0x00, 0x00 };
         Byte[] sessionId = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        
         Byte[] sessionKeyLength = { 0x00, 0x00 };
         Boolean signing = false;
+        Byte[] sessionKey;
 
-        String version = "SMB2";
-        String stage;
+        String version;//= "SMB2";
         String system;
 
         Byte[] processId;
@@ -69,21 +70,21 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         public void NegotiateSMB()
         {
-            OrderedDictionary header = GetSMBPacketHeader(
-                new Byte[] { 0x72 }, 
-                new Byte[] { 0x18 }, 
-                new Byte[] { 0x01, 0x48 },
-                new Byte[] { 0xff, 0xff }, 
-                processId.Take(2).ToArray(),
-                new Byte[] { 0x00, 0x00 }
-            );
-            Byte[] bHeader = OrderedDictionaryToBytes(header);
+            SMBHeader smbHeader = new SMBHeader();
+            smbHeader.SetCommand(new Byte[] { 0x72 });
+            smbHeader.SetFlags(new Byte[] { 0x18 });
+            smbHeader.SetFlags2(new Byte[] { 0x01, 0x48 });
+            smbHeader.SetProcessID(processId.Take(2).ToArray());
+            smbHeader.SetUserID(new Byte[] { 0x00, 0x00 });
+            Byte[] bHeader = smbHeader.GetHeader();
 
-            OrderedDictionary data = SMBNegotiateProtocolRequest();
-            Byte[] bData = OrderedDictionaryToBytes(data);
+            SMBNegotiateProtocolRequest protocols = new SMBNegotiateProtocolRequest();
+            Byte[] bData = protocols.GetProtocols();
 
-            OrderedDictionary sessionService = NetBIOSSessionService(bHeader.Length, bData.Length);
-            Byte[] bSessionService = OrderedDictionaryToBytes(sessionService);
+            NetBIOSSessionService sessionService = new NetBIOSSessionService();
+            sessionService.SetHeaderLength(bHeader.Length);
+            sessionService.SetDataLength(bData.Length);
+            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
 
             Byte[] send = Misc.Combine(bSessionService, bHeader);
             send = Misc.Combine(send, bData);
@@ -95,7 +96,7 @@ namespace WheresMyImplant
             Byte[] response = recieve.Skip(5).Take(4).ToArray();
             if (response == new Byte[] { 0xff, 0x53, 0x4d, 0x42 })
             {
-                WriteOutputBad("SMB1 is not supported");
+                WriteOutput("[-] SMB1 is not supported");
                 return;
             }
 
@@ -103,8 +104,9 @@ namespace WheresMyImplant
 
             Byte[] keyLength = { 0x00, 0x00 };
 
-            if (recieve.Skip(71).Take(1).ToArray() == new Byte[] { 0x03 })
+            if (recieve.Skip(70).Take(1).ToArray().SequenceEqual(new Byte[] { 0x03 }))
             {
+                WriteOutputNeutral("SMB Signing Required");
                 signing = true;
                 flags = new Byte[] { 0x15, 0x82, 0x08, 0xa0 };
             }
@@ -120,51 +122,67 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         public void NegotiateSMB2()
         {   
-            OrderedDictionary header = GetSMB2PacketHeader(new Byte[] { 0x00,0x00 }, new Byte[] { 0x00, 0x00 }, BitConverter.GetBytes(messageId), treeId, sessionId);
-            header["ProcessID"] = processId;
-            Byte[] bHeader = OrderedDictionaryToBytes(header);
-            
-            OrderedDictionary data = SMB2NegotiateProtocolRequest();
-            Byte[] bData = OrderedDictionaryToBytes(data);
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x00, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x00, 0x00 });
+            header.SetMessageID(messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+            Byte[] bHeader = header.GetHeader();
 
-            OrderedDictionary session = NetBIOSSessionService(bHeader.Length, bData.Length);
-            Byte[] bSession = OrderedDictionaryToBytes(session);
+            SMB2NegotiateProtocolRequest protocols = new SMB2NegotiateProtocolRequest();
+            Byte[] bData = protocols.GetProtocols();
 
-            Byte[] send = Misc.Combine(bSession, bHeader);
+            NetBIOSSessionService sessionService = new NetBIOSSessionService();
+            sessionService.SetHeaderLength(bHeader.Length);
+            sessionService.SetDataLength(bData.Length);
+            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
+
+            Byte[] send = Misc.Combine(bSessionService, bHeader);
             send = Misc.Combine(send, bData);
             streamSocket.Write(send, 0, send.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
         }
 
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
         internal void NTLMSSPNegotiate()
         {
-            messageId++;
-            OrderedDictionary header = GetSMB2PacketHeader(
-                new Byte[] { 0x01, 0x00 }, 
-                new Byte[] { 0x1f, 0x00 }, 
-                BitConverter.GetBytes(messageId), 
-                treeId, 
-                sessionId);
-            header["ProcessID"] = processId;
-            Byte[] bHeader = OrderedDictionaryToBytes(header);
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x01, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x1f, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+            Byte[] bHeader = header.GetHeader();
 
-            OrderedDictionary negotiate = GetNTLMSSPNegotiate();
-            Byte[] bNegotiate = OrderedDictionaryToBytes(negotiate);
+            SMB2NTLMSSPNegotiate NTLMSSPNegotiate = new SMB2NTLMSSPNegotiate(version);
+            NTLMSSPNegotiate.SetFlags(flags);
+            Byte[] bNegotiate = NTLMSSPNegotiate.GetSMB2NTLMSSPNegotiate();
+            
+            SMB2SessionSetupRequest sessionSetup = new SMB2SessionSetupRequest();
+            sessionSetup.SetSecurityBlob(bNegotiate);
+            Byte[] bData = sessionSetup.GetSMB2SessionSetupRequest();
 
-            OrderedDictionary data = GetSMB2SessionSetupRequest(bNegotiate);
-            Byte[] bData = OrderedDictionaryToBytes(data);
+            NetBIOSSessionService sessionService = new NetBIOSSessionService();
+            sessionService.SetHeaderLength(bHeader.Length);
+            sessionService.SetDataLength(bData.Length);
+            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
 
-            OrderedDictionary session = NetBIOSSessionService(bHeader.Length, bData.Length);
-            Byte[] bSession = OrderedDictionaryToBytes(session);
-
-            Byte[] send = Misc.Combine(bSession, bHeader);
+            Byte[] send = Misc.Combine(bSessionService, bHeader);
             send = Misc.Combine(send, bData);
             streamSocket.Write(send, 0, send.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
         }
 
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
         internal Boolean Authenticate(String domain, String username, String hash)
         {
             String NTLMSSP = BitConverter.ToString(recieve).Replace("-", "");
@@ -173,7 +191,7 @@ namespace WheresMyImplant
             UInt16 wDomain = DataLength(index + 12, recieve);
             UInt16 wtarget = DataLength(index + 40, recieve);
 
-            Byte[] sessionId = recieve.Skip(44).Take(8).ToArray();
+            sessionId = recieve.Skip(44).Take(8).ToArray();
             Byte[] bServerChallenge = recieve.Skip(index + 24).Take(8).ToArray();
             Int32 start = index + 56 + wDomain;
             Int32 end = index + 55 + wDomain + wtarget;
@@ -228,10 +246,19 @@ namespace WheresMyImplant
 
             Byte[] bServerChallengeAndBlob = Misc.Combine(bServerChallenge, blob);
             Byte[] NetNTLMv2Response;
-            using (HMACMD5 hmac = new HMACMD5())
+            using (HMACMD5 hmacMD5 = new HMACMD5())
             {
-                hmac.Key = NetNTLMv2Hash;
-                NetNTLMv2Response = hmac.ComputeHash(bServerChallengeAndBlob);
+                hmacMD5.Key = NetNTLMv2Hash;
+                NetNTLMv2Response = hmacMD5.ComputeHash(bServerChallengeAndBlob);
+            }
+
+            if (signing)
+            {
+                using (HMACMD5 hmacMD5 = new HMACMD5())
+                {
+                    hmacMD5.Key = NetNTLMv2Hash;
+                    sessionKey = hmacMD5.ComputeHash(NetNTLMv2Response);
+                }
             }
 
             NetNTLMv2Response = Misc.Combine(NetNTLMv2Response, blob);
@@ -270,29 +297,133 @@ namespace WheresMyImplant
             NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, bHostname);
             NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
             NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, NetNTLMv2Response);
-            messageId += 1;
 
-            OrderedDictionary header = GetSMB2PacketHeader(new Byte[] { 0x01, 0x00 }, new Byte[] { 0x1f, 0x00 }, BitConverter.GetBytes(messageId), treeId, sessionId);
-            header["ProcessID"] = processId;
-            Byte[] bHeader = OrderedDictionaryToBytes(header);
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x01, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x1f, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+            Byte[] bHeader = header.GetHeader();
 
             Byte[] bNTLMSSPAuth = OrderedDictionaryToBytes(GetNTLMSSPAuth(NetNTLMSSPResponse));
-            Byte[] bData = OrderedDictionaryToBytes(GetSMB2SessionSetupRequest(bNTLMSSPAuth));
-            Byte[] bSession = OrderedDictionaryToBytes(NetBIOSSessionService(bHeader.Length, bData.Length));
 
-            Byte[] send = Misc.Combine(Misc.Combine(bSession, bHeader), bData);
+            SMB2SessionSetupRequest sessionSetup = new SMB2SessionSetupRequest();
+            sessionSetup.SetSecurityBlob(bNTLMSSPAuth);
+            Byte[] bData = sessionSetup.GetSMB2SessionSetupRequest();
+
+            NetBIOSSessionService sessionService = new NetBIOSSessionService();
+            sessionService.SetHeaderLength(bHeader.Length);
+            sessionService.SetDataLength(bData.Length);
+            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
+
+            Byte[] send = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
             streamSocket.Write(send, 0, send.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
 
-            if (recieve.Skip(12).Take(4).ToArray().SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00 }))
+            Byte[] status = recieve.Skip(12).Take(4).ToArray();
+            if (status.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00 }))
             {
                 WriteOutputGood(String.Format("{0} Login Successful to {1}", username, system));
                 return true;
             }
 
-            WriteOutputBad(String.Format("{0} Login Failed to {1}", username, system));
+            WriteOutput(String.Format("[-] {0} Login Failed to {1}", username, system));
+            WriteOutput(String.Format("[-] Status: {0}", BitConverter.ToString(status)));
             return false;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal Boolean TreeConnect(String share)
+        {
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x03, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+
+            Byte[] bData = OrderedDictionaryToBytes(GetSMB2TreeConnectRequest(Encoding.Unicode.GetBytes(share)));
+    
+            if (signing)
+            {
+                header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
+                header.SetSignature(sessionKey, ref bData);
+            }
+            Byte[] bHeader = header.GetHeader();
+
+            NetBIOSSessionService sessionService = new NetBIOSSessionService();
+            sessionService.SetHeaderLength(bHeader.Length);
+            sessionService.SetDataLength(bData.Length);
+            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
+
+            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            streamSocket.Write(bSend, 0, bSend.Length);
+            streamSocket.Flush();
+            streamSocket.Read(recieve, 0, recieve.Length);
+
+            Byte[] status = recieve.Skip(12).Take(4).ToArray();
+            if (status.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00 }))
+            {
+                WriteOutputGood(String.Format("Share Connect Successful: {0}", share));
+                return true;
+            }
+            else if (status.SequenceEqual(new Byte[] { 0xcc, 0x00, 0x00, 0xc0 }))
+            {
+                WriteOutputBad("Share Not Found");
+                return false;
+            }
+            else if (status.SequenceEqual(new Byte[] { 0x22, 0x00, 0x00, 0xc0 }))
+            {
+                WriteOutputBad("Access Denied");
+                return false;
+            }
+            else
+            {
+                WriteOutputBad(BitConverter.ToString(status));
+                return false;
+            }
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal void IoctlRequest(String share)
+        {
+            treeId = new Byte[] { 0x01, 0x00, 0x00, 0x00 };
+
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x0b, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+
+            Byte[] bData = OrderedDictionaryToBytes(GetSMB2IoctlRequest(Encoding.Unicode.GetBytes(share)));
+
+            if (signing)
+            {
+                header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
+                header.SetSignature(sessionKey, ref bData);
+            }
+            Byte[] bHeader = header.GetHeader();
+
+            NetBIOSSessionService sessionService = new NetBIOSSessionService();
+            sessionService.SetHeaderLength(bHeader.Length);
+            sessionService.SetDataLength(bData.Length);
+            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
+
+            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            streamSocket.Write(bSend, 0, bSend.Length);
+            streamSocket.Flush();
+            streamSocket.Read(recieve, 0, recieve.Length);
+            treeId = new Byte[] { 0x00, 0x00, 0x00, 0x00 };
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -326,134 +457,10 @@ namespace WheresMyImplant
             return output;
         }
 
-        private OrderedDictionary GetSMBPacketHeader(
-            Byte[]command, 
-            Byte[]flags,
-            Byte[]flags2,
-            Byte[]tree_ID,
-            Byte[]process_ID,
-            Byte[]user_ID
-            ){
-            OrderedDictionary SMBHeader = new OrderedDictionary();
-            SMBHeader.Add("Protocol", new Byte[] { 0xff, 0x53, 0x4d, 0x42 });
-            SMBHeader.Add("Command", command);
-            SMBHeader.Add("ErrorClass", new Byte[] { 0x00 });
-            SMBHeader.Add("Reserved", new Byte[] { 0x00 });
-            SMBHeader.Add("ErrorCode",new Byte[] { 0x00, 0x00 });
-            SMBHeader.Add("Flags", flags);
-            SMBHeader.Add("Flags2", flags2);
-            SMBHeader.Add("ProcessIDHigh", new Byte[] { 0x00, 0x00 });
-            SMBHeader.Add("Signature",new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
-            SMBHeader.Add("Reserved2",new Byte[] { 0x00, 0x00 });
-            SMBHeader.Add("TreeID", tree_ID);
-            SMBHeader.Add("ProcessID", process_ID);
-            SMBHeader.Add("UserID", user_ID);
-            SMBHeader.Add("MultiplexID", new Byte[] {0x00, 0x00});
-            return SMBHeader;
-        }
-
-        private OrderedDictionary SMBNegotiateProtocolRequest()
-        {
-            
-            Byte[] lmBytes = new Byte[] { 0x4e, 0x54, 0x20, 0x4c, 0x4d, 0x20, 0x30, 0x2e, 0x31, 0x32, 0x00 };
-            Byte[] twoBytes = new Byte[] { 0x53, 0x4d, 0x42, 0x20, 0x32, 0x2e, 0x30, 0x30, 0x32, 0x00 };
-            Byte[] threeBytes = new Byte[] { 0x53, 0x4d, 0x42, 0x20, 0x32, 0x2e, 0x3f, 0x3f, 0x3f, 0x00 };
-
-            Byte[] byte_count = BitConverter.GetBytes((short)(lmBytes.Length + twoBytes.Length + threeBytes.Length + 3));
-            OrderedDictionary SMBNegotiateProtocolRequest = new OrderedDictionary();
-            SMBNegotiateProtocolRequest.Add("WordCount", new Byte[] { 0x00 });
-            SMBNegotiateProtocolRequest.Add("ByteCount", byte_count);
-            SMBNegotiateProtocolRequest.Add("RequestedDialects_Dialect_BufferFormatLM", new Byte[] { 0x02 });
-            SMBNegotiateProtocolRequest.Add("RequestedDialects_Dialect_Name", lmBytes);
-            SMBNegotiateProtocolRequest.Add("RequestedDialects_Dialect_BufferFormat2",new Byte[] { 0x02 });
-            SMBNegotiateProtocolRequest.Add("RequestedDialects_Dialect_Name2", twoBytes);
-            SMBNegotiateProtocolRequest.Add("RequestedDialects_Dialect_BufferFormat3", new Byte[] {0x02 });
-            SMBNegotiateProtocolRequest.Add("RequestedDialects_Dialect_Name3", threeBytes);
-
-            return SMBNegotiateProtocolRequest;
-        }
-
-        private OrderedDictionary NetBIOSSessionService(Int32 header_length, Int32 data_length)
-        {
-            Byte[] netbios_session_service_length = BitConverter.GetBytes(header_length + data_length);
-            netbios_session_service_length = netbios_session_service_length.Take(3).ToArray();
-            Array.Reverse(netbios_session_service_length);
-            Console.WriteLine(BitConverter.ToString(netbios_session_service_length));
-            OrderedDictionary NetBIOSSessionService = new OrderedDictionary();
-            NetBIOSSessionService.Add("NetBIOSSessionService_Message_Type", new Byte[] { 0x00 });
-            NetBIOSSessionService.Add("NetBIOSSessionService_Length", netbios_session_service_length);
-
-            return NetBIOSSessionService;
-        }
-
-        private OrderedDictionary GetSMB2PacketHeader(
-            Byte[] packetCommand, 
-            Byte[] creditRequest, 
-            Byte[] messageID, 
-            Byte[] treeID, 
-            Byte[] sessionID)
-        {
-            OrderedDictionary header = new OrderedDictionary();
-            header.Add("ProtocolID", new Byte[]{ 0xfe, 0x53, 0x4d, 0x42 });
-            header.Add("StructureSize", new Byte[] { 0x40, 0x00 });
-            header.Add("CreditCharge", new Byte[] { 0x01, 0x00 });
-            header.Add("ChannelSequence", new Byte[] { 0x00, 0x00 });
-            header.Add("Reserved", new Byte[] { 0x00, 0x00 });
-            header.Add("Command", packetCommand);
-            header.Add("CreditRequest", creditRequest);
-            header.Add("Flags", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-            header.Add("NextCommand", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-            messageID = Misc.Combine(messageID, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-            header.Add("MessageID", messageID);
-            header.Add("ProcessID", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-            header.Add("TreeID", treeID);
-            header.Add("SessionID", sessionID);
-            header.Add("Signature", new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
-            
-            return header;
-        }   
-
-        private OrderedDictionary SMB2NegotiateProtocolRequest()
-        {
-            OrderedDictionary SMB2NegotiateProtocolRequest = new OrderedDictionary();
-            SMB2NegotiateProtocolRequest.Add("StructureSize", new Byte[] { 0x24, 0x00 });
-            SMB2NegotiateProtocolRequest.Add("DialectCount", new Byte[] { 0x02, 0x00 });
-            SMB2NegotiateProtocolRequest.Add("SecurityMode", new Byte[] { 0x01, 0x00 });
-            SMB2NegotiateProtocolRequest.Add("Reserved", new Byte[] { 0x00, 0x00 });
-            SMB2NegotiateProtocolRequest.Add("Capabilities", new Byte[] { 0x40, 0x00, 0x00, 0x00 });
-            SMB2NegotiateProtocolRequest.Add("ClientGUID", new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
-            SMB2NegotiateProtocolRequest.Add("NegotiateContextOffset", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-            SMB2NegotiateProtocolRequest.Add("NegotiateContextCount", new Byte[] { 0x00, 0x00 });
-            SMB2NegotiateProtocolRequest.Add("Reserved2", new Byte[] { 0x00, 0x00 });
-            SMB2NegotiateProtocolRequest.Add("Dialect", new Byte[] { 0x02, 0x02 });
-            SMB2NegotiateProtocolRequest.Add("Dialect2", new Byte[] { 0x10, 0x02 });
-
-            return SMB2NegotiateProtocolRequest;
-        }
-
-        private OrderedDictionary GetSMB2SessionSetupRequest(Byte[] security_blob)
-        {
-            Byte[] security_blob_length = System.BitConverter.GetBytes(security_blob.Length);
-            security_blob_length = security_blob_length.Take(2).ToArray();
-
-            OrderedDictionary SMB2SessionSetupRequest = new OrderedDictionary();
-            SMB2SessionSetupRequest.Add("StructureSize", new Byte[] { 0x19, 0x00 });
-            SMB2SessionSetupRequest.Add("Flags", new Byte[] { 0x00 });
-            SMB2SessionSetupRequest.Add("SecurityMode", new Byte[] { 0x01});
-            SMB2SessionSetupRequest.Add("Capabilities", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-            SMB2SessionSetupRequest.Add("Channel", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-            SMB2SessionSetupRequest.Add("SecurityBufferOffset", new Byte[] { 0x58, 0x00 });
-            SMB2SessionSetupRequest.Add("SecurityBufferLength", security_blob_length);
-            SMB2SessionSetupRequest.Add("PreviousSessionID", new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
-            SMB2SessionSetupRequest.Add("Buffer", security_blob);
-
-            return SMB2SessionSetupRequest;
-        }
-
-        private OrderedDictionary SMB2TreeConnectRequest(Byte[] path)
+        private OrderedDictionary GetSMB2TreeConnectRequest(Byte[] path)
         {
             Byte[] path_length = System.BitConverter.GetBytes(path.Length);
-            path_length = path_length.Take(1).ToArray();
+            path_length = path_length.Take(2).ToArray();
 
             OrderedDictionary SMB2TreeConnectRequest = new OrderedDictionary();
             SMB2TreeConnectRequest.Add("StructureSize", new Byte[] { 0x09, 0x00 });
@@ -465,7 +472,7 @@ namespace WheresMyImplant
             return SMB2TreeConnectRequest;
         }
 
-        private OrderedDictionary PacketSMB2IoctlRequest(Byte[] file_name)
+        private OrderedDictionary GetSMB2IoctlRequest(Byte[] file_name)
         {
             Byte[] file_name_length = BitConverter.GetBytes(file_name.Length + 2);
 
@@ -643,50 +650,6 @@ namespace WheresMyImplant
                 }
             }
             return SMB2CreateRequest;
-        }
-
-        public OrderedDictionary GetNTLMSSPNegotiate()
-        {
-            Byte[] NTLMSSP_length = BitConverter.GetBytes(32 + version.Length);
-            NTLMSSP_length = new Byte[] { NTLMSSP_length[0] };
-            Byte[] ASN_length_1 = new Byte[] { (Byte)(Convert.ToInt16(NTLMSSP_length[0]) + 32) };
-            Byte[] ASN_length_2 = new Byte[] { (Byte)(Convert.ToInt16(NTLMSSP_length[0]) + 22) };
-            Byte[] ASN_length_3 = new Byte[] { (Byte)(Convert.ToInt16(NTLMSSP_length[0]) + 20) };
-            Byte[] ASN_length_4 = new Byte[] { (Byte)(Convert.ToInt16(NTLMSSP_length[0]) + 2) };
-
-            OrderedDictionary NTLMSSPNegotiate = new OrderedDictionary();
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_InitialContextTokenID", new Byte[] { 0x60 }); // the ASN.1 key names are likely not all correct
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_InitialcontextTokenLength", ASN_length_1);
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_ThisMechID", new Byte[] { 0x06 });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_ThisMechLength", new Byte[] { 0x06 });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_OID", new Byte[] { 0x2b, 0x06, 0x01, 0x05, 0x05, 0x02 });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_InnerContextTokenID", new Byte[] { 0xa0 });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_InnerContextTokenLength", ASN_length_2);
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_InnerContextTokenID2", new Byte[] { 0x30 });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_InnerContextTokenLength2", ASN_length_3);
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_MechTypesID", new Byte[] { 0xa0 });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_MechTypesLength", new Byte[] { 0x0e });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_MechTypesID2", new Byte[] { 0x30 });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_MechTypesLength2", new Byte[] { 0x0c });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_MechTypesID3", new Byte[] { 0x06 });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_MechTypesLength3", new Byte[] { 0x0a });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_MechType", new Byte[] { 0x2b, 0x06, 0x01, 0x04, 0x01, 0x82, 0x37, 0x02, 0x02, 0x0a });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_MechTokenID", new Byte[] { 0xa2 });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_MechTokenLength", ASN_length_4);
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_NTLMSSPID", new Byte[] { 0x04 });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_NTLMSSPLength", NTLMSSP_length);
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_Identifier", new Byte[] { 0x4e, 0x54, 0x4c, 0x4d, 0x53, 0x53, 0x50, 0x00 });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_MessageType", new Byte[] { 0x01, 0x00, 0x00, 0x00 });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_NegotiateFlags", flags);
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_CallingWorkstationDomain", new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
-            NTLMSSPNegotiate.Add("NTLMSSPNegotiate_CallingWorkstationName", new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
-
-            if(version.Length > 0)
-            {
-                NTLMSSPNegotiate.Add("NTLMSSPNegotiate_Version", Encoding.ASCII.GetBytes(version));
-            }
-
-            return NTLMSSPNegotiate;
         }
 
         private OrderedDictionary GetNTLMSSPAuth(Byte[] NetNTLMResponse)

@@ -95,7 +95,14 @@
     <Compile Include="Base\BaseSQL.cs" />
     <Compile Include="Credentials\LSASecrets.cs" />
     <Compile Include="Lateral\PSExec.cs" />
+    <Compile Include="Lateral\SMB\NetBIOSSessionService.cs" />
+    <Compile Include="Lateral\SMB\SMB2Header.cs" />
     <Compile Include="Lateral\SMBClient.cs" />
+    <Compile Include="Lateral\SMB\SMB2NegotiateProtocolRequest.cs" />
+    <Compile Include="Lateral\SMB\SMB2NTLMSSPNegotiate.cs" />
+    <Compile Include="Lateral\SMB\SMB2SessionSetupRequest.cs" />
+    <Compile Include="Lateral\SMB\SMBHeader.cs" />
+    <Compile Include="Lateral\SMB\SMBNegotiateProtocolRequest.cs" />
     <Compile Include="Resources\CheckCreditCard.cs" />
     <Compile Include="Resources\CheckPrivileges.cs" />
     <Compile Include="Resources\Registry.cs" />
