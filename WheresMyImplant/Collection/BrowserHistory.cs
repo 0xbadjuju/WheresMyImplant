@@ -72,7 +72,6 @@ namespace WheresMyImplant
                 {
                     String content = streamReader.ReadToEnd();
                     String[] lines = content.Split(new String[] { "http" }, StringSplitOptions.RemoveEmptyEntries);
-                    WriteOutput(lines.Length.ToString());
                     foreach (String line in lines)
                     {
                         Match match = url.Match("http"+line);
