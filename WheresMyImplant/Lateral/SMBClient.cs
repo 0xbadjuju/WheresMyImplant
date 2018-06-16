@@ -188,8 +188,8 @@ namespace WheresMyImplant
             String NTLMSSP = BitConverter.ToString(recieve).Replace("-", "");
             Int32 index = NTLMSSP.IndexOf("4E544C4D53535000") / 2;
 
-            UInt16 wDomain = DataLength(index + 12, recieve);
-            UInt16 wtarget = DataLength(index + 40, recieve);
+            UInt16 wDomain = BitConverter.ToUInt16(recieve.Skip(index + 12).Take(2).ToArray(), 0);
+            UInt16 wtarget = BitConverter.ToUInt16(recieve.Skip(index + 40).Take(2).ToArray(), 0);
 
             sessionId = recieve.Skip(44).Take(8).ToArray();
             Byte[] bServerChallenge = recieve.Skip(index + 24).Take(8).ToArray();
@@ -307,7 +307,9 @@ namespace WheresMyImplant
             header.SetSessionID(sessionId);
             Byte[] bHeader = header.GetHeader();
 
-            Byte[] bNTLMSSPAuth = OrderedDictionaryToBytes(GetNTLMSSPAuth(NetNTLMSSPResponse));
+            NTLMSSPAuth ntlmSSPAuth = new NTLMSSPAuth();
+            ntlmSSPAuth.SetNetNTLMResponse(NetNTLMSSPResponse);
+            Byte[] bNTLMSSPAuth = ntlmSSPAuth.GetNTLMSSPAuth();
 
             SMB2SessionSetupRequest sessionSetup = new SMB2SessionSetupRequest();
             sessionSetup.SetSecurityBlob(bNTLMSSPAuth);
@@ -348,7 +350,9 @@ namespace WheresMyImplant
             header.SetTreeId(treeId);
             header.SetSessionID(sessionId);
 
-            Byte[] bData = OrderedDictionaryToBytes(GetSMB2TreeConnectRequest(Encoding.Unicode.GetBytes(share)));
+            SMB2TreeConnectRequest treeConnect = new SMB2TreeConnectRequest();
+            treeConnect.SetPath(share);
+            Byte[] bData = treeConnect.GetRequest();
     
             if (signing)
             {
@@ -375,17 +379,17 @@ namespace WheresMyImplant
             }
             else if (status.SequenceEqual(new Byte[] { 0xcc, 0x00, 0x00, 0xc0 }))
             {
-                WriteOutputBad("Share Not Found");
+                WriteOutput("[-] Share Not Found");
                 return false;
             }
             else if (status.SequenceEqual(new Byte[] { 0x22, 0x00, 0x00, 0xc0 }))
             {
-                WriteOutputBad("Access Denied");
+                WriteOutput("[-] Access Denied");
                 return false;
             }
             else
             {
-                WriteOutputBad(BitConverter.ToString(status));
+                WriteOutput(String.Format("[-] {0}", BitConverter.ToString(status)));
                 return false;
             }
         }
@@ -405,7 +409,9 @@ namespace WheresMyImplant
             header.SetTreeId(treeId);
             header.SetSessionID(sessionId);
 
-            Byte[] bData = OrderedDictionaryToBytes(GetSMB2IoctlRequest(Encoding.Unicode.GetBytes(share)));
+            SMB2IoctlRequest ioctlRequest = new SMB2IoctlRequest();
+            ioctlRequest.SetFileName(share);
+            Byte[] bData = ioctlRequest.GetRequest();
 
             if (signing)
             {
@@ -426,272 +432,53 @@ namespace WheresMyImplant
             treeId = new Byte[] { 0x00, 0x00, 0x00, 0x00 };
         }
 
-        ////////////////////////////////////////////////////////////////////////////////
-        //
-        ////////////////////////////////////////////////////////////////////////////////
-        private UInt16 DataLength(Int32 start, Byte[] extract_data)
+        internal void CreateRequest()
         {
-            return BitConverter.ToUInt16(extract_data.Skip(start).Take(2).ToArray(), 0);
-        }
+            treeId = recieve.Skip(40).Take(4).ToArray();
 
-        ////////////////////////////////////////////////////////////////////////////////
-        //
-        ////////////////////////////////////////////////////////////////////////////////
-        private Byte[] OrderedDictionaryToBytes(OrderedDictionary dictionary)
-        {
-            Byte[] output = new Byte[0];
-            
-                foreach (Object field in dictionary.Values)
-                {
-                    try
-                    {
-                        output = Misc.Combine(output, (Byte[])field);
-                    }
-                    catch (InvalidCastException error)
-                    {
-                        Console.WriteLine(error);
-                        Console.WriteLine(field);
-                        return null;
-                    }
-                }
-            return output;
-        }
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x05, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
 
-        private OrderedDictionary GetSMB2TreeConnectRequest(Byte[] path)
-        {
-            Byte[] path_length = System.BitConverter.GetBytes(path.Length);
-            path_length = path_length.Take(2).ToArray();
+            SMB2CreateRequest createRequest = new SMB2CreateRequest();
+            createRequest.SetExtraInfo(1, 0);
+            Byte[] bData = createRequest.GetRequest();
 
-            OrderedDictionary SMB2TreeConnectRequest = new OrderedDictionary();
-            SMB2TreeConnectRequest.Add("StructureSize", new Byte[] { 0x09, 0x00 });
-            SMB2TreeConnectRequest.Add("Reserved", new Byte[] { 0x00, 0x00 });
-            SMB2TreeConnectRequest.Add("PathOffset", new Byte[] { 0x48, 0x00 });
-            SMB2TreeConnectRequest.Add("PathLength",path_length);
-            SMB2TreeConnectRequest.Add("Buffer",path);
-
-            return SMB2TreeConnectRequest;
-        }
-
-        private OrderedDictionary GetSMB2IoctlRequest(Byte[] file_name)
-        {
-            Byte[] file_name_length = BitConverter.GetBytes(file_name.Length + 2);
-
-            OrderedDictionary SMB2IoctlRequest = new OrderedDictionary();
-            SMB2IoctlRequest.Add("StructureSize", new Byte[] { 0x39, 0x00 });
-            SMB2IoctlRequest.Add("Reserved", new Byte[] { 0x00, 0x00 });
-            SMB2IoctlRequest.Add("Function", new Byte[] { 0x94, 0x01, 0x06, 0x00 });
-            SMB2IoctlRequest.Add("GUIDHandle", new Byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
-            SMB2IoctlRequest.Add("InData_Offset", new Byte[] { 0x78, 0x00, 0x00, 0x00 });
-            SMB2IoctlRequest.Add("InData_Length", file_name_length);
-            SMB2IoctlRequest.Add("MaxIoctlInSize", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-            SMB2IoctlRequest.Add("OutData_Offset", new Byte[] { 0x78, 0x00, 0x00, 0x00 });
-            SMB2IoctlRequest.Add("OutData_Length", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-            SMB2IoctlRequest.Add("MaxIoctlOutSize", new Byte[] { 0x00, 0x10, 0x00, 0x00 });
-            SMB2IoctlRequest.Add("Flags", new Byte[] { 0x01, 0x00, 0x00, 0x00 });
-            SMB2IoctlRequest.Add("Unknown", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-            SMB2IoctlRequest.Add("InData_MaxReferralLevel", new Byte[] { 0x04, 0x00 });
-            SMB2IoctlRequest.Add("InData_FileName", file_name);
-
-            return SMB2IoctlRequest;
-        }
-
-        private OrderedDictionary SMB2CreateRequest(Byte[] file_name, Int32 extra_info, Int64 allocation_size)
-        {
-            Byte[] file_name_length;
-            if (file_name.Length > 0)
+            if (signing)
             {
-                file_name_length = System.BitConverter.GetBytes(file_name.Length);
-                file_name_length = file_name_length.Take(1).ToArray();
+                header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
+                header.SetSignature(sessionKey, ref bData);
             }
-            else
-            {
-                file_name = new Byte[] { 0x00, 0x00, 0x69, 0x00, 0x6e, 0x00, 0x64, 0x00 };
-                file_name_length = new Byte[] { 0x00, 0x00 };
-            }
+            Byte[] bHeader = header.GetHeader();
 
-            Byte[] desired_access = { 0x03, 0x00, 0x00, 0x00 };
-            Byte[] file_attributes = { 0x80, 0x00, 0x00, 0x00 };
-            Byte[] share_access = { 0x01, 0x00, 0x00, 0x00 };
-            Byte[] create_options = { 0x40, 0x00, 0x00, 0x00 };
-            Byte[] create_contexts_offset = { 0x00, 0x00, 0x00, 0x00 };
-            Byte[] create_contexts_length = { 0x00, 0x00, 0x00, 0x00 };
-            Byte[] allocation_size_bytes = new Byte[0];
+            NetBIOSSessionService sessionService = new NetBIOSSessionService();
+            sessionService.SetHeaderLength(bHeader.Length);
+            sessionService.SetDataLength(bData.Length);
+            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
 
-            if(extra_info > 0)
-            {
-                desired_access = new Byte[] { 0x80, 0x00, 0x10, 0x00 };
-                file_attributes = new Byte[] { 0x00, 0x00, 0x00, 0x00 };
-                share_access = new Byte[] { 0x00, 0x00, 0x00, 0x00 };
-                create_options =  new Byte[] { 0x21, 0x00, 0x00, 0x00 };
-                create_contexts_offset = System.BitConverter.GetBytes(file_name.Length);
-
-                if (extra_info == 1)
-                {
-                    create_contexts_length = new Byte[] { 0x58, 0x00, 0x00, 0x00 };
-                }
-                else if (extra_info == 2)
-                {
-                    create_contexts_length = new Byte[] { 0x90, 0x00, 0x00, 0x00 };
-                }
-                else
-                {
-                    create_contexts_length = new Byte[] { 0xb0, 0x00, 0x00, 0x00 };
-                    allocation_size_bytes = System.BitConverter.GetBytes(allocation_size);
-                }
-
-                if(file_name.Length > 0)
-                {
-                    String file_name_padding_check = Convert.ToString(file_name.Length / 8);
-
-                    if (Regex.Match(file_name_padding_check, "*.75").Success)
-                    {
-                        file_name = Misc.Combine(file_name, new Byte[] { 0x04, 0x00 });
-                    }
-                    else if (Regex.Match(file_name_padding_check, "*.5").Success)
-                    {
-                        file_name = Misc.Combine(file_name, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-                    }
-                    else if (Regex.Match(file_name_padding_check, "*.25").Success)
-                    {
-                       file_name = Misc.Combine(file_name, new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
-                    }
-                }
-
-                create_contexts_offset = System.BitConverter.GetBytes(file_name.Length + 120);
-            }
-
-            OrderedDictionary SMB2CreateRequest = new OrderedDictionary();
-            SMB2CreateRequest.Add("StructureSize", new Byte[] { 0x39, 0x00 });
-            SMB2CreateRequest.Add("Flags", new Byte[] { 0x00 });
-            SMB2CreateRequest.Add("RequestedOplockLevel", new Byte[] { 0x00 });
-            SMB2CreateRequest.Add("Impersonation", new Byte[] { 0x02, 0x00, 0x00, 0x00 });
-            SMB2CreateRequest.Add("SMBCreateFlags", new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
-            SMB2CreateRequest.Add("Reserved", new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
-            SMB2CreateRequest.Add("DesiredAccess", desired_access);
-            SMB2CreateRequest.Add("FileAttributes", file_attributes);
-            SMB2CreateRequest.Add("ShareAccess", share_access);
-            SMB2CreateRequest.Add("CreateDisposition", new Byte[] { 0x01, 0x00, 0x00, 0x00 });
-            SMB2CreateRequest.Add("CreateOptions", create_options);
-            SMB2CreateRequest.Add("NameOffset", new Byte[] { 0x78, 0x00 });
-            SMB2CreateRequest.Add("NameLength",file_name_length);
-            SMB2CreateRequest.Add("CreateContextsOffset", create_contexts_offset);
-            SMB2CreateRequest.Add("CreateContextsLength", create_contexts_length);
-            SMB2CreateRequest.Add("Buffer", file_name);
-
-            if(extra_info > 0)
-            {
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementDHnQ_ChainOffset", new Byte[] { 0x28, 0x00, 0x00, 0x00 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementDHnQ_Tag_Offset", new Byte[] { 0x10, 0x00 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementDHnQ_Tag_Length", new Byte[] { 0x04, 0x00, 0x00, 0x00 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementDHnQ_Data_Offset", new Byte[] { 0x18, 0x00 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementDHnQ_Data_Length", new Byte[] { 0x10, 0x00, 0x00, 0x00 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementDHnQ_Tag", new Byte[] { 0x44, 0x48, 0x6e, 0x51 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementDHnQ_Unknown", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementDHnQ_Data_GUIDHandle", new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
-
-                if(extra_info > 3)
-                {
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementAlSi_ChainOffset", new Byte[] { 0x20, 0x00, 0x00, 0x00 });
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementAlSi_Tag_Offset", new Byte[] { 0x10, 0x00 });
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementAlSi_Tag_Length", new Byte[] { 0x04, 0x00, 0x00, 0x00 });
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementAlSi_Data_Offset", new Byte[] { 0x18, 0x00 });
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementAlSi_Data_Length", new Byte[] { 0x08, 0x00, 0x00, 0x00 });
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementAlSi_Tag", new Byte[] { 0x41, 0x6c, 0x53, 0x69 });
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementAlSi_Unknown", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementAlSi_AllocationSize", allocation_size_bytes);
-                }
-
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementMxAc_ChainOffset", new Byte[] { 0x18, 0x00, 0x00, 0x00 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementMxAc_Tag_Offset", new Byte[] { 0x10, 0x00 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementMxAc_Tag_Length", new Byte[] { 0x04, 0x00, 0x00, 0x00 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementMxAc_Data_Offset", new Byte[] { 0x18, 0x00 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementMxAc_Data_Length", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementMxAc_Tag", new Byte[] { 0x4d, 0x78, 0x41, 0x63 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementMxAc_Unknown", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-
-                if(extra_info > 1)
-                {
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementQFid_ChainOffset", new Byte[] { 0x18, 0x00, 0x00, 0x00 });
-                }
-                else
-                {
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementQFid_ChainOffset", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-                }
-                
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementQFid_Tag_Offset", new Byte[] { 0x10, 0x00 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementQFid_Tag_Length", new Byte[] { 0x04, 0x00, 0x00, 0x00 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementQFid_Data_Offset", new Byte[] { 0x18, 0x00 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementQFid_Data_Length", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementQFid_Tag", new Byte[] { 0x51, 0x46, 0x69, 0x64 });
-                SMB2CreateRequest.Add("ExtraInfo_ChainElementQFid_Unknown", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-
-                if(extra_info > 1)
-                {
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementRqLs_ChainOffset", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementRqLs_Tag_Offset", new Byte[] { 0x10, 0x00 });
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementRqLs_Tag_Length", new Byte[] { 0x04, 0x00, 0x00, 0x00 });
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementRqLs_Data_Offset", new Byte[] { 0x18, 0x00 });
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementRqLs_Data_Length", new Byte[] { 0x20, 0x00, 0x00, 0x00 });
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementRqLs_Tag", new Byte[] { 0x52, 0x71, 0x4c, 0x73 });
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementRqLs_Unknown", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-
-                    if(extra_info == 2)
-                    {
-                        SMB2CreateRequest.Add("ExtraInfo_ChainElementRqLs_Data_Lease_Key", new Byte[] { 0x10, 0xb0, 0x1d, 0x02, 0xa0, 0xf8, 0xff, 0xff, 0x47, 0x78, 0x67, 0x02, 0x00, 0x00, 0x00, 0x00 });
-                    }
-                    else
-                    {
-                        SMB2CreateRequest.Add("ExtraInfo_ChainElementRqLs_Data_Lease_Key", new Byte[] { 0x10, 0x90, 0x64, 0x01, 0xa0, 0xf8, 0xff, 0xff, 0x47, 0x78, 0x67, 0x02, 0x00, 0x00, 0x00, 0x00 });
-                    }
-
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementRqLs_Data_Lease_State", new Byte[] { 0x07, 0x00, 0x00, 0x00 });
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementRqLs_Data_Lease_Flags", new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-                    SMB2CreateRequest.Add("ExtraInfo_ChainElementRqLs_Data_Lease_Duration", new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
-                }
-            }
-            return SMB2CreateRequest;
-        }
-
-        private OrderedDictionary GetNTLMSSPAuth(Byte[] NetNTLMResponse)
-        {
-            Byte[] NTLMSSP_length = BitConverter.GetBytes(NetNTLMResponse.Length);
-            NTLMSSP_length = NTLMSSP_length.Take(2).ToArray(); 
-            Array.Reverse(NTLMSSP_length);
-
-            Byte[] ASN_length_1 = BitConverter.GetBytes(NetNTLMResponse.Length + 12);
-            ASN_length_1 = ASN_length_1.Take(2).ToArray();
-            Array.Reverse(ASN_length_1);
-
-            Byte[] ASN_length_2 = BitConverter.GetBytes(NetNTLMResponse.Length + 8);
-            ASN_length_2 = ASN_length_2.Take(2).ToArray();
-            Array.Reverse(ASN_length_2);
-
-            Byte[] ASN_length_3 = BitConverter.GetBytes(NetNTLMResponse.Length + 4);
-            ASN_length_3 = ASN_length_3.Take(2).ToArray();
-            Array.Reverse(ASN_length_3);
-
-            OrderedDictionary NTLMSSPAuth = new OrderedDictionary();
-            NTLMSSPAuth.Add("NTLMSSPAuth_ASNID", new Byte[] { 0xa1, 0x82 });
-            NTLMSSPAuth.Add("NTLMSSPAuth_ASNLength", ASN_length_1);
-            NTLMSSPAuth.Add("NTLMSSPAuth_ASNID2", new Byte[] { 0x30, 0x82 });
-            NTLMSSPAuth.Add("NTLMSSPAuth_ASNLength2", ASN_length_2);
-            NTLMSSPAuth.Add("NTLMSSPAuth_ASNID3", new Byte[] {0xa2, 0x82 });
-            NTLMSSPAuth.Add("NTLMSSPAuth_ASNLength3", ASN_length_3);
-            NTLMSSPAuth.Add("NTLMSSPAuth_NTLMSSPID", new Byte[] {0x04, 0x82} );
-            NTLMSSPAuth.Add("NTLMSSPAuth_NTLMSSPLength", NTLMSSP_length);
-            NTLMSSPAuth.Add("NTLMSSPAuth_NTLMResponse", NetNTLMResponse);
-
-            return NTLMSSPAuth;
+            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            streamSocket.Write(bSend, 0, bSend.Length);
+            streamSocket.Flush();
+            streamSocket.Read(recieve, 0, recieve.Length);
         }
 
         public void Dispose()
         {
-            smbClient.Close();
-            streamSocket.Close();
+            streamSocket.Dispose();
+
+            if (smbClient.Connected)
+            {
+                smbClient.Close();
+            }
         }
 
         ~SMBClient()
         {
+            Dispose();
         }
     }
 }

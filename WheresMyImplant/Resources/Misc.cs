@@ -201,7 +201,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public static IntPtr GetModuleAddress(String module, UInt32 processId, ref UInt32 dwSize)
+        internal static IntPtr GetModuleAddress(String module, UInt32 processId, ref UInt32 dwSize)
         {
             IntPtr hModule = IntPtr.Zero;
             IntPtr hSnapshot = IntPtr.Zero;
@@ -242,6 +242,16 @@ namespace WheresMyImplant
                 kernel32.CloseHandle(hSnapshot);
             }
             return hModule;
+        }
+
+        internal static Byte[] GenerateNTLM(String password)
+        {
+            Byte[] bPassword = System.Text.Encoding.Unicode.GetBytes(password);
+            Org.BouncyCastle.Crypto.Digests.MD4Digest md4Digest = new Org.BouncyCastle.Crypto.Digests.MD4Digest();
+            md4Digest.BlockUpdate(bPassword, 0, bPassword.Length);
+            Byte[] result = new Byte[md4Digest.GetDigestSize()];
+            md4Digest.DoFinal(result, 0);
+            return result;
         }
     }
 }

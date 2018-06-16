@@ -16,7 +16,7 @@ namespace WheresMyImplant
         private Byte[] Name;
         private readonly Byte[] BufferFormat2= { 0x02 };
         private Byte[] Name2;
-        private readonly Byte[] BufferFormat3 = {0x02 };
+        private readonly Byte[] BufferFormat3 = { 0x02 };
         private Byte[] Name3;
 
         internal SMBNegotiateProtocolRequest()
