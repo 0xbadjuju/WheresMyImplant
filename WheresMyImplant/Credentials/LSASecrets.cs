@@ -69,7 +69,6 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal static String ParseDecrypted(Byte[] decryptedString)
         {
-            Console.WriteLine((Int32)decryptedString[0]);
             Byte[] passwordText = decryptedString.Skip(16).Take((Int32)decryptedString[0]).ToArray();
             String password = Encoding.Unicode.GetString(passwordText);
             if (password.Length == 0)

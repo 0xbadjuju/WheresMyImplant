@@ -109,6 +109,9 @@ namespace Unmanaged.Libraries
         public static extern UInt32 ResumeThread(IntPtr hThread);
 
         [DllImport("kernel32.dll", SetLastError = true)]
+        internal static extern UInt32 SearchPath(String lpPath, String lpFileName, String lpExtension, UInt32 nBufferLength, StringBuilder lpBuffer, ref IntPtr lpFilePart);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean SetThreadContext(IntPtr hThread, IntPtr lpContext);
 
         [DllImport("kernel32.dll", SetLastError = true)]

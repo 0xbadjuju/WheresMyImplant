@@ -120,6 +120,9 @@ namespace Unmanaged.Libraries
         public static extern Boolean DuplicateTokenEx(IntPtr hExistingToken, UInt32 dwDesiredAccess, IntPtr lpTokenAttributes, Winnt._SECURITY_IMPERSONATION_LEVEL ImpersonationLevel, Winnt.TOKEN_TYPE TokenType, out IntPtr phNewToken);
 
         [DllImport("advapi32.dll", SetLastError = true)]
+        public static extern Boolean DuplicateTokenEx(IntPtr hExistingToken, UInt32 dwDesiredAccess, ref Winbase._SECURITY_ATTRIBUTES lpTokenAttributes, Winnt._SECURITY_IMPERSONATION_LEVEL ImpersonationLevel, Winnt.TOKEN_TYPE TokenType, out IntPtr phNewToken);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
         public static extern Boolean ImpersonateLoggedOnUser(IntPtr hToken);
 
         [DllImport("advapi32.dll", SetLastError = true)]
@@ -128,12 +131,26 @@ namespace Unmanaged.Libraries
         [DllImport("advapi32.dll", SetLastError = true)]
         public static extern Boolean GetTokenInformation(IntPtr TokenHandle, Winnt._TOKEN_INFORMATION_CLASS TokenInformationClass, IntPtr TokenInformation, UInt32 TokenInformationLength, out UInt32 ReturnLength);
 
+        [DllImport("advapi32.dll", SetLastError = true)]
+        public static extern Boolean GetTokenInformation(IntPtr TokenHandle, Winnt._TOKEN_INFORMATION_CLASS TokenInformationClass, ref Winnt._TOKEN_STATISTICS TokenInformation, UInt32 TokenInformationLength, out UInt32 ReturnLength);
+
         [Flags]
         public enum LOGON_FLAGS
         {
             WithProfile = 1,
             NetCredentialsOnly
         }
+
+        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern bool LookupAccountSid(
+            String lpSystemName, 
+            IntPtr Sid,
+            StringBuilder lpName,
+            ref UInt32 cchName,
+            StringBuilder ReferencedDomainName,
+            ref UInt32 cchReferencedDomainName,
+            out Winnt._SID_NAME_USE peUse
+        );
 
         [DllImport("advapi32.dll", SetLastError = true)]
         public static extern Boolean LookupPrivilegeName(String lpSystemName, IntPtr lpLuid, StringBuilder lpName, ref Int32 cchName);
@@ -146,6 +163,9 @@ namespace Unmanaged.Libraries
 
         [DllImport("advapi32.dll", SetLastError = true)]
         public static extern IntPtr OpenService(IntPtr hSCManager, String lpServiceName, Winsvc.dwDesiredAccess dwDesiredAccess);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        public static extern Boolean PrivilegeCheck(IntPtr ClientToken, Winnt._PRIVILEGE_SET RequiredPrivileges, out IntPtr pfResult);
 
         [DllImport("advapi32.dll", SetLastError = true)]
         public static extern Boolean StartService(IntPtr hService, Int32 dwNumServiceArgs, String[] lpServiceArgVectors);

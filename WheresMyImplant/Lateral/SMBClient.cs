@@ -432,7 +432,7 @@ namespace WheresMyImplant
             treeId = new Byte[] { 0x00, 0x00, 0x00, 0x00 };
         }
 
-        internal void CreateRequest()
+        internal Boolean CreateRequest()
         {
             treeId = recieve.Skip(40).Take(4).ToArray();
 
@@ -447,6 +447,63 @@ namespace WheresMyImplant
             SMB2CreateRequest createRequest = new SMB2CreateRequest();
             createRequest.SetExtraInfo(1, 0);
             Byte[] bData = createRequest.GetRequest();
+
+            if (signing)
+            {
+                header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
+                header.SetSignature(sessionKey, ref bData);
+            }
+            Byte[] bHeader = header.GetHeader();
+
+            NetBIOSSessionService sessionService = new NetBIOSSessionService();
+            sessionService.SetHeaderLength(bHeader.Length);
+            sessionService.SetDataLength(bData.Length);
+            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
+
+            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            streamSocket.Write(bSend, 0, bSend.Length);
+            streamSocket.Flush();
+            streamSocket.Read(recieve, 0, recieve.Length);
+
+            Byte[] status = recieve.Skip(12).Take(4).ToArray();
+            if (status.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00 }))
+            {
+                WriteOutputGood("Create Request Successful");
+                return true;
+            }
+            else if (status.SequenceEqual(new Byte[] { 0x34, 0x00, 0x00, 0xc0 }))
+            {
+                WriteOutput("[-] File Not Found");
+                return false;
+            }
+            else if (status.SequenceEqual(new Byte[] { 0x22, 0x00, 0x00, 0xc0 }))
+            {
+                WriteOutput("[-] Access Denied");
+                return false;
+            }
+            else
+            {
+                WriteOutput(String.Format("[-] {0}", BitConverter.ToString(status)));
+                return false;
+            }
+        }
+
+        public void InfoRequest()
+        {
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x10, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+
+            SMB2GetInfo getInfo = new SMB2GetInfo();
+            getInfo.SetClass(new Byte[] { 0x02 });
+            getInfo.SetInfoLevel(new Byte[] { 0x05 });
+            getInfo.SetMaxResponseSize(new Byte[] { 0x50, 0x00, 0x00, 0x00 });
+            getInfo.SetGUIDHandleFile(recieve.Skip(132).Take(16).ToArray());
+            Byte[] bData = getInfo.GetRequest();
 
             if (signing)
             {

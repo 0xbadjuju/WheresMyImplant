@@ -112,7 +112,6 @@ namespace WheresMyImplant
             WriteOutputGood("History");
             foreach (String file in historyFiles)
             {
-                Console.WriteLine(file);
                 String content;
                 using (FileStream fileStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {

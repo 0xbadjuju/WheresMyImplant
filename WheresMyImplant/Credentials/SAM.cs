@@ -62,7 +62,6 @@ namespace WheresMyImplant
                         return decryptor.TransformFinalBlock(F, 0x88, 16);
                     }
                 default:
-                    Console.WriteLine("Unknown hash type");
                     return new Byte[0];
             }
         }
@@ -93,16 +92,12 @@ namespace WheresMyImplant
             {
                 if (advapi32.RegOpenKeyEx(Reg.HKEY_LOCAL_MACHINE, @"SAM\SAM\Domains\Account\Users\Names\" + name, 0, Reg.KEY_QUERY_VALUE, out hKey) != 0)
                 {
-                    String error = String.Format("Error opening key '{0}\\{1}: 0x{2:x}", @"SAM\SAM\Domains\Account\Users\Names\" + name, "", new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
-                    Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
-                    WriteOutputBad(error);
+                    WriteOutputBad(String.Format("Error opening key '{0}\\{1}", @"SAM\SAM\Domains\Account\Users\Names\" + name, ""));
                     return null;
                 }
                 if (advapi32.RegQueryValueEx(hKey, "", 0, ref type, IntPtr.Zero, ref size) != 0)
                 {
-                    String error = String.Format("[-] Error querying value '{0}\\{1}: 0x{2:x}", @"SAM\SAM\Domains\Account\Users\Names\" + name, "", new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
-                    Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
-                    WriteOutputBad(error);
+                    WriteOutputBad(String.Format("[-] Error querying value '{0}\\{1}", @"SAM\SAM\Domains\Account\Users\Names\" + name, ""));
                     return null;
                 }
                 ridMapping[type] = name;

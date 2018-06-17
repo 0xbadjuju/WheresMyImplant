@@ -25,7 +25,7 @@ namespace WheresMyImplant
                 WriteOutputNeutral("Not running as SYSTEM, checking for Administrator access.");
                 WriteOutputNeutral(String.Format("Operating as {0}", WindowsIdentity.GetCurrent().Name));
 
-                if (CheckAdministrator(currentIdentity))
+                if (CheckElevation(currentIdentity.Token))
                 {
                     WriteOutputNeutral("Attempting to elevate to SYSTEM");
                     new Tokens().GetSystem();
@@ -55,15 +55,8 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //https://blogs.msdn.microsoft.com/cjacks/2006/10/08/how-to-determine-if-a-user-is-a-member-of-the-administrators-group-with-uac-enabled-on-windows-vista/
         ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean CheckAdministrator(WindowsIdentity currentIdentity)
+        public Boolean PrintElevation(IntPtr hToken)
         {
-            if ((new WindowsPrincipal(currentIdentity)).IsInRole(WindowsBuiltInRole.Administrator))
-            {
-                WriteOutputGood("Running as Administrator");
-                return true;
-            }
-
-            IntPtr hToken = currentIdentity.Token;
             UInt32 tokenInformationLength = (UInt32)Marshal.SizeOf(typeof(UInt32));
             IntPtr tokenInformation = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(UInt32)));
             UInt32 returnLength;
@@ -79,23 +72,53 @@ namespace WheresMyImplant
             switch ((Winnt.TOKEN_ELEVATION_TYPE)Marshal.ReadInt32(tokenInformation))
             {
                 case Winnt.TOKEN_ELEVATION_TYPE.TokenElevationTypeDefault:
-                    WriteOutputBad("TokenElevationTypeDefault");
-                    WriteOutputNeutral("Token: Not Split");
-                    WriteOutputNeutral("ProcessIntegrity: Medium/Low");
+                    WriteOutput("TokenElevationTypeDefault");
+                    WriteOutput("Token: Not Split");
+                    WriteOutput("ProcessIntegrity: Medium/Low");
                     return false;
                 case Winnt.TOKEN_ELEVATION_TYPE.TokenElevationTypeFull:
-                    WriteOutputGood("TokenElevationTypeFull");
-                    WriteOutputNeutral("Token: Split");
-                    WriteOutputNeutral("ProcessIntegrity: High");
+                    WriteOutput("TokenElevationTypeFull");
+                    WriteOutput("Token: Split");
+                    WriteOutput("ProcessIntegrity: High");
                     return true;
                 case Winnt.TOKEN_ELEVATION_TYPE.TokenElevationTypeLimited:
-                    WriteOutputNeutral("TokenElevationTypeLimited");
-                    WriteOutputNeutral("Token: Split - ProcessIntegrity: Medium/Low");
-                    WriteOutputNeutral("Hint: Try to Bypass UAC");
+                    WriteOutput("TokenElevationTypeLimited");
+                    WriteOutput("Token: Split - ProcessIntegrity: Medium/Low");
+                    WriteOutput("Hint: Try to Bypass UAC");
                     return false;
                 default:
-                    WriteOutputBad("Unknown integrity");
-                    WriteOutputNeutral("Trying anyway");
+                    WriteOutput("Unknown integrity");
+                    WriteOutput("Trying anyway");
+                    return true;
+            }
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //https://blogs.msdn.microsoft.com/cjacks/2006/10/08/how-to-determine-if-a-user-is-a-member-of-the-administrators-group-with-uac-enabled-on-windows-vista/
+        ////////////////////////////////////////////////////////////////////////////////
+        public static Boolean CheckElevation(IntPtr hToken)
+        {
+            UInt32 tokenInformationLength = (UInt32)Marshal.SizeOf(typeof(UInt32));
+            IntPtr tokenInformation = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(UInt32)));
+            UInt32 returnLength;
+
+            Boolean result = advapi32.GetTokenInformation(
+                hToken,
+                Winnt._TOKEN_INFORMATION_CLASS.TokenElevationType,
+                tokenInformation,
+                tokenInformationLength,
+                out returnLength
+            );
+
+            switch ((Winnt.TOKEN_ELEVATION_TYPE)Marshal.ReadInt32(tokenInformation))
+            {
+                case Winnt.TOKEN_ELEVATION_TYPE.TokenElevationTypeDefault: ;
+                    return false;
+                case Winnt.TOKEN_ELEVATION_TYPE.TokenElevationTypeFull:
+                    return true;
+                case Winnt.TOKEN_ELEVATION_TYPE.TokenElevationTypeLimited:
+                    return false;
+                default:
                     return true;
             }
         }

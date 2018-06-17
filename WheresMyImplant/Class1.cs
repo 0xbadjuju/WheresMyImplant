@@ -143,7 +143,7 @@ namespace WheresMyImplant
                 using (LoadDllRemote injectDllRemote = new LoadDllRemote(library, (UInt32)dwProcessId))
                 {
                     UInt32 size = 0;
-                    Console.WriteLine(Misc.GetModuleAddress("kernel32.dll", (UInt32)dwProcessId, ref size));
+                    //Misc.GetModuleAddress("kernel32.dll", (UInt32)dwProcessId, ref size);
                     injectDllRemote.Execute();
                     output = injectDllRemote.GetOutput();
                 }
@@ -368,8 +368,7 @@ namespace WheresMyImplant
             }
             else
             {
-                tokenvator = new Tokens();
-                tokenvator.GetHelp();
+                //todo
             }
             return tokenvator.GetOutput();
         }
@@ -390,8 +389,7 @@ namespace WheresMyImplant
             }
             else
             {
-                tokenvator = new RestrictedToken();
-                tokenvator.GetHelp();
+                //to do
             }
             return tokenvator.GetOutput();
         }
@@ -626,6 +624,7 @@ namespace WheresMyImplant
                     smbClient.IoctlRequest(String.Format(@"\{0}\{1}", target, "c$"));
                     smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "c$"));
                     smbClient.CreateRequest();
+                    smbClient.InfoRequest();
                 }
                 output = smbClient.GetOutput();
             }

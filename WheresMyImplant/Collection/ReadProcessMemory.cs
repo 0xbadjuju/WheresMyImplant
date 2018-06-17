@@ -34,10 +34,10 @@ namespace WheresMyImplant
             hProcess = kernel32.OpenProcess(kernel32.PROCESS_QUERY_INFORMATION | kernel32.PROCESS_VM_READ, false, (UInt32)processID);
             if (IntPtr.Zero == hProcess)
             {
-                Console.WriteLine("[-] Unable to OpenProcess {0}", processID);
+                WriteOutputBad(String.Format("Unable to OpenProcess {0}", processID));
                 return false;
             }
-            Console.WriteLine("[+] Handle Received {0}", hProcess.ToInt64());
+            WriteOutputGood(String.Format("Handle Received {0}", hProcess.ToInt64()));
             return true;
         }
 

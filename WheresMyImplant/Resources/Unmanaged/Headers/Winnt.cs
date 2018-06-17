@@ -5,6 +5,7 @@ using WORD = System.UInt16;
 using DWORD = System.UInt32;
 using QWORD = System.UInt64;
 using ULONGLONG = System.UInt64;
+using LARGE_INTEGER = System.UInt64;
 
 using PVOID = System.IntPtr;
 using LPVOID = System.IntPtr;
@@ -447,11 +448,55 @@ namespace Unmanaged.Headers
             public DWORD __alignment2;
         }
 
+        public const Int32 PRIVILEGE_SET_ALL_NECESSARY = 1;
+
+        private const Int32 ANYSIZE_ARRAY = 1;
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _PRIVILEGE_SET
+        {
+            public UInt32 PrivilegeCount;
+            public UInt32 Control;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = ANYSIZE_ARRAY)]
+            public _LUID_AND_ATTRIBUTES[] Privilege;
+        }
+
+
         [StructLayout(LayoutKind.Sequential)]
         public struct _SID_AND_ATTRIBUTES
         {
             public IntPtr Sid;
             public UInt32 Attributes;
+        }
+
+        [Flags]
+        public enum _SECURITY_IMPERSONATION_LEVEL : int
+        {
+            SecurityAnonymous = 0,
+            SecurityIdentification = 1,
+            SecurityImpersonation = 2,
+            SecurityDelegation = 3
+        };
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _SID_IDENTIFIER_AUTHORITY
+        {
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6, ArraySubType = UnmanagedType.I1)]
+            public byte[] Value;
+        }
+
+        [Flags]
+        public enum _SID_NAME_USE
+        {
+            SidTypeUser = 1,
+            SidTypeGroup,
+            SidTypeDomain,
+            SidTypeAlias,
+            SidTypeWellKnownGroup,
+            SidTypeDeletedAccount,
+            SidTypeInvalid,
+            SidTypeUnknown,
+            SidTypeComputer,
+            SidTypeLabel
         }
 
         [Flags]
@@ -529,27 +574,26 @@ namespace Unmanaged.Headers
             public _LUID_AND_ATTRIBUTES[] Privileges;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct _TOKEN_STATISTICS
+        {
+            public Winnt._LUID TokenId;
+            public Winnt._LUID AuthenticationId;
+            public LARGE_INTEGER ExpirationTime;
+            public TOKEN_TYPE TokenType;
+            public _SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+            public DWORD DynamicCharged;
+            public DWORD DynamicAvailable;
+            public DWORD GroupCount;
+            public DWORD PrivilegeCount;
+            public Winnt._LUID ModifiedId;
+        }
+
         [Flags]
         public enum TOKEN_TYPE
         {
             TokenPrimary = 1,
             TokenImpersonation
-        }
-
-        [Flags]
-        public enum _SECURITY_IMPERSONATION_LEVEL : int
-        {
-            SecurityAnonymous = 0,
-            SecurityIdentification = 1,
-            SecurityImpersonation = 2,
-            SecurityDelegation = 3
-        };
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct _SID_IDENTIFIER_AUTHORITY
-        {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6, ArraySubType = UnmanagedType.I1)]
-            public byte[] Value;
         }
 
         [StructLayout(LayoutKind.Sequential)]

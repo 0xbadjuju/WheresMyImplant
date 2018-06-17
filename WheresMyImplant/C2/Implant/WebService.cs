@@ -62,7 +62,6 @@ namespace WheresMyImplant
                     sbLoadedMethods.Append(method.ToString() + "\n");
                 }
             }
-            Console.WriteLine(sbLoadedMethods.ToString());
             return sbLoadedMethods.ToString();
         }
 
