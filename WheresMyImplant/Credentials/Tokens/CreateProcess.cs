@@ -19,7 +19,6 @@ namespace WheresMyImplant
                 name = System.IO.Path.GetFullPath(name);
                 if (!System.IO.File.Exists(name))
                 {
-                    Console.WriteLine("[-] File Not Found");
                     return false;
                 }
             }
@@ -28,7 +27,6 @@ namespace WheresMyImplant
                 name = FindFilePath(name);
                 if (String.Empty == name)
                 {
-                    Console.WriteLine("[-] Unable to find file");
                     return false;
                 }
             }

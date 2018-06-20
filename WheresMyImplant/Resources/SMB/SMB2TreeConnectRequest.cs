@@ -16,7 +16,6 @@ namespace WheresMyImplant
         {
             this.Buffer = System.Text.Encoding.Unicode.GetBytes(share);
             this.PathLength = System.BitConverter.GetBytes(Buffer.Length).Take(2).ToArray();
-            Console.WriteLine(BitConverter.ToString(PathLength));
         }
 
         internal Byte[] GetRequest()
