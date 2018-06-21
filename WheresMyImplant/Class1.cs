@@ -656,6 +656,7 @@ namespace WheresMyImplant
             Install install = new Install(".", @"ROOT\cimv2", "Win32_Implant");
             install.GetMethods();
             install.AddRegistryLocal();
+            install.CopyDll();
             return install.GetOutput();
         }
     }

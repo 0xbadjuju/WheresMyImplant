@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Management;
 using System.Reflection;
@@ -204,6 +205,34 @@ namespace WheresMyImplant
                     wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, keyValue3, "RuntimeVersion", clrVersion });
                 }
             }
+        }
+
+        internal void CopyDll()
+        {
+            String filename = Assembly.GetExecutingAssembly().CodeBase;
+            UriBuilder uri = new UriBuilder(filename);
+            String filePath = Uri.UnescapeDataString(uri.Path);
+
+            Byte[] fileBytes;
+            using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                using (BinaryReader binaryReader = new BinaryReader(fileStream))
+                {
+                    fileBytes = new Byte[binaryReader.BaseStream.Length];
+                    binaryReader.Read(fileBytes, 0, (Int32)binaryReader.BaseStream.Length);
+                }
+            }
+
+            String destination = Environment.GetEnvironmentVariable("WINDIR") + @"\System32\wbem\" + Assembly.GetExecutingAssembly().GetName().Name + ".dll";
+            using (FileStream fileStream = new FileStream(destination, FileMode.OpenOrCreate))
+            {
+                using (BinaryWriter binaryWriter = new BinaryWriter(fileStream))
+                {
+                    binaryWriter.Write(fileBytes, 0, fileBytes.Length);
+                }
+            }
+            WriteOutputGood(String.Format("Copied assembly to {0}", destination));
+            fileBytes = null;
         }
 
         private ManagementBaseObject NewManagementBaseObject(IntPtr tempPtr)
