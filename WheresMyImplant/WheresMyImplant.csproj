@@ -36,6 +36,7 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.DirectoryServices" />
     <Reference Include="System.EnterpriseServices" />
     <Reference Include="System.Management" />
     <Reference Include="System.Management.Automation" />
@@ -73,9 +74,10 @@
     <Compile Include="Collection\MiniDumpWriteDump.cs" />
     <Compile Include="Collection\ReadProcessMemory.cs" />
     <Compile Include="Credentials\CacheDump.cs" />
-    <Compile Include="Credentials\RestrictedToken.cs" />
+    <Compile Include="Credentials\Tokens\Enumeration.cs" />
+    <Compile Include="Credentials\Tokens\RestrictedToken.cs" />
     <Compile Include="Credentials\SAM.cs" />
-    <Compile Include="Credentials\Tokens.cs" />
+    <Compile Include="Credentials\Tokens\Tokens.cs" />
     <Compile Include="Credentials\VaultCLI.cs" />
     <Compile Include="Credentials\WirelessProfiles.cs" />
     <Compile Include="Empire\Empire.Agent.Coms.cs" />
@@ -95,14 +97,26 @@
     <Compile Include="Base\BaseSQL.cs" />
     <Compile Include="Credentials\LSASecrets.cs" />
     <Compile Include="Lateral\PSExec.cs" />
-    <Compile Include="Lateral\SMB\NetBIOSSessionService.cs" />
-    <Compile Include="Lateral\SMB\SMB2Header.cs" />
+    <Compile Include="Persistence\AddUser.cs" />
+    <Compile Include="Persistence\Install.cs" />
+    <Compile Include="Resources\BouncyCastle\GeneralDigest.cs" />
+    <Compile Include="Resources\BouncyCastle\IDigest.cs" />
+    <Compile Include="Resources\BouncyCastle\IMemoable.cs" />
+    <Compile Include="Resources\BouncyCastle\MD4Digest.cs" />
+    <Compile Include="Credentials\Tokens\CreateProcess.cs" />
+    <Compile Include="Resources\SMB\NetBIOSSessionService.cs" />
+    <Compile Include="Resources\SMB\SMB2CreateRequest.cs" />
+    <Compile Include="Resources\SMB\SMB2GetInfo.cs" />
+    <Compile Include="Resources\SMB\SMB2Header.cs" />
     <Compile Include="Lateral\SMBClient.cs" />
-    <Compile Include="Lateral\SMB\SMB2NegotiateProtocolRequest.cs" />
-    <Compile Include="Lateral\SMB\SMB2NTLMSSPNegotiate.cs" />
-    <Compile Include="Lateral\SMB\SMB2SessionSetupRequest.cs" />
-    <Compile Include="Lateral\SMB\SMBHeader.cs" />
-    <Compile Include="Lateral\SMB\SMBNegotiateProtocolRequest.cs" />
+    <Compile Include="Resources\SMB\SMB2IoctlRequest.cs" />
+    <Compile Include="Resources\SMB\SMB2NegotiateProtocolRequest.cs" />
+    <Compile Include="Resources\SMB\SMB2NTLMSSPAuth.cs" />
+    <Compile Include="Resources\SMB\SMB2NTLMSSPNegotiate.cs" />
+    <Compile Include="Resources\SMB\SMB2SessionSetupRequest.cs" />
+    <Compile Include="Resources\SMB\SMB2TreeConnectRequest.cs" />
+    <Compile Include="Resources\SMB\SMBHeader.cs" />
+    <Compile Include="Resources\SMB\SMBNegotiateProtocolRequest.cs" />
     <Compile Include="Resources\CheckCreditCard.cs" />
     <Compile Include="Resources\CheckPrivileges.cs" />
     <Compile Include="Resources\Registry.cs" />
@@ -112,6 +126,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources\Services.cs" />
     <Compile Include="Resources\Unmanaged\Headers\Minidumpapiset.cs" />
+    <Compile Include="Resources\Unmanaged\Headers\Ntsecapi.cs" />
     <Compile Include="Resources\Unmanaged\Headers\Rpcdce.cs" />
     <Compile Include="Resources\Unmanaged\Headers\Subauth.cs" />
     <Compile Include="Resources\Unmanaged\Headers\TlHelp32.cs" />
@@ -126,8 +141,10 @@
     <Compile Include="Resources\Unmanaged\Libraries\dbghelp.cs" />
     <Compile Include="Resources\Unmanaged\Libraries\kernel32.cs" />
     <Compile Include="Resources\Unmanaged\Libraries\ntdll.cs" />
+    <Compile Include="Resources\Unmanaged\Libraries\secur32.cs" />
     <Compile Include="Resources\Unmanaged\Libraries\vaultcli.cs" />
     <Compile Include="Resources\Unmanaged\Libraries\wlanapi.cs" />
+    <Compile Include="Resources\Unmanaged\Libraries\wtsapi32.cs" />
     <Compile Include="Resources\WMI.cs" />
     <Compile Include="Run\RunCommandPrompt.cs" />
     <Compile Include="Run\RunPowerShell.cs" />
