@@ -651,10 +651,12 @@ namespace WheresMyImplant
         }
 
         [ManagementTask]
-        public static void Install()
+        public static String Install()
         {
             Install install = new Install(".", @"ROOT\cimv2", "Win32_Implant");
             install.GetMethods();
+            install.AddRegistryLocal();
+            return install.GetOutput();
         }
     }
 }

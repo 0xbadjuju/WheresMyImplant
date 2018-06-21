@@ -11,16 +11,16 @@ namespace WheresMyImplant
         private String scope = "\\\\.\\ROOT\\CIMV2";
         private ManagementScope managementScope;
 
-        WMI()
+        internal WMI()
         {
         }
 
-        WMI(String system)
+        internal WMI(String system)
         {
             scope = String.Format("\\\\{0}\\ROOT\\CIMV2", system);
         }
 
-        WMI(String system, String wmiNamespace)
+        internal WMI(String system, String wmiNamespace)
         {
             scope = String.Format("\\\\{0}\\{1}", system, wmiNamespace);
         }
