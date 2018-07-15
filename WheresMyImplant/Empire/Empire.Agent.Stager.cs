@@ -13,7 +13,9 @@ using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 
-namespace WheresMyImplant
+using WheresMyImplant;
+
+namespace Empire
 {
     class EmpireStager : Base
     {

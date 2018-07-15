@@ -15,7 +15,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace WheresMyImplant
+using WheresMyImplant;
+
+namespace Empire
 {
     class Agent : Base
     {

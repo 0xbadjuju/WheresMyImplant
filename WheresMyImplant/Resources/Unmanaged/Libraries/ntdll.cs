@@ -8,6 +8,34 @@ namespace Unmanaged.Libraries
     sealed class ntdll
     {
         [DllImport("ntdll.dll", SetLastError = true)]
+        public static extern UInt32 NtCreateProcessEx(
+            ref IntPtr ProcessHandle,
+            UInt32 DesiredAccess,
+            IntPtr ObjectAttributes,
+            IntPtr hInheritFromProcess,
+            UInt32 Flags,
+            IntPtr SectionHandle,
+            IntPtr DebugPort,
+            IntPtr ExceptionPort,
+            Byte InJob
+        );
+
+        [DllImport("ntdll.dll", SetLastError = true)]
+		public static extern UInt32 NtCreateThreadEx(
+			ref IntPtr hThread,
+			UInt32 DesiredAccess,
+			IntPtr ObjectAttributes,
+			IntPtr ProcessHandle,
+			IntPtr lpStartAddress,
+			IntPtr lpParameter,
+			Boolean CreateSuspended,
+			UInt32 StackZeroBits,
+			UInt32 SizeOfStackCommit,
+			UInt32 SizeOfStackReserve,
+			IntPtr lpBytesBuffer
+        );
+
+        [DllImport("ntdll.dll", SetLastError = true)]
         public static extern UInt32 NtFilterToken(
             IntPtr TokenHandle,
             UInt32 Flags,

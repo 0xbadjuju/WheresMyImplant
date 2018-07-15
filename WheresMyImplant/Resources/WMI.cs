@@ -110,9 +110,11 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal Boolean ExecuteMethod(String wmiClass, String method, Object[] args)
         {
+            ManagementPath managementPath = new ManagementPath(wmiClass);
+            ObjectGetOptions options = new ObjectGetOptions();
             try
             {
-                ManagementClass managementClass = new ManagementClass(wmiClass);
+                ManagementClass managementClass = new ManagementClass(managementScope, managementPath, options);
                 Object output = managementClass.InvokeMethod(method, args);
                 WriteOutputGood(String.Format("Return Value: {0}", output));
             }
@@ -122,6 +124,48 @@ namespace WheresMyImplant
                 return false;
             }
             return true;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // Executes a standard WMI method
+        ////////////////////////////////////////////////////////////////////////////////
+        internal Object ExecuteMethod2(String wmiClass, String method, Object[] args)
+        {
+            ManagementPath managementPath = new ManagementPath(wmiClass);
+            ObjectGetOptions options = new ObjectGetOptions();
+            Object output;
+            try
+            {
+                ManagementClass managementClass = new ManagementClass(managementScope, managementPath, options);
+                output = managementClass.InvokeMethod(method, args);
+                WriteOutputGood(String.Format("Return Value: {0}", output));
+            }
+            catch (ManagementException error)
+            {
+                WriteOutputBad(error.ToString());
+                return null;
+            }
+            return output;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // Instantiates a WMI class
+        ////////////////////////////////////////////////////////////////////////////////
+        internal ManagementObject CreateInstance(String wmiClass)
+        {
+            ManagementPath managementPath = new ManagementPath(wmiClass);
+            ObjectGetOptions options = new ObjectGetOptions();
+            ManagementObject managementInstance = null;
+            try
+            {
+                ManagementClass managementClass = new ManagementClass(managementScope, managementPath, options);
+                managementInstance = managementClass.CreateInstance();
+            }
+            catch (ManagementException error)
+            {
+                WriteOutputBad(error.ToString());
+            }
+            return managementInstance;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -141,6 +185,35 @@ namespace WheresMyImplant
                 return false;
             }
             return true;
+        }
+
+        [Flags]
+        public enum AccessMask
+        {
+            WBEM_ENABLE = 0x01,
+            WBEM_METHOD_EXECUTE = 0x02,
+            WBEM_FULL_WRITE_REP = 0x04,
+            WBEM_PARTIAL_WRITE_REP = 0x8,
+            WBEM_WRITE_PROVIDER = 0x10,
+            WBEM_REMOTE_ACCESS = 0x20,
+            WBEM_RIGHT_SUBSCRIBE = 0x40,
+            WBEM_RIGHT_PUBLISH = 0x80,
+            READ_CONTROL = 0x20000,
+            WRITE_DAC = 0x40000
+        }
+
+        [Flags]
+        public enum AceFlags
+        {
+            OBJECT_INHERIT_ACE_FLAG = 0x1,
+            CONTAINER_INHERIT_ACE_FLAG = 0x2
+        }
+        
+        [Flags]
+        public enum AceType
+        {
+            ACCESS_ALLOWED_ACE_TYPE = 0x0,
+            ACCESS_DENIED_ACE_TYPE = 0x1
         }
 
         ////////////////////////////////////////////////////////////////////////////////

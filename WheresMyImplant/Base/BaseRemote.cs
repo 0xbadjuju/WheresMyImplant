@@ -26,7 +26,7 @@ namespace WheresMyImplant
                 WriteOutputBad("Unable to get process handle");
                 return;
             }
-            WriteOutputGood("Recieved Handle: 0x" + hProcess.ToString("X4"));
+            WriteOutputGood("Received Handle: 0x" + hProcess.ToString("X4"));
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -38,7 +38,6 @@ namespace WheresMyImplant
             if (IntPtr.Zero == lpBaseAddress)
             {
                 WriteOutputBad("Unable to allocate memory");
-                Environment.Exit(1);
                 return IntPtr.Zero;
             }
             WriteOutputGood("Allocated " + dwSize + " bytes at " + lpBaseAddress.ToString("X4"));
@@ -107,22 +106,7 @@ namespace WheresMyImplant
                 //This is dumb
                 return false;
             }
-            WriteOutputGood("Section " + sectionName.Trim() + " (" + dwNumberOfBytesRead + " bytes), Read From To " + lpBaseAddress.ToString("X4"));
-            return true;
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////
-        // No idea why this exists
-        ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean ReadProcessMemoryUnChecked(IntPtr lpBaseAddress, IntPtr lpBuffer, UInt32 dwSize, String sectionName)
-        {
-            UInt32 dwNumberOfBytesRead = 0;
-            if (!kernel32.ReadProcessMemory(hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesRead))
-            {
-                WriteOutputNeutral("Unable to read process memory");
-                return false;
-            }
-
+            //WriteOutputGood(String.Format("Section {0} ({1} bytes), Read From {2}", sectionName.Replace("\0", ""), dwNumberOfBytesRead, lpBaseAddress.ToString("X4")));
             return true;
         }
 
@@ -152,7 +136,7 @@ namespace WheresMyImplant
             try
             {
                 IntPtr lpStructBytes = new IntPtr((Int64)pinnedStructBuffer.AddrOfPinnedObject());
-                if (!ReadProcessMemoryUnChecked(pointer, lpStructBytes, imageSizeOfStruct, typeof(T).ToString()))
+                if (!ReadProcessMemoryChecked(pointer, lpStructBytes, imageSizeOfStruct, typeof(T).ToString()))
                 {
                     return marshaledStruct;
                 }
@@ -177,11 +161,12 @@ namespace WheresMyImplant
             Int16 integer = 0;
             Int16 marshaledInt16 = 0;
             GCHandle pinnedInteger = GCHandle.Alloc(integer, GCHandleType.Pinned);
+            WriteOutputNeutral("pinnedInteger: " + pinnedInteger.AddrOfPinnedObject());
             try
             {
                 IntPtr lpInteger = new IntPtr((Int64)pinnedInteger.AddrOfPinnedObject());
                 IntPtr adjustedPointer = new IntPtr(pointer.ToInt64() + offset);
-                if (ReadProcessMemoryUnChecked(adjustedPointer, lpInteger, sizeof(Int16), typeof(Int16).ToString()))
+                if (ReadProcessMemoryChecked(adjustedPointer, lpInteger, sizeof(Int16), typeof(Int16).ToString()))
                 {
                     return marshaledInt16;
                 }
@@ -189,6 +174,7 @@ namespace WheresMyImplant
             }
             catch
             {
+                WriteOutputBad("ReadInt16Remote Failed");
                 return marshaledInt16;
             }
             finally
@@ -201,29 +187,29 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal Int32 PtrToInt32Remote(IntPtr pointer)
+        internal Boolean PtrToInt32Remote(IntPtr pointer, ref Int32 remoteInt32)
         {
             Int32 integer = 0;
-            Int32 marshaledInt32 = 0;
             GCHandle pinnedInteger = GCHandle.Alloc(integer, GCHandleType.Pinned);
             try
             {
                 IntPtr lpInteger = new IntPtr((Int64)pinnedInteger.AddrOfPinnedObject());
-                if (!ReadProcessMemoryUnChecked(pointer, lpInteger, sizeof(Int32), typeof(Int32).ToString()))
+                if (!ReadProcessMemoryChecked(pointer, lpInteger, sizeof(Int32), typeof(Int32).ToString()))
                 {
-                    return marshaledInt32;
+                    return false;
                 }
-                marshaledInt32 = Marshal.ReadInt32(lpInteger);
+                remoteInt32 = Marshal.ReadInt32(lpInteger);
             }
-            catch
+            catch (Exception error)
             {
-                return marshaledInt32;
+                WriteOutputBad("PtrToInt32RemoteFailed");
+                return false;
             }
             finally
             {
                 pinnedInteger.Free();
             }
-            return marshaledInt32;
+            return true;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -237,7 +223,7 @@ namespace WheresMyImplant
             try
             {
                 IntPtr lpInteger = new IntPtr((Int64)pinnedInteger.AddrOfPinnedObject());
-                if (!ReadProcessMemoryUnChecked(pointer, lpInteger, sizeof(Int64), typeof(Int64).ToString()))
+                if (!ReadProcessMemoryChecked(pointer, lpInteger, sizeof(Int64), typeof(Int64).ToString()))
                 {
                     return marshaledInt64;
                 }
@@ -263,20 +249,24 @@ namespace WheresMyImplant
             try
             {
                 IntPtr lpInteger = new IntPtr((Int64)pinnedInteger.AddrOfPinnedObject());
-                if (!WriteProcessMemoryUnChecked(pointer, lpInteger, (UInt32)sizeof(Int64), ""))
+                UInt32 dwNumberOfBytesWritten = 0;
+                if (!kernel32.WriteProcessMemory(hProcess, pointer, lpInteger, (UInt32)sizeof(Int64), ref dwNumberOfBytesWritten))
                 {
+                    WriteOutputBad("Unable to write process memory");
                     return false;
                 }
+                return true;
             }
-            catch
+            catch (Exception error)
             {
+                error = null;
+                WriteOutputBad("WriteInt64Remote Failed");
                 return false;
             }
             finally
             {
                 pinnedInteger.Free();
             }
-            return true;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -292,7 +282,7 @@ namespace WheresMyImplant
             char marshaledChar;
             do {
                 IntPtr adjustedPointer = new IntPtr(pointer.ToInt64() + offset++);
-                ReadProcessMemoryUnChecked(adjustedPointer, lpCharacter, sizeof(char), typeof(char).ToString());
+                ReadProcessMemoryChecked(adjustedPointer, lpCharacter, sizeof(char), typeof(char).ToString());
                 marshaledChar = (char)Marshal.ReadByte(lpCharacter);
                 stringResult += marshaledChar;
             } while (marshaledChar != '\0');
@@ -303,7 +293,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal IntPtr LoadLibraryRemote(string library)
+        internal IntPtr LoadLibraryRemote(String library)
         {
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr hmodule = kernel32.GetModuleHandle("kernel32.dll");

@@ -5,7 +5,9 @@ using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Threading;
 
-namespace WheresMyImplant
+using WheresMyImplant;
+
+namespace Empire
 {
     ////////////////////////////////////////////////////////////////////////////////
     internal class JobTracking

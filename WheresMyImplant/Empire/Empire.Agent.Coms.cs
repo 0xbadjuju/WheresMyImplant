@@ -9,7 +9,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 
-namespace WheresMyImplant
+using WheresMyImplant;
+
+namespace Empire
 {
     class Coms : Base
     {

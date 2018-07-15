@@ -68,8 +68,9 @@
     <Compile Include="C2\Beacon\WebServiceBeacon.cs" />
     <Compile Include="C2\Implant\SMBServer.cs" />
     <Compile Include="Class1.cs">
-      <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Collection.cs" />
+    <Compile Include="Injection.cs" />
     <Compile Include="Collection\BrowserHistory.cs" />
     <Compile Include="Collection\MiniDumpWriteDump.cs" />
     <Compile Include="Collection\ReadProcessMemory.cs" />
@@ -98,7 +99,8 @@
     <Compile Include="Credentials\LSASecrets.cs" />
     <Compile Include="Lateral\PSExec.cs" />
     <Compile Include="Persistence\AddUser.cs" />
-    <Compile Include="Persistence\Install.cs" />
+    <Compile Include="Persistence\InstallUtil.cs" />
+    <Compile Include="Persistence\InstallWMI.cs" />
     <Compile Include="Resources\BouncyCastle\GeneralDigest.cs" />
     <Compile Include="Resources\BouncyCastle\IDigest.cs" />
     <Compile Include="Resources\BouncyCastle\IMemoable.cs" />

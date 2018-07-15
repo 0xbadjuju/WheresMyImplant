@@ -186,8 +186,12 @@ namespace WheresMyImplant
 
                 context32 = (Winnt.CONTEXT)Marshal.PtrToStructure(lpContext, typeof(Winnt.CONTEXT64));
             }
-            catch
+            catch (Exception error)
             {
+                if (error is ArgumentException || error is ArgumentNullException)
+                {
+                    Console.WriteLine("Get Thread Context Failed");
+                }
             }
             finally
             {
@@ -447,7 +451,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal Boolean ResumeProcess()
         {
-            return is32Bit ? ResumeProcess32() : ResumeProcess64();
+            return is32Bit ? ResumeProcess32() : ResumeProcess64(false);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -469,7 +473,7 @@ namespace WheresMyImplant
         // offsetof(Rdx) = 136
         // offsetof(Rcx) = 128
         ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean ResumeProcess64()
+        internal Boolean ResumeProcess64(Boolean wait)
         {
             Console.WriteLine("\nUpdating Thread Context");
 
@@ -490,7 +494,20 @@ namespace WheresMyImplant
             Console.WriteLine("Resuming Main Thread");
             kernel32.ResumeThread(lpProcessInformation.hThread);
 
-            kernel32.WaitForSingleObject(lpProcessInformation.hProcess, 0xFFFFFFFF);
+            if (wait)
+            {
+                kernel32.WaitForSingleObject(lpProcessInformation.hProcess, 0xFFFFFFFF);
+            }
+            return true;
+        }
+
+        internal Boolean ResumeProcessAlt()
+        {
+            IntPtr hThread = new IntPtr();
+            if (0 != ntdll.NtCreateThreadEx(ref hThread, 0x1FFFFF, IntPtr.Zero, lpProcessInformation.hProcess, new IntPtr((Int64)context64.Rcx), IntPtr.Zero, false, 0, 0, 0, IntPtr.Zero))
+            {
+                return false;
+            }
             return true;
         }
 
