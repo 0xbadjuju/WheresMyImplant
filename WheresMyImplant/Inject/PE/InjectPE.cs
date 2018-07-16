@@ -23,7 +23,7 @@ namespace WheresMyImplant
             public UInt32 RvaImportAddressTable;
         }
 
-        internal InjectPE(PELoader peLoader, string parameters)
+        internal InjectPE(PELoader peLoader, String parameters)
         {
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpAddress = IntPtr.Zero;
@@ -134,16 +134,16 @@ namespace WheresMyImplant
                 }
             }
             ////////////////////////////////////////////////////////////////////////////////
-            string parameter = "";
+            String parameter = "";
             IntPtr lpThreadAttributes = IntPtr.Zero;
             UInt32 dwStackSize = 0;
             Int32 dwStartAddress = lpBaseAddress.ToInt32() + peLoader.addressOfEntryPoint;
             IntPtr lpStartAddress = new IntPtr(dwStartAddress);
-            IntPtr lpParameter = new IntPtr(Convert.ToInt32(parameter));
+            IntPtr lpParameter = new IntPtr();//Convert.ToInt32(parameter));
             UInt32 dwCreationFlags = 0;
             UInt32 lpThreadId = 0;
             IntPtr hThread = kernel32.CreateThread(lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, ref lpThreadId);
-            WriteOutputGood(String.Format("Created thread {0}", hThread.ToString("X4")));
+            WriteOutputGood(String.Format("Created thread 0x{0}", hThread.ToString("X4")));
             ////////////////////////////////////////////////////////////////////////////////
             kernel32.WaitForSingleObject(hThread, 0xFFFFFFFF);
         }

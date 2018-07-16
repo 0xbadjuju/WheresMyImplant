@@ -60,8 +60,8 @@ namespace WheresMyImplant
                 imageDosHeader = FromBinaryReader<Winnt._IMAGE_DOS_HEADER>(binaryReader);
                 fileStream.Seek(imageDosHeader.e_lfanew, SeekOrigin.Begin);
                 ReadHeaders(ref binaryReader);
-                imageBytes = File.ReadAllBytes(library);
             }
+            imageBytes = File.ReadAllBytes(library);
         }
 
         internal void Execute(Byte[] fileBytes)
@@ -72,8 +72,8 @@ namespace WheresMyImplant
                 imageDosHeader = FromBinaryReader<Winnt._IMAGE_DOS_HEADER>(binaryReader);
                 memoryStream.Seek(imageDosHeader.e_lfanew, SeekOrigin.Begin);
                 ReadHeaders(ref binaryReader);
-                imageBytes = fileBytes;
             }
+            imageBytes = fileBytes;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -107,10 +107,11 @@ namespace WheresMyImplant
                     is64Bit = true;
                     break;
                 default:
+                    Console.WriteLine("default");
                     return;
             };
-            imageSectionHeaders = new Winnt._IMAGE_SECTION_HEADER[imageFileHeader.NumberOfSections];
-            for (int i = 0; i < imageFileHeader.NumberOfSections; ++i)
+            imageSectionHeaders = new Winnt._IMAGE_SECTION_HEADER[(Int32)imageFileHeader.NumberOfSections];
+            for (int i = 0; i < (Int32)imageFileHeader.NumberOfSections; ++i)
             {
                 imageSectionHeaders[i] = FromBinaryReader<Winnt._IMAGE_SECTION_HEADER>(binaryReader);
             }

