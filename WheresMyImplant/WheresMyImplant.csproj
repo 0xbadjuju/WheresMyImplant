@@ -144,6 +144,7 @@
     <Compile Include="Resources\Unmanaged\Libraries\kernel32.cs" />
     <Compile Include="Resources\Unmanaged\Libraries\ntdll.cs" />
     <Compile Include="Resources\Unmanaged\Libraries\secur32.cs" />
+    <Compile Include="Resources\Unmanaged\Libraries\user32.cs" />
     <Compile Include="Resources\Unmanaged\Libraries\vaultcli.cs" />
     <Compile Include="Resources\Unmanaged\Libraries\wlanapi.cs" />
     <Compile Include="Resources\Unmanaged\Libraries\wtsapi32.cs" />
