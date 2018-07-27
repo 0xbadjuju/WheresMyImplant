@@ -65,8 +65,8 @@ namespace WheresMyImplant
                 kernel32.VirtualQueryEx64(hProcess, currentAddress, out memoryBasicInformation, (UInt32)Marshal.SizeOf(typeof(Winnt._MEMORY_BASIC_INFORMATION64)));
                 regions.Append(".");    
                 //Only need areas that are going to be written and read
-                if ((memoryBasicInformation.Protect == Winnt.PAGE_READWRITE 
-                    || memoryBasicInformation.Protect == Winnt.PAGE_EXECUTE_READWRITE) 
+                if ((memoryBasicInformation.Protect == Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_READWRITE 
+                    || memoryBasicInformation.Protect == Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READWRITE) 
                     && memoryBasicInformation.State == MEM_COMMIT)
                 {
                     Byte[] buffer = new Byte[memoryBasicInformation.RegionSize];

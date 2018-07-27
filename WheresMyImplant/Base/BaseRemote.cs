@@ -19,29 +19,55 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         protected BaseRemote(UInt32 processId)
         {
-            WriteOutputNeutral("Attempting to get handle on PID: " + processId);
+            WriteOutputNeutral(String.Format("Attempting to get handle on PID: {0}", processId));
             hProcess = kernel32.OpenProcess(kernel32.PROCESS_ALL_ACCESS, false, processId);
             if (IntPtr.Zero == hProcess)
             {
                 WriteOutputBad("Unable to get process handle");
                 return;
             }
-            WriteOutputGood("Received Handle: 0x" + hProcess.ToString("X4"));
+            WriteOutputGood(String.Format("Received Handle: 0x{0}", hProcess.ToString("X4")));
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal Boolean Is32BitProcess()
+        {
+            Winbase._SYSTEM_INFO systemInfo;
+            kernel32.GetNativeSystemInfo(out systemInfo);
+            //Console.WriteLine(systemInfo.wProcessorArchitecture);
+            if (Winbase.INFO_PROCESSOR_ARCHITECTURE.PROCESSOR_ARCHITECTURE_INTEL == systemInfo.wProcessorArchitecture)
+            {
+                WriteOutputBad("System is 32Bit");
+                return true;
+            }
+
+            Boolean is32Bit;
+            if (!kernel32.IsWow64Process(hProcess, out is32Bit))
+            {
+                WriteOutputBad("IsWow64Process Failed");
+                WriteOutputBad("Assuming 32Bit System");
+                return true;
+            }
+            
+            return is32Bit;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         // No idea why this exists
         ////////////////////////////////////////////////////////////////////////////////
-        protected IntPtr VirtualAllocExChecked(IntPtr lpAddress, UInt32 dwSize)
+        protected IntPtr VirtualAllocExChecked(IntPtr lpAddress, UInt32 dwSize, Winnt.MEMORY_PROTECTION_CONSTANTS protection)
         {
-            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, lpAddress, dwSize, kernel32.MEM_COMMIT, Winnt.PAGE_EXECUTE_READWRITE);
+            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(
+                hProcess, lpAddress, dwSize, kernel32.MEM_COMMIT | kernel32.MEM_RESERVE, protection);
             if (IntPtr.Zero == lpBaseAddress)
             {
                 WriteOutputBad("Unable to allocate memory");
                 return IntPtr.Zero;
             }
             WriteOutputGood(String.Format("Allocated {0} bytes at {1}", dwSize, lpBaseAddress.ToString("X4")));
-            WriteOutputGood("\tMemory Protection Set to PAGE_READWRITE");
+            WriteOutputGood(String.Format("\tMemory Protection Set to {0}", protection));
             return lpBaseAddress;
         }
 
@@ -164,7 +190,7 @@ namespace WheresMyImplant
             Int16 integer = 0;
             Int16 marshaledInt16 = 0;
             GCHandle pinnedInteger = GCHandle.Alloc(integer, GCHandleType.Pinned);
-            WriteOutputNeutral("pinnedInteger: " + pinnedInteger.AddrOfPinnedObject());
+            //WriteOutputNeutral("pinnedInteger: " + pinnedInteger.AddrOfPinnedObject());
             try
             {
                 IntPtr lpInteger = new IntPtr((Int64)pinnedInteger.AddrOfPinnedObject());
@@ -204,9 +230,10 @@ namespace WheresMyImplant
                 }
                 remoteInt32 = Marshal.ReadInt32(lpInteger);
             }
-            catch (Exception error)
+            catch (Exception ex)
             {
                 WriteOutputBad("PtrToInt32Remote Failed");
+                WriteOutput(ex.Message);
                 return 0;
             }
             finally
@@ -263,10 +290,10 @@ namespace WheresMyImplant
                 }
                 return true;
             }
-            catch (Exception error)
+            catch (Exception ex)
             {
-                error = null;
                 WriteOutputBad("WriteInt64Remote Failed");
+                WriteOutput(ex.Message);
                 return false;
             }
             finally
@@ -308,7 +335,7 @@ namespace WheresMyImplant
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = (UInt32)((library.Length + 1) * Marshal.SizeOf(typeof(char)));
-            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, lpAddress, dwSize, kernel32.MEM_COMMIT | kernel32.MEM_RESERVE, Winnt.PAGE_READWRITE);
+            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, lpAddress, dwSize, kernel32.MEM_COMMIT | kernel32.MEM_RESERVE, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_READWRITE);
 
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 lpNumberOfBytesWritten = 0;
@@ -316,8 +343,8 @@ namespace WheresMyImplant
             Boolean writeProcessMemoryResult = kernel32.WriteProcessMemory(hProcess, lpBaseAddress, libraryPtr, dwSize, ref lpNumberOfBytesWritten);
 
             ////////////////////////////////////////////////////////////////////////////////
-            UInt32 lpflOldProtect = 0;
-            Boolean virtualProtectExResult = kernel32.VirtualProtectEx(hProcess, lpBaseAddress, dwSize, Winnt.PAGE_EXECUTE_READ, ref lpflOldProtect);
+            Winnt.MEMORY_PROTECTION_CONSTANTS lpflOldProtect = Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_NOACCESS;
+            Boolean virtualProtectExResult = kernel32.VirtualProtectEx(hProcess, lpBaseAddress, dwSize, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READ, ref lpflOldProtect);
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpThreadAttributes = IntPtr.Zero;

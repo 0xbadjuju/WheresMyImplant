@@ -70,6 +70,7 @@
     <Compile Include="Class1.cs">
     </Compile>
     <Compile Include="Collection.cs" />
+    <Compile Include="Collection\Clipboard.cs" />
     <Compile Include="Injection.cs" />
     <Compile Include="Collection\BrowserHistory.cs" />
     <Compile Include="Collection\MiniDumpWriteDump.cs" />
@@ -132,12 +133,15 @@
     <Compile Include="Resources\Unmanaged\Headers\Rpcdce.cs" />
     <Compile Include="Resources\Unmanaged\Headers\Subauth.cs" />
     <Compile Include="Resources\Unmanaged\Headers\TlHelp32.cs" />
+    <Compile Include="Resources\Unmanaged\Headers\Wincon.cs" />
     <Compile Include="Resources\Unmanaged\Headers\WinCred.cs" />
     <Compile Include="Resources\Unmanaged\Headers\Wincrypt.cs" />
+    <Compile Include="Resources\Unmanaged\Headers\Windef.cs" />
     <Compile Include="Resources\Unmanaged\Headers\Winnt.cs" />
     <Compile Include="Resources\Unmanaged\Headers\Winbase.cs" />
     <Compile Include="Resources\Unmanaged\Headers\Winsvc.cs" />
     <Compile Include="Resources\Unmanaged\Headers\Winternl.cs" />
+    <Compile Include="Resources\Unmanaged\Headers\Winuser.cs" />
     <Compile Include="Resources\Unmanaged\Libraries\advapi32.cs" />
     <Compile Include="Resources\Unmanaged\Libraries\crypt32.cs" />
     <Compile Include="Resources\Unmanaged\Libraries\dbghelp.cs" />

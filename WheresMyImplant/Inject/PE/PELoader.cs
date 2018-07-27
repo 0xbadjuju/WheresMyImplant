@@ -29,6 +29,9 @@ namespace WheresMyImplant
             Reserved = 15
         }
 
+        internal Boolean isDll = false;
+        internal Boolean isExe = false;
+
         internal Boolean is64Bit;
         private Winnt._IMAGE_DOS_HEADER imageDosHeader;
         internal Winnt._IMAGE_FILE_HEADER imageFileHeader;
@@ -41,6 +44,9 @@ namespace WheresMyImplant
         internal Int32 baseRelocationTableAddress;
         internal Int32 importTableAddress;
         internal Int32 addressOfEntryPoint;
+        internal UInt16 dllCharacteristics = 0;
+
+        private BinaryReader binaryReader;
 
         //https://github.com/mattifestation/PIC_Bindshell/blob/master/lib/PowerShell/Get-PEHeader.ps1
         //https://gist.github.com/subTee/2cb7973b677f37d32f04
@@ -52,70 +58,122 @@ namespace WheresMyImplant
             
         }
 
-        internal void Execute(String library)
+        internal Boolean Execute(String library)
         {
             using (FileStream fileStream = new FileStream(library, FileMode.Open, FileAccess.Read))
             {
-                BinaryReader binaryReader = new BinaryReader(fileStream);
+                binaryReader = new BinaryReader(fileStream);
                 imageDosHeader = FromBinaryReader<Winnt._IMAGE_DOS_HEADER>(binaryReader);
                 fileStream.Seek(imageDosHeader.e_lfanew, SeekOrigin.Begin);
-                ReadHeaders(ref binaryReader);
+                if (!ReadHeaders(ref binaryReader))
+                {
+                    return false;
+                }
             }
             imageBytes = File.ReadAllBytes(library);
+            return true;
         }
 
-        internal void Execute(Byte[] fileBytes)
+        internal Boolean Execute(Byte[] fileBytes)
         {
             using (MemoryStream memoryStream = new MemoryStream(fileBytes, 0, fileBytes.Length))
             {
                 BinaryReader binaryReader = new BinaryReader(memoryStream);
                 imageDosHeader = FromBinaryReader<Winnt._IMAGE_DOS_HEADER>(binaryReader);
                 memoryStream.Seek(imageDosHeader.e_lfanew, SeekOrigin.Begin);
-                ReadHeaders(ref binaryReader);
+                if (!ReadHeaders(ref binaryReader))
+                {
+                    return false;
+                }
             }
             imageBytes = fileBytes;
-        }
+            return true;
+         }
 
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        private void ReadHeaders(ref BinaryReader binaryReader)
+        private Boolean ReadHeaders(ref BinaryReader binaryReader)
         {
             binaryReader.ReadUInt32();
             imageFileHeader = FromBinaryReader<Winnt._IMAGE_FILE_HEADER>(binaryReader);
 
+            if (Winnt.CHARACTERISTICS.IMAGE_FILE_DLL == (imageFileHeader.Characteristics & Winnt.CHARACTERISTICS.IMAGE_FILE_DLL))
+            {
+                WriteOutputNeutral("Injecting DLL");
+                isDll = true;
+            }
+            else if (Winnt.CHARACTERISTICS.IMAGE_FILE_EXECUTABLE_IMAGE == (imageFileHeader.Characteristics & Winnt.CHARACTERISTICS.IMAGE_FILE_EXECUTABLE_IMAGE))
+            {
+                WriteOutputNeutral("Injecting EXE");
+                isExe = true;
+            }
+
+            foreach (Winnt.CHARACTERISTICS c in (Winnt.CHARACTERISTICS[])Enum.GetValues(typeof(Winnt.CHARACTERISTICS)))
+            {
+                if ((UInt16)c == (UInt16)(c & imageFileHeader.Characteristics))
+                {
+                    WriteOutputNeutral(String.Format("PE Characteristic: {0}", (Winnt.CHARACTERISTICS)(c & imageFileHeader.Characteristics)));
+                }
+            }
+
+
+            UInt64 imageBase = 0;
+            UInt16 subsystem = 0;
+            
             switch (imageFileHeader.Machine)
             {
-                case Winnt.IMAGE_FILE_MACHINE.I386:
+                case Winnt.IMAGE_FILE_MACHINE.IMAGE_FILE_MACHINE_I386:
                     imageOptionalHeader32 = FromBinaryReader<Winnt._IMAGE_OPTIONAL_HEADER>(binaryReader);
                     sizeOfImage = imageOptionalHeader32.SizeOfImage;
                     baseRelocationTableAddress = (Int32)imageOptionalHeader32.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.BaseRelocationTable].VirtualAddress;
                     importTableAddress = (Int32)imageOptionalHeader32.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.ImportTable].VirtualAddress;
                     addressOfEntryPoint = (Int32)imageOptionalHeader32.AddressOfEntryPoint;
-                    WriteOutputGood(String.Format("ImageBase: 0x{0}", imageOptionalHeader32.ImageBase.ToString("X4")));
-                    WriteOutputGood(String.Format("EntryPoint: 0x{0}", imageOptionalHeader32.AddressOfEntryPoint.ToString("X4")));
+                    imageBase = imageOptionalHeader32.ImageBase;
+                    subsystem = (UInt16)imageOptionalHeader32.Subsystem;
+                    dllCharacteristics = (UInt16)imageOptionalHeader32.DllCharacteristics;
                     is64Bit = false;
                     break;
-                case Winnt.IMAGE_FILE_MACHINE.AMD64:
+                case Winnt.IMAGE_FILE_MACHINE.IMAGE_FILE_MACHINE_AMD64:
                     imageOptionalHeader64 = FromBinaryReader<Winnt._IMAGE_OPTIONAL_HEADER64>(binaryReader);
                     sizeOfImage = imageOptionalHeader64.SizeOfImage;
                     baseRelocationTableAddress = (Int32)imageOptionalHeader64.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.BaseRelocationTable].VirtualAddress;
                     importTableAddress = (Int32)imageOptionalHeader64.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.ImportTable].VirtualAddress;
                     addressOfEntryPoint = (Int32)imageOptionalHeader64.AddressOfEntryPoint;
-                    WriteOutputGood(String.Format("ImageBase: 0x{0}", imageOptionalHeader64.ImageBase.ToString("X4")));
-                    WriteOutputGood(String.Format("EntryPoint: 0x{0}", imageOptionalHeader64.AddressOfEntryPoint.ToString("X4")));
+                    imageBase = imageOptionalHeader64.ImageBase;
+                    subsystem = (UInt16)imageOptionalHeader64.Subsystem;
+                    dllCharacteristics = (UInt16)imageOptionalHeader32.DllCharacteristics;
                     is64Bit = true;
                     break;
                 default:
-                    Console.WriteLine("default");
-                    return;
+                    return false;
             };
+
+            WriteOutputGood(String.Format("ImageBase: 0x{0}", imageBase.ToString("X4")));
+            WriteOutputGood(String.Format("EntryPoint: 0x{0}", addressOfEntryPoint.ToString("X4")));
+            foreach (Winnt.SUBSYSTEM ss in (Winnt.SUBSYSTEM[]) Enum.GetValues(typeof(Winnt.SUBSYSTEM)))
+            {
+                if ((UInt16)ss == ((UInt16)ss & subsystem))
+                {
+                    WriteOutputNeutral(String.Format("PE SubSystem: {0}", (Winnt.SUBSYSTEM)((UInt16)ss & subsystem)));
+                }
+            }
+
+            foreach (Winnt.DLL_CHARACTERISTICS dll in (Winnt.DLL_CHARACTERISTICS[])Enum.GetValues(typeof(Winnt.DLL_CHARACTERISTICS)))
+            {
+                if ((UInt16)dll == ((UInt16)dll & dllCharacteristics))
+                {
+                    WriteOutputNeutral(String.Format("DLL Characteristics: {0}", (Winnt.DLL_CHARACTERISTICS)((UInt16)dll & dllCharacteristics)));
+                }
+            }
+
             imageSectionHeaders = new Winnt._IMAGE_SECTION_HEADER[(Int32)imageFileHeader.NumberOfSections];
             for (int i = 0; i < (Int32)imageFileHeader.NumberOfSections; ++i)
             {
                 imageSectionHeaders[i] = FromBinaryReader<Winnt._IMAGE_SECTION_HEADER>(binaryReader);
             }
-            binaryReader.Close();
+            
+            return true;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -146,7 +204,7 @@ namespace WheresMyImplant
 
         public void Dispose()
         {
-
+            binaryReader.Close();
         }
     }
 }

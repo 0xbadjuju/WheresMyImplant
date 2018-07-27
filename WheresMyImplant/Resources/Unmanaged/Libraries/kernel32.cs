@@ -82,6 +82,9 @@ namespace Unmanaged.Libraries
         public static extern IntPtr LoadLibrary(string lpFileName);
 
         [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern IntPtr LocalFree(IntPtr hMem);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean Process32First(IntPtr hSnapshot, ref TiHelp32.tagPROCESSENTRY32 lppe);
 
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -111,20 +114,25 @@ namespace Unmanaged.Libraries
         [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern UInt32 SearchPath(String lpPath, String lpFileName, String lpExtension, UInt32 nBufferLength, StringBuilder lpBuffer, ref IntPtr lpFilePart);
 
+        public delegate Boolean HandlerRoutine(Wincon.CtrlType CtrlType);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean SetConsoleCtrlHandler(HandlerRoutine HandlerRoutine, Boolean Add);
+
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean SetThreadContext(IntPtr hThread, IntPtr lpContext);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern IntPtr VirtualAlloc(IntPtr lpAddress, UInt32 dwSize, UInt32 flAllocationType, UInt32 flProtect);
+        public static extern IntPtr VirtualAlloc(IntPtr lpAddress, UInt32 dwSize, UInt32 flAllocationType, Winnt.MEMORY_PROTECTION_CONSTANTS flProtect);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern IntPtr VirtualAllocEx(IntPtr hHandle, IntPtr lpAddress, UInt32 dwSize, UInt32 flAllocationType, UInt32 flProtect);
+        public static extern IntPtr VirtualAllocEx(IntPtr hHandle, IntPtr lpAddress, UInt32 dwSize, UInt32 flAllocationType, Winnt.MEMORY_PROTECTION_CONSTANTS flProtect);
 
         [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-        public static extern Boolean VirtualProtect(IntPtr lpAddress, UInt32 dwSize, UInt32 flNewProtect, ref UInt32 lpflOldProtect);
+        public static extern Boolean VirtualProtect(IntPtr lpAddress, UInt32 dwSize, Winnt.MEMORY_PROTECTION_CONSTANTS flNewProtect, ref Winnt.MEMORY_PROTECTION_CONSTANTS lpflOldProtect);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern Boolean VirtualProtectEx(IntPtr hHandle, IntPtr lpAddress, UInt32 dwSize, UInt32 flNewProtect, ref UInt32 lpflOldProtect);
+        public static extern Boolean VirtualProtectEx(IntPtr hHandle, IntPtr lpAddress, UInt32 dwSize, Winnt.MEMORY_PROTECTION_CONSTANTS flNewProtect, ref Winnt.MEMORY_PROTECTION_CONSTANTS lpflOldProtect);
 
         [DllImport("kernel32.dll", SetLastError = true, EntryPoint="VirtualQueryEx")]
         public static extern Int32 VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress, out Winnt._MEMORY_BASIC_INFORMATION lpBuffer, UInt32 dwLength);

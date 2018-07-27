@@ -58,7 +58,7 @@ namespace WheresMyImplant
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = (UInt32)((library.Length + 1) * Marshal.SizeOf(typeof(char)));
             WriteOutputNeutral("Attempting to allocate memory");
-            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, lpAddress, dwSize, kernel32.MEM_COMMIT | kernel32.MEM_RESERVE, Winnt.PAGE_READWRITE);
+            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, lpAddress, dwSize, kernel32.MEM_COMMIT | kernel32.MEM_RESERVE, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_READWRITE);
             if (IntPtr.Zero == lpBaseAddress)
             {
                 WriteOutputBad("Unable to allocate memory");
@@ -79,9 +79,9 @@ namespace WheresMyImplant
             WriteOutputGood(String.Format("Wrote {0} bytes", lpNumberOfBytesWritten));
 
             ////////////////////////////////////////////////////////////////////////////////
-            UInt32 lpflOldProtect = 0;
+            Winnt.MEMORY_PROTECTION_CONSTANTS lpflOldProtect = Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_NOACCESS;
             WriteOutputNeutral("Attempting to Alter Memory Protections to PAGE_EXECUTE_READ");
-            if (!kernel32.VirtualProtectEx(hProcess, lpBaseAddress, dwSize, Winnt.PAGE_EXECUTE_READ, ref lpflOldProtect))
+            if (!kernel32.VirtualProtectEx(hProcess, lpBaseAddress, dwSize, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READ, ref lpflOldProtect))
             {
                 WriteOutputBad("VirtualProtectEx Failed");
                 return;

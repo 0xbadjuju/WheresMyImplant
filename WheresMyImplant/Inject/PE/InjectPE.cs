@@ -28,7 +28,7 @@ namespace WheresMyImplant
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = peLoader.sizeOfImage;
-            IntPtr lpBaseAddress = kernel32.VirtualAlloc(lpAddress, dwSize, kernel32.MEM_COMMIT, Winnt.PAGE_EXECUTE_READWRITE);
+            IntPtr lpBaseAddress = kernel32.VirtualAlloc(lpAddress, dwSize, kernel32.MEM_COMMIT, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READWRITE);
             WriteOutputGood(String.Format("Allocated {0} bytes at 0x{1}", peLoader.sizeOfImage.ToString("X4"), lpBaseAddress.ToString("X4")));
 
             ////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +36,7 @@ namespace WheresMyImplant
             {
                 IntPtr lpBaseAddressSection = new IntPtr(lpBaseAddress.ToInt32() + peLoader.imageSectionHeaders[i].VirtualAddress);
                 UInt32 dwSizeSection = peLoader.imageSectionHeaders[i].SizeOfRawData;
-                IntPtr lpAllocatedAddress = kernel32.VirtualAlloc(lpBaseAddressSection, dwSizeSection, kernel32.MEM_COMMIT, Winnt.PAGE_EXECUTE_READWRITE);
+                IntPtr lpAllocatedAddress = kernel32.VirtualAlloc(lpBaseAddressSection, dwSizeSection, kernel32.MEM_COMMIT, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READWRITE);
                 Marshal.Copy(peLoader.imageBytes, (Int32)peLoader.imageSectionHeaders[i].PointerToRawData, lpAllocatedAddress, (Int32)peLoader.imageSectionHeaders[i].SizeOfRawData);
                 WriteOutputGood(String.Format("Copied {0} to 0x{1}",  peLoader.imageSectionHeaders[i].Name, lpAllocatedAddress.ToString("X4")));
             }

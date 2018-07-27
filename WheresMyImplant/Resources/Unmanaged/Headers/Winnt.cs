@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 
 using WORD = System.UInt16;
+using LONG = System.UInt32;
 using DWORD = System.UInt32;
 using QWORD = System.UInt64;
 using ULONGLONG = System.UInt64;
@@ -18,22 +19,24 @@ namespace Unmanaged.Headers
     {
         private const DWORD EXCEPTION_MAXIMUM_PARAMETERS = 15;
 
-        ////////////////////////////////////////////////////////////////////////////////
+        [Flags]
         // https://msdn.microsoft.com/en-us/library/windows/desktop/aa366786(v=vs.85).aspx
-        ////////////////////////////////////////////////////////////////////////////////
-        public const DWORD PAGE_NOACCESS = 0x01;
-        public const DWORD PAGE_READONLY = 0x02;
-        public const DWORD PAGE_READWRITE = 0x04;
-        public const DWORD PAGE_WRITECOPY = 0x08;
-        public const DWORD PAGE_EXECUTE = 0x10;
-        public const DWORD PAGE_EXECUTE_READ = 0x20;
-        public const DWORD PAGE_EXECUTE_READWRITE = 0x40;
-        public const DWORD PAGE_EXECUTE_WRITECOPY = 0x80;
-        public const DWORD PAGE_GUARD = 0x100;
-        public const DWORD PAGE_NOCACHE = 0x200;
-        public const DWORD PAGE_WRITECOMBINE = 0x400;
-        public const DWORD PAGE_TARGETS_INVALID = 0x40000000;
-        public const DWORD PAGE_TARGETS_NO_UPDATE = 0x40000000;
+        public enum MEMORY_PROTECTION_CONSTANTS : uint
+        {
+            PAGE_NOACCESS = 0x01,
+            PAGE_READONLY = 0x02,
+            PAGE_READWRITE = 0x04,
+            PAGE_WRITECOPY = 0x08,
+            PAGE_EXECUTE = 0x10,
+            PAGE_EXECUTE_READ = 0x20,
+            PAGE_EXECUTE_READWRITE = 0x40,
+            PAGE_EXECUTE_WRITECOPY = 0x80,
+            PAGE_GUARD = 0x100,
+            PAGE_NOCACHE = 0x200,
+            PAGE_WRITECOMBINE = 0x400,
+            PAGE_TARGETS_INVALID = 0x40000000,
+            PAGE_TARGETS_NO_UPDATE = 0x40000000
+        }
 
         [Flags]
         public enum ACCESS_MASK : uint
@@ -210,7 +213,7 @@ namespace Unmanaged.Headers
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        struct _EXCEPTION_RECORD
+        public struct _EXCEPTION_RECORD
         {
             public DWORD ExceptionCode;
             public DWORD ExceptionFlags;
@@ -251,6 +254,7 @@ namespace Unmanaged.Headers
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        //https://www.nirsoft.net/kernel_struct/vista/IMAGE_DOS_HEADER.html
         public struct _IMAGE_DOS_HEADER
         {
             public WORD e_magic;
@@ -267,36 +271,17 @@ namespace Unmanaged.Headers
             public WORD e_cs;
             public WORD e_lfarlc;
             public WORD e_ovno;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)] //Matt has this set to 8
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
             public WORD[] e_res;
             public WORD e_oemid;
             public WORD e_oeminfo;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
             public WORD[] e_res2;
-            public DWORD e_lfanew; //Maybe Int64?
+            public LONG e_lfanew;
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct _IMAGE_FILE_HEADER
-        {
-            public IMAGE_FILE_MACHINE Machine;
-            public WORD NumberOfSections;
-            public DWORD TimeDateStamp;
-            public DWORD PointerToSymbolTable;
-            public DWORD NumberOfSymbols;
-            public WORD SizeOfOptionalHeader;
-            public WORD Characteristics;
-        }
-
-        //http://www.exploit-monday.com/2012/04/64-bit-process-replacement-in.html
-        public enum IMAGE_FILE_MACHINE : ushort
-        {
-            I386 = 0x014c,
-            IA64 = 0x0200,
-            AMD64 = 0x8664,
-        }
-
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        //https://docs.microsoft.com/en-us/windows/desktop/api/winnt/ns-winnt-_image_nt_headers
         public struct _IMAGE_NT_HEADERS
         {
             public DWORD Signature;
@@ -313,11 +298,53 @@ namespace Unmanaged.Headers
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        //https://docs.microsoft.com/en-us/windows/desktop/api/winnt/ns-winnt-_image_file_header
+        public struct _IMAGE_FILE_HEADER
+        {
+            public IMAGE_FILE_MACHINE Machine;
+            public WORD NumberOfSections;
+            public DWORD TimeDateStamp;
+            public DWORD PointerToSymbolTable;
+            public DWORD NumberOfSymbols;
+            public WORD SizeOfOptionalHeader;
+            public CHARACTERISTICS Characteristics;
+        }
+
+        [Flags]
+        public enum IMAGE_FILE_MACHINE : ushort
+        {
+            IMAGE_FILE_MACHINE_I386 = 0x014c,
+            IMAGE_FILE_MACHINE_IA64 = 0x0200,
+            IMAGE_FILE_MACHINE_AMD64 = 0x8664,
+        }
+
+        [Flags]
+        public enum CHARACTERISTICS : ushort
+        {
+            IMAGE_FILE_RELOCS_STRIPPED = 0x0001,
+            IMAGE_FILE_EXECUTABLE_IMAGE = 0x0002,
+            IMAGE_FILE_LINE_NUMS_STRIPPED = 0x0004,
+            IMAGE_FILE_LOCAL_SYMS_STRIPPED = 0x0008,
+            IMAGE_FILE_AGGRESIVE_WS_TRIM = 0x0010,
+            IMAGE_FILE_LARGE_ADDRESS_AWARE = 0x0020,
+            IMAGE_FILE_BYTES_REVERSED_LO = 0x0080,
+            IMAGE_FILE_32BIT_MACHINE = 0x0100,
+            IMAGE_FILE_DEBUG_STRIPPED = 0x0200,
+            IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP = 0x0400,
+            IMAGE_FILE_NET_RUN_FROM_SWAP = 0x0800,
+            IMAGE_FILE_SYSTEM = 0x1000,
+            IMAGE_FILE_DLL = 0x2000,
+            IMAGE_FILE_UP_SYSTEM_ONLY = 0x4000,
+            IMAGE_FILE_BYTES_REVERSED_HI = 0x8000
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        //https://docs.microsoft.com/en-us/windows/desktop/api/winnt/ns-winnt-_image_optional_header
         public struct _IMAGE_OPTIONAL_HEADER
         {
-            public WORD Magic;
-            public byte MajorLinkerVersion;
-            public byte MinorLinkerVersion;
+            public MAGIC Magic;
+            public Byte MajorLinkerVersion;
+            public Byte MinorLinkerVersion;
             public DWORD SizeOfCode;
             public DWORD SizeOfInitializedData;
             public DWORD SizeOfUninitializedData;
@@ -337,8 +364,8 @@ namespace Unmanaged.Headers
             public DWORD SizeOfImage;
             public DWORD SizeOfHeaders;
             public DWORD CheckSum;
-            public WORD Subsystem;
-            public WORD DllCharacteristics;
+            public SUBSYSTEM Subsystem;
+            public DLL_CHARACTERISTICS DllCharacteristics;
             public DWORD SizeOfStackReserve;
             public DWORD SizeOfStackCommit;
             public DWORD SizeOfHeapReserve;
@@ -349,12 +376,13 @@ namespace Unmanaged.Headers
             public Winnt._IMAGE_DATA_DIRECTORY[] ImageDataDirectory;
         };
 
+        //https://docs.microsoft.com/en-us/windows/desktop/api/winnt/ns-winnt-_image_optional_header
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct _IMAGE_OPTIONAL_HEADER64
         {
-            public WORD Magic;
-            public byte MajorLinkerVersion;
-            public byte MinorLinkerVersion;
+            public MAGIC Magic;
+            public Byte MajorLinkerVersion;
+            public Byte MinorLinkerVersion;
             public DWORD SizeOfCode;
             public DWORD SizeOfInitializedData;
             public DWORD SizeOfUninitializedData;
@@ -373,8 +401,8 @@ namespace Unmanaged.Headers
             public DWORD SizeOfImage;
             public DWORD SizeOfHeaders;
             public DWORD CheckSum;
-            public WORD Subsystem;
-            public WORD DllCharacteristics;
+            public SUBSYSTEM Subsystem;
+            public DLL_CHARACTERISTICS DllCharacteristics;
             public QWORD SizeOfStackReserve;
             public QWORD SizeOfStackCommit;
             public QWORD SizeOfHeapReserve;
@@ -385,11 +413,57 @@ namespace Unmanaged.Headers
             public Winnt._IMAGE_DATA_DIRECTORY[] ImageDataDirectory; //234
         };
 
+        [Flags]
+        public enum MAGIC : ushort
+        {
+            IMAGE_NT_OPTIONAL_HDR_MAGIC = 0x00,
+            IMAGE_NT_OPTIONAL_HDR32_MAGIC = 0x10b,
+            IMAGE_NT_OPTIONAL_HDR64_MAGIC = 0x20b,
+            IMAGE_ROM_OPTIONAL_HDR_MAGIC = 0x107
+        }
+
+        [Flags]
+        public enum SUBSYSTEM : ushort
+        {
+            //IMAGE_SUBSYSTEM_UNKNOWN = 0,
+            IMAGE_SUBSYSTEM_NATIVE = 1,
+            IMAGE_SUBSYSTEM_WINDOWS_GUI = 2,
+            IMAGE_SUBSYSTEM_WINDOWS_CUI = 3,
+            IMAGE_SUBSYSTEM_OS2_CUI = 5,
+            IMAGE_SUBSYSTEM_POSIX_CUI = 7,
+            IMAGE_SUBSYSTEM_WINDOWS_CE_GUI = 9,
+            IMAGE_SUBSYSTEM_EFI_APPLICATION = 10,
+            IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER = 11,
+            IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER = 12,
+            IMAGE_SUBSYSTEM_EFI_ROM = 13,
+            IMAGE_SUBSYSTEM_XBOX = 14,
+            IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION = 16
+        }
+
+        [Flags]
+        public enum DLL_CHARACTERISTICS : ushort
+        {
+            Reserved1 = 0x0001,
+            Reserved2 = 0x0002,
+            Reserved4 = 0x0004,
+            Reserved8 = 0x0008,
+            IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE = 0x0040,
+            IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY = 0x0080,
+            IMAGE_DLLCHARACTERISTICS_NX_COMPAT = 0x0100,
+            IMAGE_DLLCHARACTERISTICS_NO_ISOLATION = 0x0200,
+            IMAGE_DLLCHARACTERISTICS_NO_SEH = 0x0400,
+            IMAGE_DLLCHARACTERISTICS_NO_BIND = 0x0800,
+            Reserved1000 = 0x1000,
+            IMAGE_DLLCHARACTERISTICS_WDM_DRIVER = 0x2000,
+            Reserved4000 = 0x4000,
+            IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE = 0x8000
+        }
+
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct _IMAGE_SECTION_HEADER
         {
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
-            public char[] Name;
+            public Char[] Name;
             public DWORD VirtualSize;
             public DWORD VirtualAddress;
             public DWORD SizeOfRawData;
@@ -404,22 +478,22 @@ namespace Unmanaged.Headers
         [StructLayout(LayoutKind.Sequential)]
         public struct _LUID
         {
-            public UInt32 LowPart;
-            public UInt32 HighPart;
+            public DWORD LowPart;
+            public DWORD HighPart;
         }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct _LUID_AND_ATTRIBUTES
         {
             public _LUID Luid;
-            public UInt32 Attributes;
+            public DWORD Attributes;
         }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct _M128A
         {
-            public ulong High;
-            public long Low;
+            public UInt64 High;
+            public Int64 Low;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -443,9 +517,20 @@ namespace Unmanaged.Headers
             public DWORD __alignment1;
             public ULONGLONG RegionSize;
             public DWORD State;
-            public DWORD Protect;
+            public MEMORY_PROTECTION_CONSTANTS Protect;
             public DWORD Type;
             public DWORD __alignment2;
+        }
+
+        //https://msdn.microsoft.com/en-us/library/ms809762.aspx
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        internal struct _IMAGE_IMPORT_DESCRIPTOR
+        {
+            public DWORD Characteristics;
+            public DWORD TimeDateStamp;
+            public DWORD ForwarderChain;
+            public DWORD Name;
+            public DWORD FirstThunk;
         }
 
         public const Int32 PRIVILEGE_SET_ALL_NECESSARY = 1;

