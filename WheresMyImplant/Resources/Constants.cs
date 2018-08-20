@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 
+namespace WheresMyImplant
 {
     class Constants
     {
