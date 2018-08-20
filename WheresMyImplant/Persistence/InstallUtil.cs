@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Configuration.Install;
 using System.Management;
 using System.Management.Instrumentation;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
+//https://docs.microsoft.com/en-us/dotnet/framework/app-domains/how-to-create-a-public-private-key-pair
 [assembly: WmiConfiguration(@"root\cimv2", HostingModel = ManagementHostingModel.LocalSystem), AssemblyKeyFileAttribute("sgKey.snk")]
 namespace WheresMyImplant
 {
