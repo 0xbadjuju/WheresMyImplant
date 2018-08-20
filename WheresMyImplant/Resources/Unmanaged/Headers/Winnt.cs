@@ -246,6 +246,27 @@ namespace Unmanaged.Headers
             public DWORD SizeOfBlock;
         }
 
+        [Flags]
+        public enum TypeOffset : ushort
+        {
+            IMAGE_REL_BASED_ABSOLUTE = 0,
+            IMAGE_REL_BASED_HIGH = 1,
+            IMAGE_REL_BASED_LOW = 2,
+            IMAGE_REL_BASED_HIGHLOW = 3,
+            IMAGE_REL_BASED_HIGHADJ = 4,
+            IMAGE_REL_BASED_MIPS_JMPADDR = 5,
+            IMAGE_REL_BASED_ARM_MOV32A = 5,
+            IMAGE_REL_BASED_ARM_MOV32 = 5,
+            IMAGE_REL_BASED_SECTION = 6,
+            IMAGE_REL_BASED_REL = 7,
+            IMAGE_REL_BASED_ARM_MOV32T = 7,
+            IMAGE_REL_BASED_THUMB_MOV32 = 7,
+            IMAGE_REL_BASED_MIPS_JMPADDR16 = 9,
+            IMAGE_REL_BASED_IA64_IMM64 = 9,
+            IMAGE_REL_BASED_DIR64 = 10,
+            IMAGE_REL_BASED_HIGH3ADJ = 11
+        }
+
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct _IMAGE_DATA_DIRECTORY
         {
@@ -388,7 +409,7 @@ namespace Unmanaged.Headers
             public DWORD SizeOfUninitializedData;
             public DWORD AddressOfEntryPoint;
             public DWORD BaseOfCode;
-            public QWORD ImageBase;
+            public ULONGLONG ImageBase;
             public DWORD SectionAlignment;
             public DWORD FileAlignment;
             public WORD MajorOperatingSystemVersion;
@@ -403,14 +424,14 @@ namespace Unmanaged.Headers
             public DWORD CheckSum;
             public SUBSYSTEM Subsystem;
             public DLL_CHARACTERISTICS DllCharacteristics;
-            public QWORD SizeOfStackReserve;
-            public QWORD SizeOfStackCommit;
-            public QWORD SizeOfHeapReserve;
-            public QWORD SizeOfHeapCommit;
+            public ULONGLONG SizeOfStackReserve;
+            public ULONGLONG SizeOfStackCommit;
+            public ULONGLONG SizeOfHeapReserve;
+            public ULONGLONG SizeOfHeapCommit;
             public DWORD LoaderFlags;
-            public DWORD NumberOfRvaAndSizes; //106
+            public DWORD NumberOfRvaAndSizes;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-            public Winnt._IMAGE_DATA_DIRECTORY[] ImageDataDirectory; //234
+            public Winnt._IMAGE_DATA_DIRECTORY[] ImageDataDirectory;
         };
 
         [Flags]

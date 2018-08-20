@@ -53,7 +53,7 @@ namespace WheresMyImplant
             }
 
             ////////////////////////////////////////////////////////////////////////////////
-            IntPtr lpBaseAddress = VirtualAllocExChecked(new IntPtr(0), peLoader.sizeOfImage, protection);
+            IntPtr lpBaseAddress = VirtualAllocExChecked(IntPtr.Zero, peLoader.sizeOfImage, protection);
             if (IntPtr.Zero == lpBaseAddress)
             {
                 return;
@@ -72,42 +72,59 @@ namespace WheresMyImplant
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpRelocationTable = new IntPtr(lpBaseAddress.ToInt64() + peLoader.baseRelocationTableAddress);
+
             Winnt._IMAGE_BASE_RELOCATION relocationEntry = PtrToStructureRemote<Winnt._IMAGE_BASE_RELOCATION>(lpRelocationTable);
             UInt32 imageSizeOfBaseRelocation = (UInt32)Marshal.SizeOf(typeof(Winnt._IMAGE_BASE_RELOCATION));
-            Int32 sizeOfNextBlock = (Int32)relocationEntry.SizeOfBlock;
+            UInt32 sizeOfNextBlock = relocationEntry.SizeOfBlock;
             IntPtr offset = lpRelocationTable;
-            
+
+            Int64 delta64 = lpBaseAddress.ToInt64() - (Int64)peLoader.imageBase;
+
             ////////////////////////////////////////////////////////////////////////////////
             while (true)
             {
                 IntPtr lpNextRelocationEntry = new IntPtr(lpRelocationTable.ToInt64() + (Int64)sizeOfNextBlock);
                 Winnt._IMAGE_BASE_RELOCATION relocationNextEntry = PtrToStructureRemote<Winnt._IMAGE_BASE_RELOCATION>(lpNextRelocationEntry);
                 IntPtr destinationAddress = new IntPtr(lpBaseAddress.ToInt64() + (Int32)relocationEntry.VirtualAdress);
-                Int32 entries = (Int32)((relocationEntry.SizeOfBlock - imageSizeOfBaseRelocation) / 2);
                 
                 ////////////////////////////////////////////////////////////////////////////////
-                // Some magic from subtee
-                ////////////////////////////////////////////////////////////////////////////////
+                Int32 entries = (Int32)((relocationEntry.SizeOfBlock - imageSizeOfBaseRelocation) / 2);
                 for (Int32 i = 0; i < entries; i++)
                 {
-                    UInt16 value = (UInt16)ReadInt16Remote(offset, 8 + (2 * i));
-                    UInt16 type = (UInt16)(value >> 12);
-                    UInt16 fixup = (UInt16)(value & 0xfff);
+                    UInt16 value = ReadInt16Remote(offset, (relocationEntry.SizeOfBlock) + (2 * i));
+                    Winnt.TypeOffset type = (Winnt.TypeOffset)(value >> 12);
+                    UInt16 patchOffset = (UInt16)(value & 0xfff);
+                    IntPtr lpPatchAddress = IntPtr.Zero;
                     switch (type)
                     {
-                        case 0x0:
+                        case Winnt.TypeOffset.IMAGE_REL_BASED_ABSOLUTE:
                             break;
-                        case 0xA:
-                            IntPtr lpPatchAddress = new IntPtr(destinationAddress.ToInt64() + (Int32)fixup);
-                            Int64 originalAddress = ReadInt64Remote(lpPatchAddress);
-                            Int64 delta64 = (Int64)(lpBaseAddress.ToInt64() - (Int64)peLoader.imageOptionalHeader64.ImageBase);
-                            IntPtr lpOriginalAddress = new IntPtr(originalAddress + delta64);
-                            WriteInt64Remote(lpPatchAddress, originalAddress + delta64);
+                        case Winnt.TypeOffset.IMAGE_REL_BASED_HIGH:
+                            break;
+                        case Winnt.TypeOffset.IMAGE_REL_BASED_LOW:
+                            break;
+                        case Winnt.TypeOffset.IMAGE_REL_BASED_HIGHLOW:
+                            lpPatchAddress = new IntPtr(destinationAddress.ToInt64() + patchOffset);
+                            WriteInt64Remote(lpPatchAddress, ReadInt64Remote(lpPatchAddress) + delta64);
+                            break;
+                        case Winnt.TypeOffset.IMAGE_REL_BASED_HIGHADJ:
+                            break;
+                        case Winnt.TypeOffset.IMAGE_REL_BASED_SECTION:
+                            break;
+                        case Winnt.TypeOffset.IMAGE_REL_BASED_REL:
+                            break;
+                        case Winnt.TypeOffset.IMAGE_REL_BASED_DIR64:
+                            lpPatchAddress = new IntPtr(destinationAddress.ToInt64() + patchOffset);
+                            WriteInt64Remote(lpPatchAddress, ReadInt64Remote(lpPatchAddress) + delta64);
+                            break;
+                        case Winnt.TypeOffset.IMAGE_REL_BASED_HIGH3ADJ:
+                            break;
+                        default:
                             break;
                     }
                 }
                 offset = new IntPtr(lpRelocationTable.ToInt64() + (Int64)sizeOfNextBlock);
-                sizeOfNextBlock += (Int32)relocationNextEntry.SizeOfBlock;
+                sizeOfNextBlock += relocationNextEntry.SizeOfBlock;
                 relocationEntry = relocationNextEntry;
                 //"The last entry is set to zero (NULL) to indicate the end of the table." - cool
                 if (0 == relocationNextEntry.SizeOfBlock)
@@ -128,7 +145,7 @@ namespace WheresMyImplant
             
             while(true)
             {
-                Int32 dwImportTableAddressOffset = ((sizeOfStruct * multiplier++) + peLoader.importTableAddress);
+                UInt32 dwImportTableAddressOffset = (UInt32)((sizeOfStruct * multiplier++) + peLoader.importTableAddress);
                 IntPtr lpImportAddressTable = new IntPtr(lpBaseAddress.ToInt64() + dwImportTableAddressOffset);
                 Winnt._IMAGE_IMPORT_DESCRIPTOR imageImportDirectory = PtrToStructureRemote<Winnt._IMAGE_IMPORT_DESCRIPTOR>(lpImportAddressTable);
                 if (0 == imageImportDirectory.FirstThunk) 
@@ -142,12 +159,10 @@ namespace WheresMyImplant
                 IntPtr lpLocalModuleAddress = kernel32.LoadLibrary(dllName);
                 IntPtr lpModuleBaseAddress = LoadLibraryRemote(dllName);
                 WaitForSingleObjectExRemote(lpModuleBaseAddress);
-                WriteOutputGood(String.Format("Loaded {0}", dllName));
+                WriteOutputGood(String.Format("Library {0}", dllName));
 				
 				////////////////////////////////////////////////////////////////////////////////
                 IntPtr lpRvaImportAddressTable = new IntPtr(lpBaseAddress.ToInt64() + imageImportDirectory.FirstThunk);
-
-                
                 while (true)
                 {
                     Int32 dwRvaImportAddressTable = PtrToInt32Remote(lpRvaImportAddressTable);
@@ -163,9 +178,7 @@ namespace WheresMyImplant
                     IntPtr lpLocalFunctionAddress = kernel32.GetProcAddress(hModule, dllFunctionName);
                     IntPtr lpRelativeFunctionAddress = new IntPtr(lpLocalFunctionAddress.ToInt64() - lpLocalBaseAddress.ToInt64());
                     IntPtr lpFunctionAddress = new IntPtr(lpRemoteBaseAddress.ToInt64() + lpRelativeFunctionAddress.ToInt64());
-                    //WriteOutputGood(String.Format("\tLoaded Function {0}", dllFunctionName));
-                    WriteOutputGood("\tLoaded Function " + dllFunctionName);
-                    //WriteProcessMemoryChecked(lpRvaImportAddressTable, lpFunctionAddress, sizeof(Int64),"");
+                    WriteOutputGood(String.Format("\tFunction: {0}", dllFunctionName));
 
                     if (!WriteInt64Remote(lpRvaImportAddressTable, (Int64)lpFunctionAddress))
                     {

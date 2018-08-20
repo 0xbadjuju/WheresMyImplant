@@ -40,10 +40,10 @@ namespace WheresMyImplant
         internal Winnt._IMAGE_SECTION_HEADER[] imageSectionHeaders;
         internal Byte[] imageBytes;
         internal UInt32 sizeOfImage;
-        private UInt32 imageBase;
-        internal Int32 baseRelocationTableAddress;
-        internal Int32 importTableAddress;
-        internal Int32 addressOfEntryPoint;
+        internal UInt64 imageBase;
+        internal UInt32 baseRelocationTableAddress;
+        internal UInt32 importTableAddress;
+        internal UInt32 addressOfEntryPoint;
         internal UInt16 dllCharacteristics = 0;
 
         private BinaryReader binaryReader;
@@ -117,8 +117,6 @@ namespace WheresMyImplant
                 }
             }
 
-
-            UInt64 imageBase = 0;
             UInt16 subsystem = 0;
             
             switch (imageFileHeader.Machine)
@@ -126,9 +124,9 @@ namespace WheresMyImplant
                 case Winnt.IMAGE_FILE_MACHINE.IMAGE_FILE_MACHINE_I386:
                     imageOptionalHeader32 = FromBinaryReader<Winnt._IMAGE_OPTIONAL_HEADER>(binaryReader);
                     sizeOfImage = imageOptionalHeader32.SizeOfImage;
-                    baseRelocationTableAddress = (Int32)imageOptionalHeader32.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.BaseRelocationTable].VirtualAddress;
-                    importTableAddress = (Int32)imageOptionalHeader32.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.ImportTable].VirtualAddress;
-                    addressOfEntryPoint = (Int32)imageOptionalHeader32.AddressOfEntryPoint;
+                    baseRelocationTableAddress = imageOptionalHeader32.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.BaseRelocationTable].VirtualAddress;
+                    importTableAddress = imageOptionalHeader32.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.ImportTable].VirtualAddress;
+                    addressOfEntryPoint = imageOptionalHeader32.AddressOfEntryPoint;
                     imageBase = imageOptionalHeader32.ImageBase;
                     subsystem = (UInt16)imageOptionalHeader32.Subsystem;
                     dllCharacteristics = (UInt16)imageOptionalHeader32.DllCharacteristics;
@@ -137,12 +135,12 @@ namespace WheresMyImplant
                 case Winnt.IMAGE_FILE_MACHINE.IMAGE_FILE_MACHINE_AMD64:
                     imageOptionalHeader64 = FromBinaryReader<Winnt._IMAGE_OPTIONAL_HEADER64>(binaryReader);
                     sizeOfImage = imageOptionalHeader64.SizeOfImage;
-                    baseRelocationTableAddress = (Int32)imageOptionalHeader64.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.BaseRelocationTable].VirtualAddress;
-                    importTableAddress = (Int32)imageOptionalHeader64.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.ImportTable].VirtualAddress;
-                    addressOfEntryPoint = (Int32)imageOptionalHeader64.AddressOfEntryPoint;
+                    baseRelocationTableAddress = imageOptionalHeader64.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.BaseRelocationTable].VirtualAddress;
+                    importTableAddress = imageOptionalHeader64.ImageDataDirectory[(Int32)IMAGE_DATA_DIRECTORY_OPTIONS.ImportTable].VirtualAddress;
+                    addressOfEntryPoint = imageOptionalHeader64.AddressOfEntryPoint;
                     imageBase = imageOptionalHeader64.ImageBase;
                     subsystem = (UInt16)imageOptionalHeader64.Subsystem;
-                    dllCharacteristics = (UInt16)imageOptionalHeader32.DllCharacteristics;
+                    dllCharacteristics = (UInt16)imageOptionalHeader64.DllCharacteristics;
                     is64Bit = true;
                     break;
                 default:

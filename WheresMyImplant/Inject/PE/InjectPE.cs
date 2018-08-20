@@ -104,7 +104,7 @@ namespace WheresMyImplant
             Int32 multiplier = 0;
             while (true)
             {
-                Int32 dwImportTableAddressOffset = ((sizeOfStruct * multiplier++) + peLoader.importTableAddress);
+                UInt32 dwImportTableAddressOffset = (UInt32)((sizeOfStruct * multiplier++) + peLoader.importTableAddress);
                 IntPtr lpImportAddressTable = new IntPtr(lpBaseAddress.ToInt32() + dwImportTableAddressOffset);
                 _IMAGE_IMPORT_DIRECTORY imageImportDirectory = (_IMAGE_IMPORT_DIRECTORY)Marshal.PtrToStructure(lpImportAddressTable, typeof(_IMAGE_IMPORT_DIRECTORY));
                 if (0 == imageImportDirectory.RvaImportAddressTable)
@@ -137,7 +137,7 @@ namespace WheresMyImplant
             String parameter = "";
             IntPtr lpThreadAttributes = IntPtr.Zero;
             UInt32 dwStackSize = 0;
-            Int32 dwStartAddress = lpBaseAddress.ToInt32() + peLoader.addressOfEntryPoint;
+            UInt32 dwStartAddress = (UInt32)(lpBaseAddress.ToInt64() + peLoader.addressOfEntryPoint);
             IntPtr lpStartAddress = new IntPtr(dwStartAddress);
             IntPtr lpParameter = new IntPtr();//Convert.ToInt32(parameter));
             UInt32 dwCreationFlags = 0;

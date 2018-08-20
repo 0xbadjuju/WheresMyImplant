@@ -185,21 +185,21 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        protected Int16 ReadInt16Remote(IntPtr pointer, Int32 offset)
+        protected UInt16 ReadInt16Remote(IntPtr pointer, Int64 offset)
         {
-            Int16 integer = 0;
-            Int16 marshaledInt16 = 0;
+            UInt16 integer = 0;
+            UInt16 marshaledInt16 = 0;
             GCHandle pinnedInteger = GCHandle.Alloc(integer, GCHandleType.Pinned);
             //WriteOutputNeutral("pinnedInteger: " + pinnedInteger.AddrOfPinnedObject());
             try
             {
-                IntPtr lpInteger = new IntPtr((Int64)pinnedInteger.AddrOfPinnedObject());
+                IntPtr lpInteger = pinnedInteger.AddrOfPinnedObject();
                 IntPtr adjustedPointer = new IntPtr(pointer.ToInt64() + offset);
-                if (ReadProcessMemoryChecked(adjustedPointer, lpInteger, sizeof(Int16), typeof(Int16).ToString()))
+                if (ReadProcessMemoryChecked(adjustedPointer, lpInteger, sizeof(UInt16), typeof(UInt16).ToString()))
                 {
                     return marshaledInt16;
                 }
-                marshaledInt16 = Marshal.ReadInt16(lpInteger);
+                marshaledInt16 = (UInt16)Marshal.ReadInt16(lpInteger);
             }
             catch
             {
@@ -281,7 +281,7 @@ namespace WheresMyImplant
             GCHandle pinnedInteger = GCHandle.Alloc(value, GCHandleType.Pinned);
             try
             {
-                IntPtr lpInteger = new IntPtr((Int64)pinnedInteger.AddrOfPinnedObject());
+                IntPtr lpInteger = pinnedInteger.AddrOfPinnedObject();
                 UInt32 dwNumberOfBytesWritten = 0;
                 if (!kernel32.WriteProcessMemory(hProcess, lpBaseAddress, lpInteger, (UInt32)sizeof(Int64), ref dwNumberOfBytesWritten))
                 {
@@ -311,15 +311,27 @@ namespace WheresMyImplant
             String stringResult = "";
             Byte character = new Byte();
             GCHandle pinnedCharacter = GCHandle.Alloc(character, GCHandleType.Pinned);
-            IntPtr lpCharacter = new IntPtr((Int64)pinnedCharacter.AddrOfPinnedObject());
-            Char marshaledChar;
-            do {
-                IntPtr adjustedPointer = new IntPtr(pointer.ToInt64() + offset++);
-                ReadProcessMemoryChecked(adjustedPointer, lpCharacter, sizeof(Char), typeof(Char).ToString());
-                marshaledChar = (char)Marshal.ReadByte(lpCharacter);
-                stringResult += marshaledChar;
-            } while (marshaledChar != '\0');
-            pinnedCharacter.Free();
+            try
+            {
+                IntPtr lpCharacter = pinnedCharacter.AddrOfPinnedObject();
+                Char marshaledChar;
+                do
+                {
+                    IntPtr adjustedPointer = new IntPtr(pointer.ToInt64() + offset++);
+                    ReadProcessMemoryChecked(adjustedPointer, lpCharacter, sizeof(Char), typeof(Char).ToString());
+                    marshaledChar = (char)Marshal.ReadByte(lpCharacter);
+                    stringResult += marshaledChar;
+                } while (marshaledChar != '\0');
+            }
+            catch (Exception ex)
+            {
+                WriteOutputBad("WriteInt64Remote Failed");
+                WriteOutput(ex.Message);
+            }
+            finally
+            {
+                pinnedCharacter.Free();
+            }
             return stringResult;
         }
 
