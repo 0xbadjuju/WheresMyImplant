@@ -67,7 +67,10 @@ namespace Unmanaged.Libraries
         public static extern void GetSystemInfo(out Winbase._SYSTEM_INFO lpSystemInfo);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool GetThreadContext(IntPtr hThread, IntPtr lpContext);
+        public static extern Boolean GetThreadContext(IntPtr hThread, IntPtr lpContext);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern UInt32 GlobalSize(IntPtr hMem);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean IsWow64Process(IntPtr hProcess, out Boolean Wow64Process);

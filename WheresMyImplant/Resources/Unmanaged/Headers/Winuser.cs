@@ -13,8 +13,51 @@ namespace Unmanaged.Headers
     sealed class Winuser
     {
         public static IntPtr HWND_MESSAGE = new IntPtr(-3);
+
         public static UInt32 WM_QUIT = 0x0012;
-        public static UInt32 WM_CHANGECBCHAIN = 0x030D;
+
+        public const UInt32 WM_ASKCBFORMATNAME = 0x030C;
+        public const UInt32 WM_CHANGECBCHAIN = 0x030D;
+        public const UInt32 WM_CLIPBOARDUPDATE = 0x031D;
+        public const UInt32 WM_DESTROYCLIPBOARD = 0x0307;
+        public const UInt32 WM_DRAWCLIPBOARD = 0x0308;
+        public const UInt32 WM_HSCROLLCLIPBOARD = 0x030E;
+        public const UInt32 WM_PAINTCLIPBOARD = 0x0309;
+        public const UInt32 WM_RENDERALLFORMATS = 0x0306;
+        public const UInt32 WM_RENDERFORMAT = 0x0305;
+        public const UInt32 WM_SIZECLIPBOARD = 0x030B;
+        public const UInt32 WM_VSCROLLCLIPBOARD = 0x030A;
+
+        [Flags]
+        public enum ClipboardFormats : uint
+        {
+            CF_TEXT = 1,
+            CF_BITMAP = 2,
+            CF_METAFILEPICT = 3,
+            CF_SYLK = 4,
+            CF_DIF = 5,
+            CF_TIFF = 6,
+            CF_OEMTEXT = 7,
+            CF_DIB = 8,
+            CF_PALETTE = 9,
+            CF_PENDATA = 10,
+            CF_RIFF = 11,
+            CF_WAVE = 12,
+            CF_UNICODETEXT = 13,
+            CF_ENHMETAFILE = 14,
+            CF_HDROP = 15,
+            CF_LOCALE = 16,
+            CF_DIBV5 = 17,
+            CF_OWNERDISPLAY = 0x0080,
+            CF_DSPTEXT = 0x0081,
+            CF_DSPBITMAP = 0x0082,
+            CF_DSPMETAFILEPICT = 0x0083,
+            CF_DSPENHMETAFILE = 0x008E,
+            CF_PRIVATEFIRST = 0x0200,
+            CF_PRIVATELAST = 0x02FF,
+            CF_GDIOBJFIRST = 0x0300,
+            CF_GDIOBJLAST = 0x03FF
+        }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public struct tagMSG 
@@ -97,7 +140,7 @@ namespace Unmanaged.Headers
             public UInt32 cbSize;
             [MarshalAs(UnmanagedType.U4)]
             public UInt32 style;
-            public IntPtr lpfnWndProc; // not WndProc
+            public Delegate lpfnWndProc; // not WndProc
             public Int32 cbClsExtra;
             public Int32 cbWndExtra;
             public IntPtr hInstance;
