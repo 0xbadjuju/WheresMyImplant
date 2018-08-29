@@ -241,11 +241,24 @@ namespace WheresMyImplant
         [ManagementTask]
         public static String Install()
         {
+            StringBuilder output = new StringBuilder();
             InstallWMI install = new InstallWMI(".", @"ROOT\cimv2", "Win32_Implant");
-            install.GetMethods();
-            install.AddRegistryLocal();
-            install.CopyDll();
-            return install.GetOutput();
+            try
+            {
+                install.ExtensionProviderSetup();
+                install.GetMethods();
+                install.AddRegistryLocal();
+                install.CopyDll();
+            }
+            catch (Exception ex)
+            {
+                output.Append(ex.ToString());
+            }
+            finally
+            {
+                output.Append(install.GetOutput());
+            }
+            return output.ToString();
         }
 
         [ManagementTask]

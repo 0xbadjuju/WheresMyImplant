@@ -24,15 +24,20 @@ namespace WheresMyImplant
         private String[] hkcrKeys;
         private String[] hklmKeys;
 
-        private String dotNetVersion = "4.0.0.0";
-        private String clrVersion = "v4.0.30319";
-
         private ManagementScope managementScope;
         private ManagementClass managementClass;
 
         private String runtimePath = RuntimeEnvironment.GetRuntimeDirectory();
         private Assembly assembly = Assembly.GetExecutingAssembly();
-        private AssemblyName systemManagementName;
+
+        //private AssemblyName systemManagementName;
+        private String registryDefault;
+        private String registryAssembly;
+        private String registryClass;
+        private String registryRuntimeVersion;
+
+        private String providerGuid = "{" + (new Guid("54D8502C-527D-43f7-A506-A9DA075E229C").ToString().ToUpper()) + "}";
+        //private String providerGuid = "{" + (new Guid("2A7B042D-578A-4366-9A3D-154C0498458E").ToString().ToUpper()) + "}";
 
         internal InstallWMI(String system, String namespaceName, String providerDisplayName)
         {
@@ -40,10 +45,12 @@ namespace WheresMyImplant
             this.namespaceName = namespaceName;
             this.providerDisplayName = providerDisplayName;
 
-            systemManagementName = AssemblyName.GetAssemblyName(String.Format("{0}{1}", runtimePath, "System.Management.dll"));
+            //systemManagementName = AssemblyName.GetAssemblyName(String.Format("{0}{1}", runtimePath, "System.Management.Instrumentation.dll"));
+            registryDefault = @"C:\Windows\System32\mscoree.dll";
+            registryAssembly = @"System.Management.Instrumentation, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089";//systemManagementName.FullName;
+            registryClass = @"System.Management.Instrumentation.ManagedCommonProvider";
+            registryRuntimeVersion = assembly.ImageRuntimeVersion;
 
-            String providerGuid = "{"+(new Guid("2A7B042D-578A-4366-9A3D-154C0498458E").ToString().ToUpper())+"}";
-            
             hkcrKeys = new String[] { 
                 String.Format(@"CLSID\{0}", providerGuid.ToString()), 
                 String.Format(@"WOW6432Node\CLSID\{0}", providerGuid.ToString()) 
@@ -54,17 +61,12 @@ namespace WheresMyImplant
                 String.Format(@"SOFTWARE\Classes\WOW6432Node\CLSID\{0}", providerGuid.ToString()), 
                 String.Format(@"SOFTWARE\WOW6432Node\Classes\CLSID\{0}", providerGuid.ToString()) 
             };
-
+            
+            String connectionString = String.Format(@"\\{0}\{1}", system, namespaceName);
             ConnectionOptions connectionOptions = new ConnectionOptions();
             connectionOptions.Impersonation = ImpersonationLevel.Impersonate;
-
-            String connectionString = String.Format(@"\\{0}\{1}", system, namespaceName);
             managementScope = new ManagementScope(connectionString, connectionOptions);
-
-            ManagementPath managementPath = new ManagementPath();
-            ObjectGetOptions options = new ObjectGetOptions();
-            managementClass = new ManagementClass(managementScope, managementPath, options);
-
+            managementClass = new ManagementClass(managementScope, new ManagementPath(), new ObjectGetOptions());
             managementClass["__class"] = providerDisplayName;
             managementClass.Qualifiers.Add("dynamic", true, false, true, false, true);
             managementClass.Qualifiers.Add("provider", assembly.FullName, false, false, false, true);
@@ -117,69 +119,96 @@ namespace WheresMyImplant
 
                 statusMethods += ".";
             }
-            managementClass.Put();
+
+            try
+            {
+                managementClass.Put();
+            }
+            catch (ManagementException ex)
+            {
+                WriteOutput(ex.Message);
+            }
+
             WriteOutput(statusMethods);
         }
 
         internal void AddRegistryLocal()
         {
-            String registryProvider = String.Format(@"System.Management.Instrumentation, Version={0}, Culture=neutral, PublicKeyToken=b77a5c561934e089", dotNetVersion);
-            String dllProvider = @"C:\Windows\System32\mscoree.dll";
-            String dllProviderClass = @"System.Management.Instrumentation.ManagedCommonProvider";
+            
             WriteOutputNeutral("Adding Registry Keys");
 
             foreach (String key in hkcrKeys)
             {
-                RegistryKey key1 = Registry.ClassesRoot.CreateSubKey(key);
-                key1.SetValue("", dllProviderClass);
+                AddRegistryClassesRoot(key, "", registryClass);
 
                 String keyValue2 = String.Format(@"{0}\InprocServer32", key);
-                RegistryKey key2 = Registry.ClassesRoot.CreateSubKey(keyValue2);
-                key2.SetValue("", dllProvider);
-                key2.SetValue("Assembly", registryProvider);
-                key2.SetValue("Class", dllProviderClass);
-                key2.SetValue("RuntimeVersion", clrVersion);
-                key2.SetValue("ThreadingModel", "Both");
-
-                String keyValue3 = String.Format(@"{0}\InprocServer32\{1}", key, dotNetVersion);
-                RegistryKey key3 = Registry.ClassesRoot.CreateSubKey(keyValue3);
-                key3.SetValue("Assembly", registryProvider);
-                key3.SetValue("Class", dllProviderClass);
-                key3.SetValue("RuntimeVersion", clrVersion);
+                AddRegistryClassesRoot(keyValue2, "", registryDefault);
+                AddRegistryClassesRoot(keyValue2, "Assembly", registryAssembly);
+                AddRegistryClassesRoot(keyValue2, "Class", registryClass);
+                AddRegistryClassesRoot(keyValue2, "RuntimeVersion", registryRuntimeVersion);
+                AddRegistryClassesRoot(keyValue2, "ThreadingModel", "Both");
+                
+                String keyValue3 = String.Format(@"{0}\InprocServer32\{1}", key, "3.5.0.0");
+                AddRegistryClassesRoot(keyValue3, "Assembly", registryAssembly);
+                AddRegistryClassesRoot(keyValue3, "Class", registryClass);
+                AddRegistryClassesRoot(keyValue3, "RuntimeVersion", registryRuntimeVersion);
 
                 statusRegistry += ".";
             }
 
             foreach (String key in hklmKeys)
             {
-                RegistryKey key1 = Registry.LocalMachine.CreateSubKey(key);
-                key1.SetValue("", dllProviderClass);
+                AddRegistryLocalMachine(key, "", registryClass);
 
                 String keyValue2 = String.Format(@"{0}\InprocServer32", key);
-                RegistryKey key2 = Registry.LocalMachine.CreateSubKey(keyValue2);
-                key2.SetValue("", dllProvider);
-                key2.SetValue("Assembly", registryProvider);
-                key2.SetValue("Class", dllProviderClass);
-                key2.SetValue("RuntimeVersion", clrVersion);
-                key2.SetValue("ThreadingModel", "Both");
-
-                String keyValue3 = String.Format(@"{0}\InprocServer32\{1}", key, dotNetVersion);
-                RegistryKey key3 = Registry.LocalMachine.CreateSubKey(keyValue3);
-                key3.SetValue("Assembly", registryProvider);
-                key3.SetValue("Class", dllProviderClass);
-                key3.SetValue("RuntimeVersion", clrVersion);
+                AddRegistryLocalMachine(keyValue2, "", registryDefault);
+                AddRegistryLocalMachine(keyValue2, "Assembly", registryAssembly);
+                AddRegistryLocalMachine(keyValue2, "Class", registryClass);
+                AddRegistryLocalMachine(keyValue2, "RuntimeVersion", registryRuntimeVersion);
+                AddRegistryLocalMachine(keyValue2, "ThreadingModel", "Both");
+                
+                String keyValue3 = String.Format(@"{0}\InprocServer32\{1}", key, "3.5.0.0");
+                AddRegistryLocalMachine(keyValue3, "Assembly", registryAssembly);
+                AddRegistryLocalMachine(keyValue3, "Class", registryClass);
+                AddRegistryLocalMachine(keyValue3, "RuntimeVersion", registryRuntimeVersion);
 
                 statusRegistry += ".";
             }
             WriteOutput(statusRegistry);
         }
 
+        private void AddRegistryClassesRoot(String strKey, String value, String data)
+        {
+            try
+            {
+                using (RegistryKey key = Registry.ClassesRoot.CreateSubKey(strKey))
+                {
+                    key.SetValue(value, data);
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteOutputBad(ex.Message);
+            }
+        }
+
+        private void AddRegistryLocalMachine(String strKey, String value, String data)
+        {
+            try
+            {
+                using (RegistryKey key = Registry.LocalMachine.CreateSubKey(strKey))
+                {
+                    key.SetValue(value, data);
+                }
+            }
+            catch(Exception ex)
+            {
+                WriteOutputBad(ex.Message);
+            }
+        }
+
         internal void AddRegistryRemote(String[] keys, UInt32 hive)
         {
-            String registryProvider = String.Format(@"System.Management.Instrumentation, Version={0}, Culture=neutral, PublicKeyToken=b77a5c561934e089", dotNetVersion);
-            String dllProvider = @"C:\Windows\System32\mscoree.dll";
-            String dllProviderClass = @"System.Management.Instrumentation.ManagedCommonProvider";
-
             using (WMI wmi = new WMI())
             {
                 if (!wmi.Connect())
@@ -190,19 +219,19 @@ namespace WheresMyImplant
                 foreach (String key in keys)
                 {
                     wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, key });
-                    wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, key, "", dllProviderClass });
+                    wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, key, "", registryDefault });
 
                     String keyValue2 = String.Format(@"{0}\InprocServer32", key);
-                    wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, keyValue2, "", dllProvider });
-                    wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, keyValue2, "Assembly", registryProvider });
-                    wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, keyValue2, "Class", dllProviderClass });
-                    wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, keyValue2, "RuntimeVersion", clrVersion });
+                    wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, keyValue2, "", registryDefault });
+                    wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, keyValue2, "Assembly", registryAssembly });
+                    wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, keyValue2, "Class", registryClass });
+                    wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, keyValue2, "RuntimeVersion", registryRuntimeVersion });
                     wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, keyValue2, "ThreadingModel", "Both" });
 
-                    String keyValue3 = String.Format(@"{0}\InprocServer32\{1}", key, dotNetVersion);
-                    wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, keyValue3, "Assembly", registryProvider });
-                    wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, keyValue3, "Class", dllProviderClass });
-                    wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, keyValue3, "RuntimeVersion", clrVersion });
+                    String keyValue3 = String.Format(@"{0}\InprocServer32\{1}", key, "3.5.0.0");
+                    wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, keyValue3, "Assembly", registryAssembly });
+                    wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, keyValue3, "Class", registryClass });
+                    wmi.ExecuteMethod("StdRegProv", "CreateKey", new Object[] { hive, keyValue3, "RuntimeVersion", registryRuntimeVersion });
                 }
             }
         }
@@ -237,11 +266,12 @@ namespace WheresMyImplant
 
         private ManagementBaseObject NewManagementBaseObject(IntPtr tempPtr)
         {
-            Type IWbemClassObjectFreeThreaded = Type.GetType("System.Management.IWbemClassObjectFreeThreaded, " + systemManagementName.FullName);
+            AssemblyName name = AssemblyName.GetAssemblyName(RuntimeEnvironment.GetRuntimeDirectory() + "System.Management.dll");
+            Type IWbemClassObjectFreeThreaded = Type.GetType("System.Management.IWbemClassObjectFreeThreaded, " + name.FullName);
             ConstructorInfo IWbemClassObjectFreeThreaded_ctor = IWbemClassObjectFreeThreaded.GetConstructors().First();
             Object IWbemClassObjectFreeThreadedInstance = IWbemClassObjectFreeThreaded_ctor.Invoke(new Object[] { tempPtr });
 
-            Type ManagementBaseObject = Type.GetType("System.Management.ManagementBaseObject, " + systemManagementName.FullName);
+            Type ManagementBaseObject = Type.GetType("System.Management.ManagementBaseObject, " + name.FullName);
             ConstructorInfo[] ManagementBaseObject_ctor = ManagementBaseObject.GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance);
             return (ManagementBaseObject)ManagementBaseObject_ctor.Last().Invoke(new Object[] { IWbemClassObjectFreeThreadedInstance });
         }
@@ -253,6 +283,94 @@ namespace WheresMyImplant
             ManagementClass parameters = (ManagementClass)__PARAMETERS.Clone();
             parameters.Qualifiers.Add(direction, true);
             return parameters;
+        }
+
+        internal void ExtensionProviderSetup()
+        {
+            WriteOutput("Creating WMI_extension");
+            using (ManagementClass __Win32Provider = new ManagementClass(@"ROOT\cimv2", "__Win32Provider", null))
+            {
+                using (ManagementClass WMI_extension = __Win32Provider.Derive("WMI_extension"))
+                {
+                    WMI_extension.Properties["Name"].Value = null;
+                    WMI_extension.Properties["ClsId"].Value = providerGuid;
+                    WMI_extension.Properties["Version"].Value = 1;
+                    WMI_extension.Properties["HostingModel"].Value = "Decoupled:COM";
+                    WMI_extension.Properties["SecurityDescriptor"].Value = null;
+                    WMI_extension.Properties.Add("AssemblyName", CimType.String, false);
+                    WMI_extension.Properties.Add("AssemblyPath", CimType.String, false);
+                    WMI_extension.Properties.Add("CLRVersion", CimType.String, false);
+                    try
+                    {
+                        WMI_extension.Put();
+                    }
+                    catch (ManagementException ex)
+                    {
+                        WriteOutput(ex.Message);
+                    }
+                }
+            }
+
+            WriteOutput("Registering " + Assembly.GetExecutingAssembly().GetName().Name + " as a WMI_extension Instance");
+            ManagementPath managementPath = null;
+            using (ManagementClass WMI_extension = new ManagementClass(@"ROOT\cimv2", "WMI_extension", null))
+            {
+                using (ManagementObject managementObject = WMI_extension.CreateInstance())
+                {
+                    managementObject.SetPropertyValue("AssemblyName", assembly.FullName);
+                    managementObject.SetPropertyValue("AssemblyPath", "file:///C:/Windows/System32/wbem/" + Assembly.GetExecutingAssembly().GetName().Name + ".dll");
+                    managementObject.SetPropertyValue("CLRVersion", assembly.ImageRuntimeVersion);
+                    managementObject.SetPropertyValue("CLSID", providerGuid);
+                    managementObject.SetPropertyValue("HostingModel", "LocalSystemHost:CLR2.0");
+                    managementObject.SetPropertyValue("Name", assembly.FullName);
+                    try
+                    {
+                        managementPath = managementObject.Put();
+                    }
+                    catch (ManagementException ex)
+                    {
+                        WriteOutput("WMI_extension: " + ex.Message);
+                    }
+                }
+            }
+
+            WriteOutput("Registering " + providerDisplayName + " as an Instance Provider");
+            using (ManagementClass __InstanceProviderRegistration = new ManagementClass(@"ROOT\cimv2", "__InstanceProviderRegistration", null))
+            {
+                using (ManagementObject managementObject = __InstanceProviderRegistration.CreateInstance())
+                {
+                    managementObject.SetPropertyValue("Provider", managementPath);
+                    managementObject.SetPropertyValue("SupportsGet", true);
+                    managementObject.SetPropertyValue("SupportsPut", true);
+                    managementObject.SetPropertyValue("SupportsDelete", true);
+                    managementObject.SetPropertyValue("SupportsEnumeration", true);
+                    try
+                    {
+                        managementObject.Put();
+                    }
+                    catch (ManagementException ex)
+                    {
+                        WriteOutput("__InstanceProviderRegistration: " + ex.Message);
+                    }
+                }
+            }
+
+            WriteOutput("Registering " + providerDisplayName + " as an Method Provider");
+            using (ManagementClass __MethodProviderRegistration = new ManagementClass(@"ROOT\cimv2", "__MethodProviderRegistration", null))
+            {
+                using (ManagementObject managementObject = __MethodProviderRegistration.CreateInstance())
+                {
+                    managementObject.SetPropertyValue("Provider", managementPath);
+                    try
+                    {
+                        managementObject.Put();
+                    }
+                    catch (ManagementException ex)
+                    {
+                        WriteOutput("__MethodProviderRegistration: " + ex.Message);
+                    }
+                }
+            }
         }
 
         internal void SetPermissions(String sid)
