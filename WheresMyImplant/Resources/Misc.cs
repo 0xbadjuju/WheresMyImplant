@@ -65,19 +65,26 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        //
+        // Reads the Imagef File Headers from the Image Base Address
         ////////////////////////////////////////////////////////////////////////////////
-        internal static Boolean Is64BitOs()
+        public static Boolean Is64BitProcess(IntPtr hProcess)
         {
-            if (Directory.Exists(@"C:\Program Files (x86)\"))
+            kernel32.GetNativeSystemInfo(out Winbase._SYSTEM_INFO systemInfo);
+            if (Winbase.INFO_PROCESSOR_ARCHITECTURE.PROCESSOR_ARCHITECTURE_INTEL == systemInfo.wProcessorArchitecture)
             {
-                Console.WriteLine("[*] 64 Bit OS");
-                return true;
+                return false;
+            }
+            else if (Winbase.INFO_PROCESSOR_ARCHITECTURE.PROCESSOR_ARCHITECTURE_AMD64 == systemInfo.wProcessorArchitecture)
+            {
+                if (!kernel32.IsWow64Process(hProcess, out Boolean isWOW64))
+                {
+                    throw new Exception("IsWow64Process");
+                }
+                return !isWOW64;
             }
             else
             {
-                Console.WriteLine("[*] 32 Bit OS");
-                return false;
+                throw new Exception("INFO_PROCESSOR_ARCHITECTURE");
             }
         }
 
@@ -242,6 +249,47 @@ namespace WheresMyImplant
                 kernel32.CloseHandle(hSnapshot);
             }
             return hModule;
+        }
+
+
+        internal static UInt32 GetMainThread(UInt32 processId)
+        {
+            IntPtr hThread = IntPtr.Zero;
+            IntPtr hSnapshot = IntPtr.Zero;
+
+            try
+            {
+                hSnapshot = kernel32.CreateToolhelp32Snapshot(TiHelp32.TH32CS_SNAPTHREAD, processId);
+                if (IntPtr.Zero == hSnapshot)
+                {
+                    return 0;
+                }
+
+                TiHelp32.tagTHREADENTRY32 threadEntry = new TiHelp32.tagTHREADENTRY32();
+                threadEntry.dwSize = (UInt32)Marshal.SizeOf(threadEntry);
+                if (!kernel32.Thread32First(hSnapshot, ref threadEntry))
+                {
+                    return 0;
+                }
+
+                do
+                {
+                    Console.WriteLine(threadEntry.th32ThreadID);
+                    hThread = kernel32.OpenThread(Constants.PROCESS_ALL_ACCESS, false, threadEntry.th32ThreadID);
+                    threadEntry = new TiHelp32.tagTHREADENTRY32();
+                    threadEntry.dwSize = (UInt32)Marshal.SizeOf(threadEntry);
+                }
+                while (kernel32.Thread32Next(hSnapshot, ref threadEntry));
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
+            finally
+            {
+                kernel32.CloseHandle(hSnapshot);
+            }
+            return 0;
         }
 
         internal static Byte[] GenerateNTLM(String password)

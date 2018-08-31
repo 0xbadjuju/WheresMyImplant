@@ -50,5 +50,18 @@ namespace Unmanaged.Headers
             //[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
             public TCHAR szExeFile;
         }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct tagTHREADENTRY32
+        {
+            public DWORD dwSize;
+            public DWORD cntUsage;
+            public DWORD th32ThreadID;
+            public DWORD th32OwnerProcessID;
+            public LONG tpBasePri;
+            public LONG tpDeltaPri;
+            public DWORD dwFlags;
+        }
+        //THREADENTRY32
     }
 }

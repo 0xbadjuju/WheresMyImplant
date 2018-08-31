@@ -82,7 +82,7 @@ namespace Unmanaged.Headers
         [StructLayout(LayoutKind.Sequential)]
         public struct CONTEXT
         {
-            public CONTEXT_FLAGS ContextFlags; //set this to an appropriate value 
+            public CONTEXT_FLAGS ContextFlags;
             // Retrieved by CONTEXT_DEBUG_REGISTERS 
             public uint Dr0;
             public uint Dr1;
@@ -187,8 +187,8 @@ namespace Unmanaged.Headers
             CONTEXT_FLOATING_POINT = CONTEXT_i386 | 0x0008, // 387 state
             CONTEXT_DEBUG_REGISTERS = CONTEXT_i386 | 0x0010, // DB 0-3,6,7
             CONTEXT_EXTENDED_REGISTERS = CONTEXT_i386 | 0x0020, // cpu specific extensions
-            CONTEXT_FULL = CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS,
-            CONTEXT_ALL = CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS | CONTEXT_FLOATING_POINT | CONTEXT_DEBUG_REGISTERS | CONTEXT_EXTENDED_REGISTERS
+            CONTEXT_FULL = 65543,//CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS,
+            CONTEXT_ALL = 65599//CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS | CONTEXT_FLOATING_POINT | CONTEXT_DEBUG_REGISTERS | CONTEXT_EXTENDED_REGISTERS
         }
 
         [Flags]

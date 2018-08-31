@@ -140,28 +140,7 @@ namespace WheresMyImplant
                 Marshal.FreeHGlobal(buffer);
             }
 
-            return GetTargetArch();
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////
-        // Reads the Imagef File Headers from the Image Base Address
-        ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean GetTargetArch()
-        {
-            Winbase._SYSTEM_INFO systemInfo;
-            kernel32.GetNativeSystemInfo(out systemInfo);
-            //Console.WriteLine(systemInfo.wProcessorArchitecture);
-            if (Winbase.INFO_PROCESSOR_ARCHITECTURE.PROCESSOR_ARCHITECTURE_INTEL == systemInfo.wProcessorArchitecture)
-            {
-                is32Bit = true;
-            }
-            /*
-            if (!kernel32.IsWow64Process(lpProcessInformation.hProcess, out is32Bit))
-            {
-                WriteOutputBad("IsWow64Process Failed");
-                return false;
-            }
-            */
+            is32Bit = !Misc.Is64BitProcess(lpProcessInformation.hProcess);
             return GetContext();
         }
 

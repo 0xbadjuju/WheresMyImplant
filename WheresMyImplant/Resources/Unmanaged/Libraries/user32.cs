@@ -53,6 +53,9 @@ namespace Unmanaged.Libraries
         public static extern UInt32 GetClipboardSequenceNumber();
 
         [DllImport("user32.dll", SetLastError = true)]
+        public static extern Boolean IsWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
         public static extern Boolean OpenClipboard(IntPtr hWndNewOwner);
 
         [DllImport("user32.dll", SetLastError = true)]

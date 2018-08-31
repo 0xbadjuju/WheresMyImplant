@@ -70,6 +70,12 @@ namespace Unmanaged.Libraries
         public static extern Boolean GetThreadContext(IntPtr hThread, IntPtr lpContext);
 
         [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean GetThreadContext(IntPtr hThread, ref Winnt.CONTEXT lpContext);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean GetThreadContext(IntPtr hThread, ref Winnt.CONTEXT64 lpContext);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern UInt32 GlobalSize(IntPtr hMem);
 
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -100,7 +106,7 @@ namespace Unmanaged.Libraries
         public static extern Boolean OpenProcessToken(IntPtr hProcess, UInt32 dwDesiredAccess, out IntPtr hToken);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern IntPtr OpenThread(uint dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
+        public static extern IntPtr OpenThread(ProcessThreadsApi.ThreadSecurityRights dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean OpenThreadToken(IntPtr ThreadHandle, UInt32 DesiredAccess, Boolean OpenAsSelf, ref IntPtr TokenHandle);
@@ -124,6 +130,21 @@ namespace Unmanaged.Libraries
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean SetThreadContext(IntPtr hThread, IntPtr lpContext);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean SetThreadContext(IntPtr hThread, ref Winnt.CONTEXT lpContext);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean SetThreadContext(IntPtr hThread, ref Winnt.CONTEXT64 lpContext);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Int32 SuspendThread(IntPtr hThread);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean Thread32First(IntPtr hSnapshot, ref TiHelp32.tagTHREADENTRY32 lpte);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean Thread32Next(IntPtr hSnapshot, ref TiHelp32.tagTHREADENTRY32 lpte);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern IntPtr VirtualAlloc(IntPtr lpAddress, UInt32 dwSize, UInt32 flAllocationType, Winnt.MEMORY_PROTECTION_CONSTANTS flProtect);
@@ -150,7 +171,22 @@ namespace Unmanaged.Libraries
         public static extern UInt32 WaitForSingleObjectEx(IntPtr hProcess, IntPtr hHandle, UInt32 dwMilliseconds);
 
         [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean Wow64GetThreadContext(IntPtr hThread, IntPtr lpContext);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean Wow64GetThreadContext(IntPtr hThread, ref Winnt.CONTEXT lpContext);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean Wow64SetThreadContext(IntPtr hThread, IntPtr lpContext);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean Wow64SetThreadContext(IntPtr hThread, ref Winnt.CONTEXT lpContext);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, IntPtr lpBuffer, UInt32 nSize, ref UInt32 lpNumberOfBytesWritten);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, Byte[] lpBuffer, UInt32 nSize, ref UInt32 lpNumberOfBytesWritten);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, ref UInt64 lpBuffer, UInt32 nSize, ref UInt32 lpNumberOfBytesWritten);

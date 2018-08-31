@@ -91,7 +91,8 @@
     <Compile Include="Empire\Empire.Agent.cs" />
     <Compile Include="Empire\Empire.Agent.Jobs.cs" />
     <Compile Include="Empire\Empire.Agent.Stager.cs" />
-    <Compile Include="Inject\HijackThread.cs" />
+    <Compile Include="Inject\ShellCode\HijackThread.cs" />
+    <Compile Include="Inject\PE\DoppelgangProcess.cs" />
     <Compile Include="Inject\PE\HollowProcess.cs" />
     <Compile Include="Inject\Dll\LoadDll.cs" />
     <Compile Include="Inject\Dll\LoadDllRemote.cs" />
@@ -137,6 +138,7 @@
     <Compile Include="Resources\Services.cs" />
     <Compile Include="Resources\Unmanaged\Headers\Minidumpapiset.cs" />
     <Compile Include="Resources\Unmanaged\Headers\Ntsecapi.cs" />
+    <Compile Include="Resources\Unmanaged\Headers\ProcessThreadsApi.cs" />
     <Compile Include="Resources\Unmanaged\Headers\Rpcdce.cs" />
     <Compile Include="Resources\Unmanaged\Headers\Subauth.cs" />
     <Compile Include="Resources\Unmanaged\Headers\TlHelp32.cs" />
