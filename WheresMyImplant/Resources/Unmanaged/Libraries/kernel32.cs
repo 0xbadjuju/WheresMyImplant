@@ -103,6 +103,9 @@ namespace Unmanaged.Libraries
         public static extern IntPtr OpenProcess(UInt32 dwDesiredAccess, Boolean bInheritHandle, UInt32 dwProcessId);
 
         [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern IntPtr OpenProcess(ProcessThreadsApi.ProcessSecurityRights dwDesiredAccess, Boolean bInheritHandle, UInt32 dwProcessId);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean OpenProcessToken(IntPtr hProcess, UInt32 dwDesiredAccess, out IntPtr hToken);
 
         [DllImport("kernel32.dll", SetLastError = true)]

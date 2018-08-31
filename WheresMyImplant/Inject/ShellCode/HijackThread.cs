@@ -31,12 +31,9 @@ namespace WheresMyImplant
                 return;
             }
 
-            UInt32 accessMask = (UInt32)(ProcessThreadsApi.ProcessSecurityRights.PROCESS_VM_OPERATION
-                | ProcessThreadsApi.ProcessSecurityRights.PROCESS_CREATE_THREAD
+            hProcess = kernel32.OpenProcess(ProcessThreadsApi.ProcessSecurityRights.PROCESS_VM_OPERATION
                 | ProcessThreadsApi.ProcessSecurityRights.PROCESS_VM_WRITE
-                | ProcessThreadsApi.ProcessSecurityRights.PROCESS_VM_READ
-                | ProcessThreadsApi.ProcessSecurityRights.PROCESS_QUERY_INFORMATION);
-            hProcess = kernel32.OpenProcess(accessMask, false, processId);
+                | ProcessThreadsApi.ProcessSecurityRights.PROCESS_QUERY_INFORMATION, false, processId);
             if (IntPtr.Zero == hProcess)
             {
                 WriteOutputBad("OpenProcess Failed");
