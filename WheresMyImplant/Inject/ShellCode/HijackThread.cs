@@ -137,7 +137,6 @@ namespace WheresMyImplant
                 WriteOutputNeutral(String.Format("Checking EIP: 0x{0}", context.Eip.ToString("X4"))); 
             }
             WriteOutputNeutral("Resuming Thread");
-            kernel32.ResumeThread(hThread);
         }
 
         ////////////////////////////////////////////////////////////////////////////////

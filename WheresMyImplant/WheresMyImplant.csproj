@@ -91,6 +91,8 @@
     <Compile Include="Empire\Empire.Agent.cs" />
     <Compile Include="Empire\Empire.Agent.Jobs.cs" />
     <Compile Include="Empire\Empire.Agent.Stager.cs" />
+    <Compile Include="Inject\PE\HollowProcess32.cs" />
+    <Compile Include="Inject\PE\HollowProcess64.cs" />
     <Compile Include="Inject\ShellCode\HijackThread.cs" />
     <Compile Include="Inject\PE\DoppelgangProcess.cs" />
     <Compile Include="Inject\PE\HollowProcess.cs" />
@@ -116,7 +118,9 @@
     <Compile Include="Resources\BouncyCastle\MD4Digest.cs" />
     <Compile Include="Credentials\Tokens\CreateProcess.cs" />
     <Compile Include="Resources\SMB\NetBIOSSessionService.cs" />
+    <Compile Include="Resources\SMB\SMB2CloseRequest.cs" />
     <Compile Include="Resources\SMB\SMB2CreateRequest.cs" />
+    <Compile Include="Resources\SMB\SMB2FindFileRequestFile.cs" />
     <Compile Include="Resources\SMB\SMB2GetInfo.cs" />
     <Compile Include="Resources\SMB\SMB2Header.cs" />
     <Compile Include="Lateral\SMBClient.cs" />
@@ -126,6 +130,7 @@
     <Compile Include="Resources\SMB\SMB2NTLMSSPNegotiate.cs" />
     <Compile Include="Resources\SMB\SMB2SessionSetupRequest.cs" />
     <Compile Include="Resources\SMB\SMB2TreeConnectRequest.cs" />
+    <Compile Include="Resources\SMB\SMB2TreeDisconnectRequest.cs" />
     <Compile Include="Resources\SMB\SMBHeader.cs" />
     <Compile Include="Resources\SMB\SMBNegotiateProtocolRequest.cs" />
     <Compile Include="Resources\CheckCreditCard.cs" />

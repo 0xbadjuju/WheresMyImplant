@@ -28,11 +28,11 @@ namespace WheresMyImplant
             ChainOffset = new Byte[] { 0x00, 0x00, 0x00, 0x00 };
         }
 
-        internal void SetCommand(Byte[] command)
+        internal void SetCommand(Byte[] Command)
         {
-            if (command.Length == this.Command.Length)
+            if (Command.Length == this.Command.Length)
             {
-                this.Command = command;
+                this.Command = Command;
                 return;
             }
             throw new IndexOutOfRangeException();
@@ -48,26 +48,41 @@ namespace WheresMyImplant
             throw new IndexOutOfRangeException();
         }
 
-        internal void SetFlags(Byte[] flags)
+        internal void SetFlags(Byte[] Flags)
         {
-            if (flags.Length == this.Flags.Length)
+            if (Flags.Length == this.Flags.Length)
             {
-                this.Flags = flags;
+                this.Flags = Flags;
                 return;
             }
             throw new IndexOutOfRangeException();
         }
 
-        internal void SetMessageID(UInt32 messageId)
+        internal void SetChainOffset(Int32 dataLength)
         {
-            this.MessageID = Misc.Combine(BitConverter.GetBytes(messageId), new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+            ChainOffset = BitConverter.GetBytes(GetHeader().Length + dataLength);
         }
 
-        internal void SetProcessID(Byte[] processId)
+        internal void SetChainOffset(Byte[] ChainOffset)
         {
-            if (processId.Length == this.ProcessId.Length)
+            if (ChainOffset.Length == this.ChainOffset.Length)
             {
-                this.ProcessId = processId;
+                this.ChainOffset = ChainOffset;
+                return;
+            }
+            throw new IndexOutOfRangeException();
+        }
+
+        internal void SetMessageID(UInt32 MessageID)
+        {
+            this.MessageID = Misc.Combine(BitConverter.GetBytes(MessageID), new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+        }
+
+        internal void SetProcessID(Byte[] ProcessId)
+        {
+            if (ProcessId.Length == this.ProcessId.Length)
+            {
+                this.ProcessId = ProcessId;
                 return;
             }
             throw new IndexOutOfRangeException();

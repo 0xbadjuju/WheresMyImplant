@@ -27,6 +27,8 @@ namespace WheresMyImplant
         TcpClient smbClient;
         NetworkStream streamSocket;
 
+        Byte[] guidFileHandle = new Byte[16];
+
         Byte[] recieve = new Byte[81920];
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -432,6 +434,9 @@ namespace WheresMyImplant
             treeId = new Byte[] { 0x00, 0x00, 0x00, 0x00 };
         }
 
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
         internal Boolean CreateRequest()
         {
             treeId = recieve.Skip(40).Take(4).ToArray();
@@ -469,6 +474,7 @@ namespace WheresMyImplant
             if (status.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00 }))
             {
                 WriteOutputGood("Create Request Successful");
+                guidFileHandle = recieve.Skip(0x0084).Take(16).ToArray();
                 return true;
             }
             else if (status.SequenceEqual(new Byte[] { 0x34, 0x00, 0x00, 0xc0 }))
@@ -488,7 +494,10 @@ namespace WheresMyImplant
             }
         }
 
-        public void InfoRequest()
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal Boolean InfoRequest()
         {
             SMB2Header header = new SMB2Header();
             header.SetCommand(new Byte[] { 0x10, 0x00 });
@@ -521,8 +530,319 @@ namespace WheresMyImplant
             streamSocket.Write(bSend, 0, bSend.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
+
+            Byte[] status = recieve.Skip(12).Take(4).ToArray();
+            if (status.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00 }))
+            {
+                WriteOutputGood("Info Request Successful");
+                return true;
+            }
+            else if (status.SequenceEqual(new Byte[] { 0x34, 0x00, 0x00, 0xc0 }))
+            {
+                WriteOutput("[-] File Not Found");
+                return false;
+            }
+            else if (status.SequenceEqual(new Byte[] { 0x22, 0x00, 0x00, 0xc0 }))
+            {
+                WriteOutput("[-] Access Denied");
+                return false;
+            }
+            else
+            {
+                WriteOutput(String.Format("[-] {0}", BitConverter.ToString(status)));
+                return false;
+            }
         }
 
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal Boolean FindRequest()
+        {
+            treeId = recieve.Skip(40).Take(4).ToArray();
+
+            ////////////////////////////////////////////////////////////////////////////////
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x05, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+
+            SMB2CreateRequest createRequest = new SMB2CreateRequest();
+            createRequest.SetExtraInfo(1, 0);
+            createRequest.SetAccessMask(new Byte[] { 0x81, 0x00, 0x10, 0x00 });
+            createRequest.SetShareAccess(new Byte[] { 0x07, 0x00, 0x00, 0x00 });
+            Byte[] bData = createRequest.GetRequest();
+
+            header.SetChainOffset(bData.Length);
+            if (signing)
+            {
+                header.SetFlags(new Byte[] { 0x0c, 0x00, 0x00, 0x00 });
+                header.SetSignature(sessionKey, ref bData);
+            }
+            else
+            {
+                header.SetFlags(new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+            }
+            Byte[] bHeader = header.GetHeader();
+            
+
+            ////////////////////////////////////////////////////////////////////////////////
+            SMB2Header header2 = new SMB2Header();
+            header2.SetCommand(new Byte[] { 0x0e, 0x00 });
+            header2.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header2.SetMessageID(++messageId);
+            header2.SetProcessID(processId);
+            header2.SetTreeId(treeId);
+            header2.SetSessionID(sessionId);
+            header2.SetChainOffset(new Byte[] { 0x68, 0x00, 0x00, 0x00 });
+
+            SMB2FindFileRequestFile requestFile = new SMB2FindFileRequestFile();
+            requestFile.SetPadding(new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+            Byte[] bData2 = requestFile.GetRequest();
+
+            if (signing)
+            {
+                header2.SetFlags(new Byte[] { 0x0c, 0x00, 0x00, 0x00 });
+                header2.SetSignature(sessionKey, ref bData2);
+            }
+            else
+            {
+                header2.SetFlags(new Byte[] { 0x04, 0x00, 0x00, 0x00 });
+            }
+            Byte[] bHeader2 = header2.GetHeader();
+
+
+            ////////////////////////////////////////////////////////////////////////////////
+            SMB2Header header3 = new SMB2Header();
+            header3.SetCommand(new Byte[] { 0x0e, 0x00 });
+            header3.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header3.SetMessageID(++messageId);
+            header3.SetProcessID(processId);
+            header3.SetTreeId(treeId);
+            header3.SetSessionID(sessionId);
+
+            SMB2FindFileRequestFile requestFile2 = new SMB2FindFileRequestFile();
+            requestFile2.SetOutputBufferLength(new Byte[] { 0x80, 0x00, 0x00, 0x00 });
+            Byte[] bData3 = requestFile2.GetRequest();
+
+            if (signing)
+            {
+                header3.SetFlags(new Byte[] { 0x0c, 0x00, 0x00, 0x00 });
+                header3.SetSignature(sessionKey, ref bData3);
+            }
+            else
+            {
+                header3.SetFlags(new Byte[] { 0x04, 0x00, 0x00, 0x00 });
+            }
+            Byte[] bHeader3 = header3.GetHeader();
+
+
+            ////////////////////////////////////////////////////////////////////////////////
+            NetBIOSSessionService sessionService = new NetBIOSSessionService();
+            sessionService.SetHeaderLength(bHeader.Length + bHeader2.Length + bHeader3.Length);
+            sessionService.SetDataLength(bData.Length + bData2.Length + bData3.Length);
+            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
+
+            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            bSend = Misc.Combine(bSend, Misc.Combine(bHeader2, bData2));
+            bSend = Misc.Combine(bSend, Misc.Combine(bHeader3, bData3));
+            streamSocket.Write(bSend, 0, bSend.Length);
+            streamSocket.Flush();
+            streamSocket.Read(recieve, 0, recieve.Length);
+
+            Byte[] status = recieve.Skip(12).Take(4).ToArray();
+            if (status.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00 }))
+            {
+                WriteOutputGood("Find Request Successful");
+                return true;
+            }
+            else if (status.SequenceEqual(new Byte[] { 0x34, 0x00, 0x00, 0xc0 }))
+            {
+                WriteOutput("[-] File Not Found");
+                return false;
+            }
+            else if (status.SequenceEqual(new Byte[] { 0x22, 0x00, 0x00, 0xc0 }))
+            {
+                WriteOutput("[-] Access Denied");
+                return false;
+            }
+            else
+            {
+                WriteOutput(String.Format("[-] {0}", BitConverter.ToString(status)));
+                return false;
+            }
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal void ParseDirectoryContents()
+        {
+            String directory = BitConverter.ToString(recieve).Replace("-", "");
+            Int32 index = directory.Substring(10).IndexOf("FE534D42") + 154;
+            Int32 offset = 0;
+            Int32 nextOffset = 0;
+            WriteOutput("");
+            WriteOutput(String.Format("{0,5}{1,15}{2,20}{3,20}\t{4}", "Mode", "File Size", "Created", "Modified", "File Name"));
+            WriteOutput(String.Format("{0,5}{1,15}{2,20}{3,20}\t{4}", "----", "---------", "-------", "--------", "---------"));
+            do
+            {
+                Int32 start = (index / 2 + offset);
+                nextOffset = BitConverter.ToInt32(recieve.Skip(start).Take(4).ToArray(), 0);
+                UInt32 dwFileLength = BitConverter.ToUInt32(recieve.Skip(start + 40).Take(7).ToArray(), 0);
+                String fileLength = 0 == dwFileLength ? String.Empty : dwFileLength.ToString();
+
+                String attributes = Convert.ToString(recieve[start + 56], 2).PadLeft(16, '0');
+                String d = attributes.Substring(11, 1) == "1" ? "d" : "-";
+                String a = attributes.Substring(10, 1) == "1" ? "a" : "-";
+                String r = attributes.Substring(15, 1) == "1" ? "r" : "-";
+                String h = attributes.Substring(14, 1) == "1" ? "h" : "-";
+                String s = attributes.Substring(13, 1) == "1" ? "s" : "-";
+
+                DateTime create = DateTime.FromFileTime(BitConverter.ToInt64(recieve.Skip(start + 8).Take(8).ToArray(), 0));
+                DateTime modify = DateTime.FromFileTime(BitConverter.ToInt64(recieve.Skip(start + 24).Take(8).ToArray(), 0));
+                Int32 filenameLength = BitConverter.ToInt32(recieve.Skip(start + 60).Take(4).ToArray(), 0);
+                Byte[] filename_unicode = recieve.Skip(start + 104).Take(filenameLength).ToArray();
+                String filename = Encoding.Unicode.GetString(filename_unicode);
+                WriteOutput(String.Format(
+                    "{0,5}{1,15}{2,20}{3,20}\t{4}", 
+                    d + a + r + h + s,  
+                    fileLength, 
+                    create.ToString("MM/dd/yyyy HH:mm"), 
+                    modify.ToString("MM/dd/yyyy HH:mm"), 
+                    filename));
+                offset += nextOffset;
+            }
+            while (nextOffset != 0);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal Boolean CloseRequest()
+        {
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x06, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+
+            SMB2CloseRequest closeRequest = new SMB2CloseRequest();
+            closeRequest.SetFileID(guidFileHandle);
+            Byte[] bData = closeRequest.GetRequest();
+
+            if (signing)
+            {
+                header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
+                header.SetSignature(sessionKey, ref bData);
+            }
+            else
+            {
+                header.SetFlags(new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+            }
+            Byte[] bHeader = header.GetHeader();
+
+            NetBIOSSessionService sessionService = new NetBIOSSessionService();
+            sessionService.SetHeaderLength(bHeader.Length);
+            sessionService.SetDataLength(bData.Length);
+            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
+
+            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            streamSocket.Write(bSend, 0, bSend.Length);
+            streamSocket.Flush();
+            streamSocket.Read(recieve, 0, recieve.Length);
+
+            Byte[] status = recieve.Skip(12).Take(4).ToArray();
+            if (status.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00 }))
+            {
+                WriteOutputGood("Close Request Successful");
+                return true;
+            }
+            else if (status.SequenceEqual(new Byte[] { 0x34, 0x00, 0x00, 0xc0 }))
+            {
+                WriteOutput("[-] File Not Found");
+                return false;
+            }
+            else if (status.SequenceEqual(new Byte[] { 0x22, 0x00, 0x00, 0xc0 }))
+            {
+                WriteOutput("[-] Access Denied");
+                return false;
+            }
+            else
+            {
+                WriteOutput(String.Format("[-] {0}", BitConverter.ToString(status)));
+                return false;
+            }
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal Boolean DisconnectTree()
+        {
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x04, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+
+            SMB2TreeDisconnectRequest disconnectRequest = new SMB2TreeDisconnectRequest();
+            Byte[] bData = disconnectRequest.GetRequest();
+
+            if (signing)
+            {
+                header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
+                header.SetSignature(sessionKey, ref bData);
+            }
+            else
+            {
+                header.SetFlags(new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+            }
+            Byte[] bHeader = header.GetHeader();
+
+            NetBIOSSessionService sessionService = new NetBIOSSessionService();
+            sessionService.SetHeaderLength(bHeader.Length);
+            sessionService.SetDataLength(bData.Length);
+            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
+
+            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            streamSocket.Write(bSend, 0, bSend.Length);
+            streamSocket.Flush();
+            streamSocket.Read(recieve, 0, recieve.Length);
+
+            Byte[] status = recieve.Skip(12).Take(4).ToArray();
+            if (status.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00 }))
+            {
+                WriteOutputGood("Disconnect Request Successful");
+                return true;
+            }
+            else if (status.SequenceEqual(new Byte[] { 0x34, 0x00, 0x00, 0xc0 }))
+            {
+                WriteOutput("[-] File Not Found");
+                return false;
+            }
+            else if (status.SequenceEqual(new Byte[] { 0x22, 0x00, 0x00, 0xc0 }))
+            {
+                WriteOutput("[-] Access Denied");
+                return false;
+            }
+            else
+            {
+                WriteOutput(String.Format("[-] {0}", BitConverter.ToString(status)));
+                return false;
+            }
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
         public void Dispose()
         {
             streamSocket.Dispose();
@@ -532,6 +852,7 @@ namespace WheresMyImplant
                 smbClient.Close();
             }
         }
+
 
         ~SMBClient()
         {

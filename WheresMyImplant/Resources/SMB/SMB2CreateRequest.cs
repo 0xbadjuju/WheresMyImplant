@@ -31,8 +31,8 @@ namespace WheresMyImplant
 
         internal void SetFileName(String filename)
         {
-            this.Buffer = System.Text.Encoding.Unicode.GetBytes(filename);
-            this.FileNameBlobLength = System.Text.Encoding.Unicode.GetBytes(filename);
+            Buffer = System.Text.Encoding.Unicode.GetBytes(filename);
+            FileNameBlobLength = System.Text.Encoding.Unicode.GetBytes(filename);
 
             String paddingCheck = ((Double)filename.Length / 8.0).ToString();
             
@@ -192,6 +192,22 @@ namespace WheresMyImplant
                 ExtraInfo = Misc.Combine(ExtraInfo, ExtraInfoRqLs_Data_Lease_State);
                 ExtraInfo = Misc.Combine(ExtraInfo, ExtraInfoRqLs_Data_Lease_Flags);
                 ExtraInfo = Misc.Combine(ExtraInfo, ExtraInfoRqLs_Data_Lease_Duration);
+            }
+        }
+
+        internal void SetAccessMask(Byte[] AccessMask)
+        {
+            if (AccessMask.Length == this.AccessMask.Length)
+            {
+                this.AccessMask = AccessMask;
+            }
+        }
+
+        internal void SetShareAccess(Byte[] ShareAccess)
+        {
+            if (ShareAccess.Length == this.ShareAccess.Length)
+            {
+                this.ShareAccess = ShareAccess;
             }
         }
 

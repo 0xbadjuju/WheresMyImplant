@@ -7,5 +7,6 @@ namespace WheresMyImplant
 {
     class DoppelgangProcess
     {
+
     }
 }

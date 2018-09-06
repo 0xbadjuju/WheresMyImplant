@@ -192,6 +192,9 @@ namespace Unmanaged.Libraries
         public static extern Boolean WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, Byte[] lpBuffer, UInt32 nSize, ref UInt32 lpNumberOfBytesWritten);
 
         [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern Boolean WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, ref UInt32 lpBuffer, UInt32 nSize, ref UInt32 lpNumberOfBytesWritten);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern Boolean WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, ref UInt64 lpBuffer, UInt32 nSize, ref UInt32 lpNumberOfBytesWritten);
     }
 }
