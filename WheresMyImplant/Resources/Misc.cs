@@ -122,6 +122,31 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
+        internal static String GenerateUuidAlpha(int length)
+        {
+            Random random = new Random();
+            const String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            return new String(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal static Int32 GenerateUuidNumeric(int length)
+        {
+            Random random = new Random();
+            const String chars = "0123456789";
+            String strUUID = new String(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
+            if (Int32.TryParse(strUUID, out Int32 uuid))
+            {
+                return uuid;
+            }
+            return 0;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
         internal static void PrintStruct<T>(T imageDosHeader)
         {
             System.Reflection.FieldInfo[] fields = imageDosHeader.GetType().GetFields();
@@ -251,7 +276,6 @@ namespace WheresMyImplant
             return hModule;
         }
 
-
         internal static UInt32 GetMainThread(UInt32 processId)
         {
             IntPtr hThread = IntPtr.Zero;
@@ -294,7 +318,7 @@ namespace WheresMyImplant
 
         internal static Byte[] GenerateNTLM(String password)
         {
-            Byte[] bPassword = System.Text.Encoding.Unicode.GetBytes(password);
+            Byte[] bPassword = Encoding.Unicode.GetBytes(password);
             Org.BouncyCastle.Crypto.Digests.MD4Digest md4Digest = new Org.BouncyCastle.Crypto.Digests.MD4Digest();
             md4Digest.BlockUpdate(bPassword, 0, bPassword.Length);
             Byte[] result = new Byte[md4Digest.GetDigestSize()];

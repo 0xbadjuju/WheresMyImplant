@@ -34,7 +34,7 @@ namespace WheresMyImplant
             Buffer = System.Text.Encoding.Unicode.GetBytes(filename);
             FileNameBlobLength = System.Text.Encoding.Unicode.GetBytes(filename);
 
-            String paddingCheck = ((Double)filename.Length / 8.0).ToString();
+            String paddingCheck = (filename.Length / 8.0).ToString();
             
             if (Regex.Match(paddingCheck, "*.75").Success)
             {
