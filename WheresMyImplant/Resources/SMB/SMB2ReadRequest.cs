@@ -7,7 +7,7 @@ namespace WheresMyImplant
         private readonly Byte[] StructureSize = { 0x31, 0x00 };
         private readonly Byte[] Padding = { 0x50 };
         private readonly Byte[] Flags = { 0x00 };
-        private readonly Byte[] Length = { 0x00, 0x00, 0x10, 0x00 };
+        private Byte[] Length = { 0x00, 0x00, 0x10, 0x00 };
         private readonly Byte[] Offset = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
         private Byte[] GuidHandleFile;
         private readonly Byte[] MinimumCount = { 0x00, 0x00, 0x00, 0x00 };
@@ -25,6 +25,16 @@ namespace WheresMyImplant
         internal void SetGuidHandleFile(Byte[] GuidHandleFile)
         {
             this.GuidHandleFile = GuidHandleFile;
+        }
+
+        internal void SetLength(Byte[] Length)
+        {
+            if (this.Length == Length)
+            {
+                this.Length = Length;
+                return;
+            }
+            throw new IndexOutOfRangeException();
         }
 
         internal Byte[] GetRequest()
