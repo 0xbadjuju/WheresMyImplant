@@ -377,7 +377,6 @@ namespace WheresMyImplant
             Boolean returnValue = Send(bHeader, bData);
 
             guidFileHandle = recieve.Skip(0x0084).Take(16).ToArray();
-            Console.WriteLine(BitConverter.ToString(guidFileHandle));
 
             return returnValue;
         }
@@ -509,6 +508,7 @@ namespace WheresMyImplant
             SVCCTLSCMCreateServiceW createServiceW = new SVCCTLSCMCreateServiceW();
             createServiceW.SetContextHandle(serviceContectHandle);
             createServiceW.SetServiceName();
+            WriteOutputGood("Creating Service " + createServiceW.GetServiceName());
             createServiceW.SetCommand(command);
             Byte[] bData = createServiceW.GetRequest();
 
@@ -564,6 +564,7 @@ namespace WheresMyImplant
 
         internal Boolean StartServiceW()
         {
+            WriteOutputGood("Starting Service");
             serviceHandle = recieve.Skip(112).Take(20).ToArray();
 
             SMB2Header header = new SMB2Header();
@@ -609,6 +610,7 @@ namespace WheresMyImplant
 
         internal Boolean DeleteServiceW()
         {
+            WriteOutputGood("Deleting Service");
             SMB2Header header = new SMB2Header();
             header.SetCommand(new Byte[] { 0x09, 0x00 });
             header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });

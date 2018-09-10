@@ -36,7 +36,6 @@ namespace WheresMyImplant
         {
             Winbase._SYSTEM_INFO systemInfo;
             kernel32.GetNativeSystemInfo(out systemInfo);
-            //Console.WriteLine(systemInfo.wProcessorArchitecture);
             if (Winbase.INFO_PROCESSOR_ARCHITECTURE.PROCESSOR_ARCHITECTURE_INTEL == systemInfo.wProcessorArchitecture)
             {
                 WriteOutputBad("System is 32Bit");

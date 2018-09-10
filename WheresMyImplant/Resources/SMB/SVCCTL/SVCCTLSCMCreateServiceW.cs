@@ -33,10 +33,11 @@ namespace WheresMyImplant
         private readonly Byte[] Password = { 0x00, 0x00, 0x00, 0x00 };
         private readonly Byte[] PasswordSize = { 0x00, 0x00, 0x00, 0x00 };
 
+        private String strServiceName;
+
         internal SVCCTLSCMCreateServiceW()
         {
             DisplayName_ReferentID = Misc.Combine(BitConverter.GetBytes(Misc.GenerateUuidNumeric(2)).Take(2).ToArray(), new Byte[] { 0x00, 0x00 });
-            Console.WriteLine(BitConverter.ToString(DisplayName_ReferentID));
         }
         
         internal void SetContextHandle(Byte[] ContextHandle)
@@ -46,14 +47,20 @@ namespace WheresMyImplant
 
         internal void SetServiceName()
         {
-            String strServiceName = Misc.GenerateUuidAlpha(20);
+            strServiceName = Misc.GenerateUuidAlpha(20);
             Byte[] tmp = Misc.Combine(Encoding.Unicode.GetBytes(strServiceName), new Byte[] { 0x00, 0x00, 0x00, 0x00 });
             ServiceName = DisplayName = tmp;
             ServiceName_MaxCount = ServiceName_ActualCount = DisplayName_MaxCount = DisplayName_ActualCount = BitConverter.GetBytes(strServiceName.Length + 1);
         }
 
+        internal String GetServiceName()
+        {
+            return strServiceName;
+        }
+
         internal void SetServiceName(String strServiceName)
         {
+            this.strServiceName = strServiceName;
             Byte[] tmp = Misc.Combine(Encoding.Unicode.GetBytes(strServiceName), new Byte[] { 0x00, 0x00 });
             if (0 != strServiceName.Length % 2)
             {
