@@ -25,17 +25,18 @@ namespace WheresMyImplant
         private readonly Byte[] BinaryPathName_Offset = { 0x00, 0x00, 0x00, 0x00 };
         private Byte[] BinaryPathName_ActualCount;
         private Byte[] BinaryPathName;
-        private readonly Byte[] NULLPointer = { 0x00, 0x00, 0x00, 0x00 };
+        private readonly Byte[] LoadOrderGroup = { 0x00, 0x00, 0x00, 0x00 };
         private readonly Byte[] TagID = { 0x00, 0x00, 0x00, 0x00 };
-        private readonly Byte[] NULLPointer2 = { 0x00, 0x00, 0x00, 0x00 };
+        private readonly Byte[] Dependencies = { 0x00, 0x00, 0x00, 0x00 };
         private readonly Byte[] DependSize = { 0x00, 0x00, 0x00, 0x00 };
-        private readonly Byte[] NULLPointer3 = { 0x00, 0x00, 0x00, 0x00 };
-        private readonly Byte[] NULLPointer4 = { 0x00, 0x00, 0x00, 0x00 };
+        private readonly Byte[] ServiceStartName = { 0x00, 0x00, 0x00, 0x00 };
+        private readonly Byte[] Password = { 0x00, 0x00, 0x00, 0x00 };
         private readonly Byte[] PasswordSize = { 0x00, 0x00, 0x00, 0x00 };
 
         internal SVCCTLSCMCreateServiceW()
         {
-            DisplayName_ReferentID = Misc.Combine(BitConverter.GetBytes(Misc.GenerateUuidNumeric(2)), new Byte[] { 0x00, 0x00 });
+            DisplayName_ReferentID = Misc.Combine(BitConverter.GetBytes(Misc.GenerateUuidNumeric(2)).Take(2).ToArray(), new Byte[] { 0x00, 0x00 });
+            Console.WriteLine(BitConverter.ToString(DisplayName_ReferentID));
         }
         
         internal void SetContextHandle(Byte[] ContextHandle)
@@ -45,7 +46,10 @@ namespace WheresMyImplant
 
         internal void SetServiceName()
         {
-            SetServiceName(Misc.GenerateUuidAlpha(20));
+            String strServiceName = Misc.GenerateUuidAlpha(20);
+            Byte[] tmp = Misc.Combine(Encoding.Unicode.GetBytes(strServiceName), new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+            ServiceName = DisplayName = tmp;
+            ServiceName_MaxCount = ServiceName_ActualCount = DisplayName_MaxCount = DisplayName_ActualCount = BitConverter.GetBytes(strServiceName.Length + 1);
         }
 
         internal void SetServiceName(String strServiceName)
@@ -56,14 +60,17 @@ namespace WheresMyImplant
                 tmp = Misc.Combine(tmp, new Byte[] { 0x00, 0x00 });
             }
             ServiceName = DisplayName = tmp;
-
             ServiceName_MaxCount = ServiceName_ActualCount = DisplayName_MaxCount = DisplayName_ActualCount = BitConverter.GetBytes(strServiceName.Length + 1);
         }
 
         internal void SetCommand(String command)
         {
-            BinaryPathName = Encoding.Unicode.GetBytes(command);
-            BinaryPathName_ActualCount = BinaryPathName_MaxCount = BitConverter.GetBytes(command.Length + 1);
+            BinaryPathName = Misc.Combine(Encoding.Unicode.GetBytes(command), new Byte[] { 0x00, 0x00 });
+            if (0 != command.Length % 2)
+            {
+                //BinaryPathName = Misc.Combine(BinaryPathName, new Byte[] { 0x00, 0x00 });
+            }
+            BinaryPathName_MaxCount = BinaryPathName_ActualCount = BitConverter.GetBytes(command.Length + 1);
         }
 
         internal Byte[] GetRequest()
@@ -87,12 +94,12 @@ namespace WheresMyImplant
             combine.Extend(BinaryPathName_Offset);
             combine.Extend(BinaryPathName_ActualCount);
             combine.Extend(BinaryPathName);
-            combine.Extend(NULLPointer);
+            combine.Extend(LoadOrderGroup);
             combine.Extend(TagID);
-            combine.Extend(NULLPointer2);
+            combine.Extend(Dependencies);
             combine.Extend(DependSize);
-            combine.Extend(NULLPointer3);
-            combine.Extend(NULLPointer4);
+            combine.Extend(ServiceStartName);
+            combine.Extend(Password);
             combine.Extend(PasswordSize);
             return combine.Retrieve();
         }

@@ -24,14 +24,11 @@ namespace WheresMyImplant
 
         Byte[] guidFileHandle = new Byte[16];
 
-        Byte[] recieve = new Byte[81920];
-
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        public SMBClient()
+        public SMBClient() : base()
         {
-            smbClient = new TcpClient();
             Int32 dwProcessId = Process.GetCurrentProcess().Id;
             String strProcessId = BitConverter.ToString(BitConverter.GetBytes(dwProcessId));
             processId = strProcessId.Split('-').Select(i => (Byte)Convert.ToInt16(i,16)).ToArray();

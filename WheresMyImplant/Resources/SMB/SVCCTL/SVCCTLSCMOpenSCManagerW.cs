@@ -20,18 +20,19 @@ namespace WheresMyImplant
 
         internal SVCCTLSCMOpenSCManagerW()
         {
-            String strMachineName = Misc.GenerateUuidAlpha(16);
+            String strMachineName = Misc.GenerateUuidAlpha(20);
             MachineName = Encoding.Unicode.GetBytes(strMachineName);
-
+            /*
             if (0 == MachineName.Length % 2)
                 MachineName = Misc.Combine(MachineName, new Byte[] { 0x00, 0x00 });
             else
                 MachineName = Misc.Combine(MachineName, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-
+            */
+            MachineName = Misc.Combine(MachineName, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
             MachineName_ActualCount = MachineName_MaxCount = BitConverter.GetBytes(strMachineName.Length + 1);
 
-            MachineName_ReferentID = Misc.Combine(BitConverter.GetBytes(Misc.GenerateUuidNumeric(2)), new Byte[] { 0x00, 0x00 });
-            Database_ReferentID = Misc.Combine(BitConverter.GetBytes(Misc.GenerateUuidNumeric(2)), new Byte[] { 0x00, 0x00 });
+            MachineName_ReferentID = Misc.Combine(BitConverter.GetBytes((short)Misc.GenerateUuidNumeric(2)), new Byte[] { 0x00, 0x00 });
+            Database_ReferentID = Misc.Combine(BitConverter.GetBytes((short)Misc.GenerateUuidNumeric(2)), new Byte[] { 0x00, 0x00 });
         }
 
         internal Byte[] GetRequest()

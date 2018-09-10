@@ -1,10 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.Globalization;
 using System.Linq;
 using System.Management;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Text;
 
 using Unmanaged.Headers;

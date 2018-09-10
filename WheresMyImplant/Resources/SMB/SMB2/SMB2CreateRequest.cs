@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace WheresMyImplant
 {
@@ -21,35 +21,56 @@ namespace WheresMyImplant
         private readonly Byte[] FileNameBlobOffset = { 0x78, 0x00 };
         private Byte[] FileNameBlobLength = { 0x00, 0x00 };
         private Byte[] BlobOffset = { 0x00, 0x00, 0x00, 0x00 };
-        private Byte[] BlobLength = { 0x40, 0x00, 0x00, 0x00 };
+        private Byte[] BlobLength = { 0x00, 0x00, 0x00, 0x00 };
         private Byte[] Buffer = { 0x00, 0x00, 0x69, 0x00, 0x6e, 0x00, 0x64, 0x00 };//{ 0x00, 0x00, 0x72, 0x00, 0x6f, 0x00, 0x28, 0x00 };//
         private Byte[] ExtraInfo = new Byte[0];
 
         internal SMB2CreateRequest()
         {
         }
-
-        internal void SetFileName(String filename)
+        /*
+        internal void SetFileNameOld(String filename)
         {
             Buffer = System.Text.Encoding.Unicode.GetBytes(filename);
             FileNameBlobLength = System.Text.Encoding.Unicode.GetBytes(filename);
 
             String paddingCheck = (filename.Length / 8.0).ToString();
             
-            if (Regex.Match(paddingCheck, "*.75").Success)
+            if (Regex.Match(paddingCheck, @".*\.75").Success)
             {
                 Buffer = Misc.Combine(Buffer, new Byte[] { 0x04, 0x00 });
             }
-            else if (Regex.Match(paddingCheck, "*.5").Success)
+            else if (Regex.Match(paddingCheck, @".*\.5").Success)
             {
                 Buffer = Misc.Combine(Buffer, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
             }
-            else if (Regex.Match(paddingCheck, "*.25").Success)
+            else if (Regex.Match(paddingCheck, @".*\.25").Success)
             {
                Buffer = Misc.Combine(Buffer, new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
             }
 
             BlobOffset = BitConverter.GetBytes(filename.Length + 120);
+        }
+        */
+        internal void SetFileName(String filename)
+        {
+            Buffer = System.Text.Encoding.Unicode.GetBytes(filename);
+            FileNameBlobLength = BitConverter.GetBytes(System.Text.Encoding.Unicode.GetByteCount(filename)).Take(2).ToArray();
+
+            Double paddingCheck = filename.Length / 8.0;
+
+            if (paddingCheck + 0.25 % 1 == 0)
+            {
+                Buffer = Misc.Combine(Buffer, new Byte[] { 0x04, 0x00 });
+            }
+            else if (paddingCheck + 0.50 % 1 == 0)
+            {
+                Buffer = Misc.Combine(Buffer, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+            }
+            else if (paddingCheck + 0.75 % 1 == 0)
+            {
+                Buffer = Misc.Combine(Buffer, new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+            }
         }
 
         internal void SetExtraInfo(Int32 extraInfo, Int64 allocationSize)
@@ -209,6 +230,12 @@ namespace WheresMyImplant
             {
                 this.ShareAccess = ShareAccess;
             }
+        }
+
+        internal void SetBlobOffSet(String filename)
+        {
+            BlobOffset = BitConverter.GetBytes(filename.Length + 120);
+            BlobLength = new Byte[] { 0x40, 0x00, 0x00, 0x00 };
         }
 
         internal Byte[] GetRequest()

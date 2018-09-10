@@ -11,6 +11,8 @@ namespace WheresMyImplant
         protected NetworkStream streamSocket;
         protected String system;
 
+        protected Byte[] recieve = new Byte[81920];
+
         private static readonly Byte[] status_okay = { 0x00, 0x00, 0x00, 0x00 };
         private static readonly Byte[] status_access_denied = new Byte[] { 0x22, 0x00, 0x00, 0xc0 };
         private static readonly Byte[] status_file_closed = new Byte[] { 0x28, 0x01, 0x00, 0xc0 };
@@ -48,6 +50,11 @@ namespace WheresMyImplant
                 WriteOutput("[-] " + BitConverter.ToString(status));
                 return false;
             }
+        }
+
+        public SMB()
+        {
+            smbClient = new TcpClient();
         }
 
         ////////////////////////////////////////////////////////////////////////////////

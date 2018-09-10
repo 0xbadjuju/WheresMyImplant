@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Security.Cryptography;
 
 namespace WheresMyImplant
 {
@@ -15,7 +14,7 @@ namespace WheresMyImplant
         internal void SetPath(String share)
         {
             this.Buffer = System.Text.Encoding.Unicode.GetBytes(share);
-            this.PathLength = System.BitConverter.GetBytes(Buffer.Length).Take(2).ToArray();
+            this.PathLength = BitConverter.GetBytes(Buffer.Length).Take(2).ToArray();
         }
 
         internal Byte[] GetRequest()

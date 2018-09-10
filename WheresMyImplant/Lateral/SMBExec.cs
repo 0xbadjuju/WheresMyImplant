@@ -20,25 +20,21 @@ namespace WheresMyImplant
         Byte[] sessionKey;
 
         String version;//= "SMB2";
-        String system;
 
         Byte[] processId;
-        TcpClient smbClient;
-        NetworkStream streamSocket;
 
         Byte[] guidFileHandle = new Byte[16];
-        Byte[] serviceHandle = new Byte[0];
 
-        Byte[] recieve = new Byte[81920];
-
+        Byte[] serviceContectHandle = new Byte[0];
+        Byte[] serviceHandle = new Byte[0];       
         Byte[] serviceName;
+
 
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal SMBExec()
+        internal SMBExec() : base()
         {
-            smbClient = new TcpClient();
             Int32 dwProcessId = Process.GetCurrentProcess().Id;
             String strProcessId = BitConverter.ToString(BitConverter.GetBytes(dwProcessId));
             processId = strProcessId.Split('-').Select(i => (Byte)Convert.ToInt16(i, 16)).ToArray();
@@ -354,7 +350,7 @@ namespace WheresMyImplant
             return Send(bHeader, bData);
         }
 
-        internal Boolean CreateRequest()
+        internal Boolean CreateRequest(Byte[] ShareAccess)
         {
             treeId = recieve.Skip(40).Take(4).ToArray();
 
@@ -368,7 +364,7 @@ namespace WheresMyImplant
 
             SMB2CreateRequest createRequest = new SMB2CreateRequest();
             createRequest.SetFileName("svcctl");
-            createRequest.SetShareAccess(new Byte[] { 0x07, 0x00, 0x00, 0x00 });
+            createRequest.SetShareAccess(ShareAccess);
             Byte[] bData = createRequest.GetRequest();
 
             if (signing)
@@ -378,8 +374,12 @@ namespace WheresMyImplant
             }
             Byte[] bHeader = header.GetHeader();
 
+            Boolean returnValue = Send(bHeader, bData);
+
             guidFileHandle = recieve.Skip(0x0084).Take(16).ToArray();
-            return Send(bHeader, bData);
+            Console.WriteLine(BitConverter.ToString(guidFileHandle));
+
+            return returnValue;
         }
 
         internal Boolean RPCBind()
@@ -466,8 +466,11 @@ namespace WheresMyImplant
             writeRequest.SetLength(bRPCRequest.Length + bSCManager.Length);
             Byte[] bWriteRequest = writeRequest.GetRequest();
 
-            Byte[] bData = Misc.Combine(bWriteRequest, bRPCRequest);
-            bData = Misc.Combine(bData, bSCManager);
+            Combine combine = new Combine();
+            combine.Extend(bWriteRequest);
+            combine.Extend(bRPCRequest);
+            combine.Extend(bSCManager);
+            Byte[] bData = combine.Retrieve();
 
             if (signing)
             {
@@ -492,21 +495,21 @@ namespace WheresMyImplant
                 return false;
         }
 
-        internal Boolean CheckAccess()
+        internal Boolean CheckAccess(String command)
         {
-            Byte[] handle = recieve.Skip(107).Take(19).ToArray();
-            Byte[] status = recieve.Skip(127).Take(4).ToArray();
+            serviceContectHandle = recieve.Skip(108).Take(20).ToArray();
+            Byte[] status = recieve.Skip(128).Take(4).ToArray();
 
             if (!status.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00 }) 
-                && handle.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }))
+                && serviceContectHandle.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }))
             {
                 return false;
             }
 
             SVCCTLSCMCreateServiceW createServiceW = new SVCCTLSCMCreateServiceW();
-            createServiceW.SetContextHandle(handle);
+            createServiceW.SetContextHandle(serviceContectHandle);
             createServiceW.SetServiceName();
-            createServiceW.SetCommand(@"%COMSPEC% /c whoami > C:\whoami.txt");
+            createServiceW.SetCommand(command);
             Byte[] bData = createServiceW.GetRequest();
 
             if (bData.Length < 4256)
@@ -515,7 +518,7 @@ namespace WheresMyImplant
                 return CreateServiceW1();
         }
 
-        internal Boolean CreateServiceW(Byte[] bCreateServiceW)
+        private Boolean CreateServiceW(Byte[] bCreateServiceW)
         {
             SMB2Header header = new SMB2Header();
             header.SetCommand(new Byte[] { 0x09, 0x00 });
@@ -540,8 +543,8 @@ namespace WheresMyImplant
 
             Combine combine = new Combine();
             combine.Extend(bWriteRequest);
-            combine.Extend(bCreateServiceW);
             combine.Extend(bRPCData);
+            combine.Extend(bCreateServiceW);
             Byte[] bData = combine.Retrieve();
 
             if (signing)
@@ -554,14 +557,14 @@ namespace WheresMyImplant
             return Send(bHeader, bData);
         }
 
-        internal Boolean CreateServiceW1()
+        private Boolean CreateServiceW1()
         {
             return false;
         }
 
         internal Boolean StartServiceW()
         {
-            serviceHandle = recieve.Skip(112).Take(19).ToArray();
+            serviceHandle = recieve.Skip(112).Take(20).ToArray();
 
             SMB2Header header = new SMB2Header();
             header.SetCommand(new Byte[] { 0x09, 0x00 });
@@ -658,7 +661,7 @@ namespace WheresMyImplant
             header.SetSessionID(sessionId);
 
             SVCCTLSCMCloseServiceHandle closeServiceW = new SVCCTLSCMCloseServiceHandle();
-            closeServiceW.SetContextHandle(serviceHandle);
+            closeServiceW.SetContextHandle(serviceContectHandle);
             Byte[] bCloseServiceW = closeServiceW.GetRequest();
 
             DCERPCRequest rpcRequest = new DCERPCRequest();

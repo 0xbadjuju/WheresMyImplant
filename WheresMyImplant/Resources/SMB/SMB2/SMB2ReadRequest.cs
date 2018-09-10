@@ -29,7 +29,7 @@ namespace WheresMyImplant
 
         internal void SetLength(Byte[] Length)
         {
-            if (this.Length == Length)
+            if (this.Length.Length == Length.Length)
             {
                 this.Length = Length;
                 return;
