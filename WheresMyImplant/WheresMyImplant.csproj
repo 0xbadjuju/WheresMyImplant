@@ -109,6 +109,7 @@
     <Compile Include="Lateral\PSExec.cs" />
     <Compile Include="Lateral\SMB.cs" />
     <Compile Include="Lateral\SMBExec.cs" />
+    <Compile Include="Lateral\WMIExec.cs" />
     <Compile Include="Persistence\AddUser.cs" />
     <Compile Include="Persistence\InstallUtil.cs">
       <SubType>Component</SubType>
@@ -120,8 +121,14 @@
     <Compile Include="Resources\BouncyCastle\MD4Digest.cs" />
     <Compile Include="Credentials\Tokens\CreateProcess.cs" />
     <Compile Include="Resources\Combine.cs" />
+    <Compile Include="Resources\SMB\DCERPC\DCERPCAlterContext.cs" />
+    <Compile Include="Resources\SMB\DCERPC\DCERPCAUTH3.cs" />
     <Compile Include="Resources\SMB\DCERPC\DCERPCBind.cs" />
     <Compile Include="Resources\SMB\DCERPC\DCERPCRequest.cs" />
+    <Compile Include="Resources\SMB\DCOM\DCOMRemoteCreateInstance.cs" />
+    <Compile Include="Resources\SMB\DCOM\DCOMRemQueryInterface.cs" />
+    <Compile Include="Resources\SMB\DCOM\DCOMRemRelease.cs" />
+    <Compile Include="Resources\SMB\DCOM\NTLMSSPVerifier.cs" />
     <Compile Include="Resources\SMB\SMB2\SMB2ReadRequest.cs" />
     <Compile Include="Resources\SMB\SMB2\SMB2SessionLogoffRequest.cs" />
     <Compile Include="Resources\SMB\SMB1\SMB2WriteRequest.cs" />
@@ -161,7 +168,7 @@
     <Compile Include="Resources\SMB\SVCCTL\SVCCTLSCMCreateServiceW.cs" />
     <Compile Include="Resources\SMB\SVCCTL\SVCCTLSCMDeleteServiceW.cs" />
     <Compile Include="Resources\SMB\SVCCTL\SVCCTLSCMOpenSCManagerW.cs" />
-    <Compile Include="Resources\SVCCTLSCMStartServiceW.cs" />
+    <Compile Include="Resources\SMB\SVCCTL\SVCCTLSCMStartServiceW.cs" />
     <Compile Include="Resources\Unmanaged\Headers\Minidumpapiset.cs" />
     <Compile Include="Resources\Unmanaged\Headers\Ntsecapi.cs" />
     <Compile Include="Resources\Unmanaged\Headers\ProcessThreadsApi.cs" />

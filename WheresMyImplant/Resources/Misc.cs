@@ -110,7 +110,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // https://stackoverflow.com/questions/1344221/how-can-i-generate-random-alphanumeric-strings-in-c
         ////////////////////////////////////////////////////////////////////////////////
-        internal String GenerateUuid(int length)
+        internal static String GenerateUuid(int length)
         {
             Random random = new Random();
             const String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

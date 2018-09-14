@@ -67,17 +67,20 @@ namespace WheresMyImplant
 
         internal Byte[] GetRequest()
         {
-            Byte[] request = Misc.Combine(Version, VersionMinor);
-            request = Misc.Combine(request, PacketType);
-            request = Misc.Combine(request, PacketFlags);
-            request = Misc.Combine(request, DataRepresentation);
-            request = Misc.Combine(request, FragLength);
-            request = Misc.Combine(request, AuthLength);
-            request = Misc.Combine(request, CallID);
-            request = Misc.Combine(request, AllocHint);
-            request = Misc.Combine(request, ContextID);
-            request = Misc.Combine(request, Opnum);
-            return Misc.Combine(request, Data);
+            Combine combine = new Combine();
+            combine.Extend(Version);
+            combine.Extend(VersionMinor);
+            combine.Extend(PacketType);
+            combine.Extend(PacketFlags);
+            combine.Extend(DataRepresentation);
+            combine.Extend(FragLength);
+            combine.Extend(AuthLength);
+            combine.Extend(CallID);
+            combine.Extend(AllocHint);
+            combine.Extend(ContextID);
+            combine.Extend(Opnum);
+            combine.Extend(Data);
+            return combine.Retrieve();
         }
     }
 }
