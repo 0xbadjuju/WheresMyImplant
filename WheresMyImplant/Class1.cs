@@ -299,7 +299,7 @@ namespace WheresMyImplant
             StringBuilder output = new StringBuilder();
             try
             {
-                using (WMIExec wmiExec = new WMIExec())
+                using (WMIExec wmiExec = new WMIExec(command))
                 {
                     if (wmiExec.ConnectInitiator(target))
                     {

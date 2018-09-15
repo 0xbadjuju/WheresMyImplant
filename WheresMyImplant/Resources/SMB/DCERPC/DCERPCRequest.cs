@@ -50,6 +50,11 @@ namespace WheresMyImplant
             this.CallID = CallID;
         }
 
+        internal void SetAllocHint(Byte[] AllocHint)
+        {
+            this.AllocHint = AllocHint;
+        }
+
         internal void SetContextID(Byte[] ContextID)
         {
             this.ContextID = ContextID;
