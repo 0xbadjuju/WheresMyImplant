@@ -24,7 +24,9 @@ namespace WheresMyImplant
         private NetworkStream wmiStream;
 
         private Byte[] recieve;
-        private String hostname;
+
+        private Byte[] bLocalHostname;
+        private String strLocalHostname;
 
         private Byte[] sessionId;
         private Byte[] causalityId;
@@ -39,7 +41,8 @@ namespace WheresMyImplant
         private Byte[] sessionBaseKey;
         private Byte[] signingKey;
 
-        private Byte[] bLocalHostname;
+        private Byte[] bRemoteHostname;
+        private String strRemoteHostname;
 
         private Byte[] assocGroup;
 
@@ -53,7 +56,7 @@ namespace WheresMyImplant
             this.command = command;
 
             Int32 dwProcessId = System.Diagnostics.Process.GetCurrentProcess().Id;
-            String strProcessId = BitConverter.ToString(BitConverter.GetBytes(dwProcessId));
+            String strProcessId = BitConverter.ToString(BitConverter.GetBytes(dwProcessId)).Replace("-00-00", "");
             processId = strProcessId.Split('-').Select(i => (Byte)Convert.ToInt16(i, 16)).ToArray();
 
             wmiClientInitiator = new TcpClient();
@@ -128,10 +131,10 @@ namespace WheresMyImplant
             wmiStream.Flush();
             wmiStream.Read(recieve, 0, recieve.Length);
 
-            Byte[] bLocalHostname = recieve.Skip(42).Take(recieve.Length - 42).ToArray();
-            GCHandle handle = GCHandle.Alloc(bLocalHostname, GCHandleType.Pinned);
-            hostname = Marshal.PtrToStringUni(handle.AddrOfPinnedObject());
-            Console.WriteLine("Target hostname: {0}", hostname);
+            bRemoteHostname = recieve.Skip(42).Take(recieve.Length - 42).ToArray();
+            GCHandle handle = GCHandle.Alloc(bRemoteHostname, GCHandleType.Pinned);
+            strRemoteHostname = Marshal.PtrToStringUni(handle.AddrOfPinnedObject());
+            Console.WriteLine("Target hostname: {0}", strRemoteHostname);
             handle.Free();
 
             if (null != wmiStream)
@@ -344,7 +347,7 @@ namespace WheresMyImplant
 
             DCOMRemoteCreateInstance remoteCreateInstance = new DCOMRemoteCreateInstance();
             remoteCreateInstance.SetDCOMCausalityID(causalityId);
-            remoteCreateInstance.SetServerInfoName(hostname);
+            remoteCreateInstance.SetServerInfoName(strRemoteHostname);
             Byte[] bRemoteCreateInstance = remoteCreateInstance.GetRequest();
 
             DCERPCRequest rpcRequest = new DCERPCRequest();
@@ -386,7 +389,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal Boolean ConnectRandom()
         {
-            Byte[] bTargetUnicode = Misc.Combine(new Byte[] { 0x07, 0x00 }, Encoding.Unicode.GetBytes(hostname + "["));
+            Byte[] bTargetUnicode = Misc.Combine(new Byte[] { 0x07, 0x00 }, Encoding.Unicode.GetBytes(strRemoteHostname + "["));
             String search = BitConverter.ToString(bTargetUnicode).Replace("-", "");
             String strRecieve = BitConverter.ToString(recieve).Replace("-", "");
             Int32 indexStart = strRecieve.IndexOf(search) / 2;
@@ -492,14 +495,12 @@ namespace WheresMyImplant
             verifier.SetAuthPadLen(4);
             verifier.SetAuthLevel(new Byte[] { 0x04 });
             verifier.SetNTLMSSPVerifierSequenceNumber(sequenceNumber);
-            Console.WriteLine(BitConverter.ToString(sequenceNumber));
             Byte[] bVerifier = verifier.GetRequest();
 
             Byte[] rpcSignature;
             using (HMACMD5 hmacMD5 = new HMACMD5())
             {
                 hmacMD5.Key = signingKey;
-                Console.WriteLine(BitConverter.ToString(signingKey));
                 Combine hmacCombine = new Combine();
                 hmacCombine.Extend(sequenceNumber);
                 hmacCombine.Extend(bRPCRequest);
@@ -523,7 +524,7 @@ namespace WheresMyImplant
 
             String strRecieve = BitConverter.ToString(recieve).Replace("-", "");
             Int32 oxidIndex = strRecieve.IndexOf(oxid) / 2;
-            uuid = recieve.Skip(oxidIndex + 16).Take(16).ToArray();
+            uuid2 = recieve.Skip(oxidIndex + 16).Take(16).ToArray();
 
             AlterContext();
         }
@@ -549,7 +550,7 @@ namespace WheresMyImplant
                 contextID = new Byte[] { 0x03, 0x00 };
                 contextUUID = new Byte[] { 0x18, 0xad, 0x09, 0xf3, 0x6a, 0xd8, 0xd0, 0x11, 0xa0, 0x75, 0x00, 0xc0, 0x4f, 0xb6, 0x88, 0x20 };
             }
-            else if (sequenceNumber.SequenceEqual(new Byte[] { 0x09, 0x00, 0x00, 0x00 }))
+            else if (sequenceNumber.SequenceEqual(new Byte[] { 0x06, 0x00, 0x00, 0x00 }))
             {
                 callID = new Byte[] { 0x09, 0x00, 0x00, 0x00 };
                 contextID = new Byte[] { 0x04, 0x00 };
@@ -583,9 +584,9 @@ namespace WheresMyImplant
             Byte[] contextID = new Byte[0];
             Byte[] opnum = new Byte[0];
             Byte[] requestUUID = new Byte[0];
-            Byte[] hostnameLength = BitConverter.GetBytes(Environment.MachineName.Length + 1);
             Byte[] stubData;
 
+            Console.WriteLine("Sequence Number: {0}", BitConverter.ToString(sequenceNumber));
             if (sequenceNumber.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00 }))
             {
                 sequenceNumber = new Byte[] { 0x01, 0x00, 0x00, 0x00 };
@@ -595,11 +596,13 @@ namespace WheresMyImplant
                 contextID = new Byte[] { 0x02, 0x00 };
                 opnum = new Byte[] { 0x03, 0x00 };
                 requestUUID = uuid2;
+                Byte[] hostnameLength = BitConverter.GetBytes(Environment.MachineName.Length + 1);
 
                 if (0 == Environment.MachineName.Length % 2)
-                    hostnameLength = Misc.Combine(hostnameLength, new Byte[] { 0x00, 0x00 });
+                    bLocalHostname = Misc.Combine(bLocalHostname, new Byte[] { 0x00, 0x00 });
                 else
-                    hostnameLength = Misc.Combine(hostnameLength, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+                    bLocalHostname = Misc.Combine(bLocalHostname, new Byte[] { 0x00, 0x00 });
+
 
                 Combine stubCombine = new Combine();
                 stubCombine.Extend(new Byte[] { 0x05, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
@@ -643,11 +646,11 @@ namespace WheresMyImplant
                 opnum = new Byte[] { 0x06, 0x00 };
                 requestUUID = ipid;
 
-                Byte[] namespaceLength = BitConverter.GetBytes(hostname.Length + 14);
-                Byte[] bWMINamespace = Encoding.Unicode.GetBytes(String.Format(@"\\{0}\root\cimv2", hostname));
+                Byte[] namespaceLength = BitConverter.GetBytes(strRemoteHostname.Length + 14);
+                Byte[] bWMINamespace = Encoding.Unicode.GetBytes(String.Format(@"\\{0}\root\cimv2", strRemoteHostname));
 
-                if (0 == hostname.Length % 2)
-                    bWMINamespace = Misc.Combine(bWMINamespace, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+                if (0 == strRemoteHostname.Length % 2)
+                    bWMINamespace = Misc.Combine(bWMINamespace, new Byte[] { 0x00, 0x00 });
                 else
                     bWMINamespace = Misc.Combine(bWMINamespace, new Byte[] { 0x00, 0x00 });
 
@@ -974,13 +977,16 @@ namespace WheresMyImplant
             }
 
             DCERPCRequest rpcRequest = new DCERPCRequest();
+            rpcRequest.SetData(requestUUID);
             rpcRequest.SetPacketFlags(flags);
             rpcRequest.SetFragLength(stubData.Length, 16, authPadding);
             rpcRequest.SetCallID(callID);
+            rpcRequest.SetContextID(contextID);
             rpcRequest.SetOpnum(opnum);
-            rpcRequest.SetData(requestUUID);
+            
             if (requestSplit)
             {
+                Console.WriteLine("Request Length: {0}", requestLength);
                 rpcRequest.SetAllocHint(BitConverter.GetBytes(requestLength));
             }
             Byte[] bRPCRequest = rpcRequest.GetRequest();
@@ -998,9 +1004,11 @@ namespace WheresMyImplant
                 hmacCombine.Extend(sequenceNumber);
                 hmacCombine.Extend(bRPCRequest);
                 hmacCombine.Extend(stubData);
-                hmacCombine.Extend(bVerifier.Take(authPadding + 7).ToArray());
-                verifier.SetNTLMSSPVerifierChecksum(hmacMD5.ComputeHash(hmacCombine.Retrieve()).Take(8).ToArray());
+                hmacCombine.Extend(bVerifier.Take(authPadding + 8).ToArray());
+                Byte[] checksum = hmacMD5.ComputeHash(hmacCombine.Retrieve());
+                verifier.SetNTLMSSPVerifierChecksum(checksum.Take(8).ToArray());
             }
+            bVerifier = verifier.GetRequest();
 
             Combine combine = new Combine();
             combine.Extend(bRPCRequest);
@@ -1022,6 +1030,7 @@ namespace WheresMyImplant
                 wmiStream.Read(recieve, 0, recieve.Length);
             }
 
+            Console.WriteLine(stage);
             if ("AlterContext" == stage)
             {
                 AlterContext();

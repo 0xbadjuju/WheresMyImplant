@@ -28,6 +28,9 @@ namespace WheresMyImplant
         {
             switch (dwAuthPadLen)
             {
+                case 0:
+                    AuthPadLen = new Byte[] { 0x00 };
+                    return;
                 case 4:
                     AuthPadding = new Byte[] { 0x00, 0x00, 0x00, 0x00 };
                     AuthPadLen = new Byte[] { 0x04 };
@@ -41,6 +44,7 @@ namespace WheresMyImplant
                     AuthPadLen = new Byte[] { 0x0c };
                     return;
                 default:
+                    Console.WriteLine("Invalid AuthPadLen");
                     return;
             }
         }
