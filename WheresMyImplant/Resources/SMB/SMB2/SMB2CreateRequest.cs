@@ -27,31 +27,9 @@ namespace WheresMyImplant
 
         internal SMB2CreateRequest()
         {
-        }
-        /*
-        internal void SetFileNameOld(String filename)
-        {
-            Buffer = System.Text.Encoding.Unicode.GetBytes(filename);
-            FileNameBlobLength = System.Text.Encoding.Unicode.GetBytes(filename);
 
-            String paddingCheck = (filename.Length / 8.0).ToString();
-            
-            if (Regex.Match(paddingCheck, @".*\.75").Success)
-            {
-                Buffer = Misc.Combine(Buffer, new Byte[] { 0x04, 0x00 });
-            }
-            else if (Regex.Match(paddingCheck, @".*\.5").Success)
-            {
-                Buffer = Misc.Combine(Buffer, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-            }
-            else if (Regex.Match(paddingCheck, @".*\.25").Success)
-            {
-               Buffer = Misc.Combine(Buffer, new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
-            }
-
-            BlobOffset = BitConverter.GetBytes(filename.Length + 120);
         }
-        */
+
         internal void SetFileName(String filename)
         {
             Buffer = System.Text.Encoding.Unicode.GetBytes(filename);
@@ -59,15 +37,15 @@ namespace WheresMyImplant
 
             Double paddingCheck = filename.Length / 8.0;
 
-            if (paddingCheck + 0.25 % 1 == 0)
+            if ((paddingCheck + 0.25) == Math.Ceiling(paddingCheck))
             {
                 Buffer = Misc.Combine(Buffer, new Byte[] { 0x04, 0x00 });
             }
-            else if (paddingCheck + 0.50 % 1 == 0)
+            else if ((paddingCheck + 0.50) == Math.Ceiling(paddingCheck))
             {
                 Buffer = Misc.Combine(Buffer, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
             }
-            else if (paddingCheck + 0.75 % 1 == 0)
+            else if ((paddingCheck + 0.75) == Math.Ceiling(paddingCheck))
             {
                 Buffer = Misc.Combine(Buffer, new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
             }

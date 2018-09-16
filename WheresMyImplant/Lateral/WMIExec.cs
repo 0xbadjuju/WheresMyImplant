@@ -789,22 +789,28 @@ namespace WheresMyImplant
                 Byte[] commandLength = BitConverter.GetBytes(command.Length + 93).Take(2).ToArray();
                 Byte[] commandLength2 = BitConverter.GetBytes(command.Length + 16).Take(2).ToArray();
                 Byte[] bComand = Encoding.UTF8.GetBytes(command);
-                Double paddingCheck = (Double)command.Length / 4.0;
+                Double paddingCheck = command.Length / 4.0;
 
-                if (paddingCheck + 0.25 % 1 == 0)
+                Console.WriteLine("Padding Check " + paddingCheck);
+                if ((paddingCheck + 0.25) == Math.Ceiling(paddingCheck))
                 {
+                    Console.WriteLine(".25");
                     bComand = Misc.Combine(bComand, new Byte[] { 0x00 });
                 }
-                else if (paddingCheck + 0.50 % 1 == 0)
+                
+                else if ((paddingCheck + 0.50) == Math.Ceiling(paddingCheck))
                 {
+                    Console.WriteLine(".50");
                     bComand = Misc.Combine(bComand, new Byte[] { 0x00, 0x00 });
                 }
-                else if (paddingCheck + 0.75 % 1 == 0)
+                else if ((paddingCheck + 0.75) == Math.Ceiling(paddingCheck))
                 {
+                    Console.WriteLine(".75");
                     bComand = Misc.Combine(bComand, new Byte[] { 0x00, 0x00, 0x00 });
                 }
                 else
                 {
+                    Console.WriteLine("Else");
                     bComand = Misc.Combine(bComand, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
                 }
 
@@ -933,45 +939,49 @@ namespace WheresMyImplant
                                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
                 stubData = stubCombine.Retrieve();
 
+                Console.WriteLine(stubData.Length);
+                Console.WriteLine(SPLIT_INDEX);
                 if (stubData.Length < SPLIT_INDEX)
                 {
                     flags = new Byte[] { 0x83 };
                     stage = "Result";
-                    return;
-                }
-
-                requestSplit = true;
-                Decimal splitStageFinal = Math.Ceiling((Decimal)stubData.Length / SPLIT_INDEX);
-                
-                if (requestSplitStage < 2)
-                {
-                    requestLength = stubData.Length;
-                    stubData = stubData.Take(SPLIT_INDEX - 1).ToArray();
-                    requestSplitStage = 2;
-                    sequenceNumberCounter = 10;
-                    flags = new Byte[] { 0x81 };
-                    splitIndexTracker = SPLIT_INDEX;
-                    stage = "Request";
-                }
-                else if(requestSplitStage == (Int32)splitStageFinal)
-                {
-                    requestSplit = false;
-                    sequenceNumber = BitConverter.GetBytes(sequenceNumberCounter);
-                    requestSplitStage = 0;
-                    stubData = stubData.Skip(splitIndexTracker).Take(stubData.Length - splitIndexTracker).ToArray();
-                    flags = new Byte[] { 0x82 };
-                    stage = "Result";
                 }
                 else
                 {
-                    requestLength = stubData.Length - splitIndexTracker;
-                    stubData = stubData.Skip(splitIndexTracker).Take(splitIndexTracker + SPLIT_INDEX - 1).ToArray();
-                    splitIndexTracker += SPLIT_INDEX;
-                    requestSplitStage++;
-                    sequenceNumber = BitConverter.GetBytes(sequenceNumberCounter);
-                    sequenceNumberCounter++;
-                    flags = new Byte[] { 0x80 };
-                    stage = "Request";
+                    requestSplit = true;
+                    Decimal splitStageFinal = Math.Ceiling((Decimal)stubData.Length / SPLIT_INDEX);
+                    Console.WriteLine(requestSplitStage);
+                    Console.WriteLine(splitStageFinal);
+                    if (requestSplitStage < 2)
+                    {
+                        requestLength = stubData.Length;
+                        stubData = stubData.Take(SPLIT_INDEX - 1).ToArray();
+                        requestSplitStage = 2;
+                        sequenceNumberCounter = 10;
+                        flags = new Byte[] { 0x81 };
+                        splitIndexTracker = SPLIT_INDEX;
+                        stage = "Request";
+                    }
+                    else if (requestSplitStage == (Int32)splitStageFinal)
+                    {
+                        requestSplit = false;
+                        sequenceNumber = BitConverter.GetBytes(sequenceNumberCounter);
+                        requestSplitStage = 0;
+                        stubData = stubData.Skip(splitIndexTracker).Take(stubData.Length - splitIndexTracker).ToArray();
+                        flags = new Byte[] { 0x82 };
+                        stage = "Result";
+                    }
+                    else
+                    {
+                        requestLength = stubData.Length - splitIndexTracker;
+                        stubData = stubData.Skip(splitIndexTracker).Take(splitIndexTracker + SPLIT_INDEX - 1).ToArray();
+                        splitIndexTracker += SPLIT_INDEX;
+                        requestSplitStage++;
+                        sequenceNumber = BitConverter.GetBytes(sequenceNumberCounter);
+                        sequenceNumberCounter++;
+                        flags = new Byte[] { 0x80 };
+                        stage = "Request";
+                    }
                 }
                 
             }
@@ -1018,9 +1028,8 @@ namespace WheresMyImplant
 
             wmiStream.Write(bData, 0, bData.Length);
             wmiStream.Flush();
-            wmiStream.Read(recieve, 0, recieve.Length);
 
-            if (requestSplit)
+            if (!requestSplit)
             {
                 wmiStream.Read(recieve, 0, recieve.Length);
             }
@@ -1030,7 +1039,7 @@ namespace WheresMyImplant
                 wmiStream.Read(recieve, 0, recieve.Length);
             }
 
-            Console.WriteLine(stage);
+                Console.WriteLine(stage);
             if ("AlterContext" == stage)
             {
                 AlterContext();
@@ -1054,10 +1063,11 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         public void Result()
         {
-            while (wmiStream.DataAvailable)
+            do
             {
                 wmiStream.Read(recieve, 0, recieve.Length);
             }
+            while (wmiStream.DataAvailable) ;
 
             UInt16 processId;
             if (9 != recieve[1145])
