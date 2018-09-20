@@ -8,7 +8,7 @@ using Unmanaged.Libraries;
 namespace WheresMyImplant
 {
     //https://github.com/gentilkiwi/mimikatz/blob/master/mimikatz/modules/kuhl_m_misc.c
-    sealed class Clipboard : Base, IDisposable
+    sealed class ClipboardNative : Base, IDisposable
     {
         private const String szName = "Clippy";
 
@@ -27,7 +27,7 @@ namespace WheresMyImplant
 
         private delegate UInt32 lpfnWndProcDelegate(IntPtr hwnd, UInt32 uMsg, IntPtr wParam, String lParam);
 
-        public Clipboard()
+        public ClipboardNative()
         {
             hInstance = kernel32.GetModuleHandle(String.Empty);
 
@@ -254,7 +254,7 @@ namespace WheresMyImplant
             }
         }
 
-        ~Clipboard()
+        ~ClipboardNative()
         {
             Dispose();
         }

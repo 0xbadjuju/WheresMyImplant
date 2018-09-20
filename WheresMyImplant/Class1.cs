@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Linq;
-using System.Management.Automation;
-using System.Management.Automation.Runspaces;
 using System.Management.Instrumentation;
-using System.Net;
-using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -319,6 +313,7 @@ namespace WheresMyImplant
                         wmiExec.AuthenticateRandom(domain, username, hash);
                         wmiExec.QueryInterface();
                     }
+                    output.Append(wmiExec.GetOutput());
                 }
             }
             catch (Exception ex)
@@ -331,8 +326,7 @@ namespace WheresMyImplant
         [ManagementTask]
         public static String AddUser(String username, String password, String admin)
         {
-            Boolean isAdmin;
-            if (!Boolean.TryParse(admin, out isAdmin))
+            if (!Boolean.TryParse(admin, out Boolean isAdmin))
             {
                 return String.Empty;
             }

