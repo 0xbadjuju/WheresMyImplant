@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 using Unmanaged.Headers;
 
@@ -44,13 +45,28 @@ namespace Unmanaged.Libraries
         public static extern UInt32 EnumClipboardFormats(UInt32 format);
 
         [DllImport("user32.dll", SetLastError = true)]
+        public static extern UInt16 GetAsyncKeyState(UInt32 vKey);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern UInt16 GetAsyncKeyState(System.Windows.Forms.Keys vKey);
+
+        [DllImport("user32.dll", SetLastError = true)]
         public static extern IntPtr GetClipboardData(UInt32 uFormat);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern Boolean GetMessage(ref Winuser.tagMSG lpMsg, IntPtr hWnd, UInt32 wMsgFilterMin, UInt32 wMsgFilterMax);
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern UInt32 GetClipboardSequenceNumber();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern UInt32 GetWindowText(IntPtr hWnd, System.Text.StringBuilder lpString, UInt32 nMaxCount);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern UInt32 GetWindowTextLength(IntPtr hWnd);
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern Boolean IsWindow(IntPtr hWnd);
