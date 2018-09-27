@@ -23,6 +23,8 @@ namespace WheresMyImplant
 
         Byte[] guidFileHandle = new Byte[16];
 
+        String target;
+
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
@@ -380,7 +382,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean CreateRequest()
+        internal Boolean CreateRequest(String folder)
         {
             treeId = recieve.Skip(40).Take(4).ToArray();
 
@@ -393,6 +395,8 @@ namespace WheresMyImplant
             header.SetSessionID(sessionId);
 
             SMB2CreateRequest createRequest = new SMB2CreateRequest();
+            if (!String.IsNullOrEmpty(folder))
+                createRequest.SetFileName(folder);
             createRequest.SetExtraInfo(1, 0);
             Byte[] bData = createRequest.GetRequest();
 
@@ -471,7 +475,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean FindRequest()
+        internal Boolean FindRequest(String folder)
         {
             treeId = recieve.Skip(40).Take(4).ToArray();
 
@@ -485,9 +489,12 @@ namespace WheresMyImplant
             header.SetSessionID(sessionId);
 
             SMB2CreateRequest createRequest = new SMB2CreateRequest();
+            if (!String.IsNullOrEmpty(folder))
+                createRequest.SetFileName(folder);
             createRequest.SetExtraInfo(1, 0);
             createRequest.SetAccessMask(new Byte[] { 0x81, 0x00, 0x10, 0x00 });
             createRequest.SetShareAccess(new Byte[] { 0x07, 0x00, 0x00, 0x00 });
+            
             Byte[] bData = createRequest.GetRequest();
 
             header.SetChainOffset(bData.Length);

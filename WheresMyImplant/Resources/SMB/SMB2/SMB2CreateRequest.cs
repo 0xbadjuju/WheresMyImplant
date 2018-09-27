@@ -35,8 +35,7 @@ namespace WheresMyImplant
             Buffer = System.Text.Encoding.Unicode.GetBytes(filename);
             FileNameBlobLength = BitConverter.GetBytes(System.Text.Encoding.Unicode.GetByteCount(filename)).Take(2).ToArray();
 
-            Double paddingCheck = filename.Length / 8.0;
-
+            Double paddingCheck = (Buffer.Length) / 8.0;
             if ((paddingCheck + 0.25) == Math.Ceiling(paddingCheck))
             {
                 Buffer = Misc.Combine(Buffer, new Byte[] { 0x04, 0x00 });
@@ -48,6 +47,10 @@ namespace WheresMyImplant
             else if ((paddingCheck + 0.75) == Math.Ceiling(paddingCheck))
             {
                 Buffer = Misc.Combine(Buffer, new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+            }
+            else
+            {
+                Console.WriteLine(paddingCheck);
             }
         }
 
