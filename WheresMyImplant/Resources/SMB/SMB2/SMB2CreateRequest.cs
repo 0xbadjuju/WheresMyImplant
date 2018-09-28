@@ -213,6 +213,14 @@ namespace WheresMyImplant
             }
         }
 
+        internal void SetCreateOptions(Byte[] CreateOptions)
+        {
+            if (CreateOptions.Length == this.CreateOptions.Length)
+            {
+                this.CreateOptions = CreateOptions;
+            }
+        }
+
         internal void SetBlobOffSet(String filename)
         {
             BlobOffset = BitConverter.GetBytes(filename.Length + 120);

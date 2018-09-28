@@ -115,6 +115,7 @@
     <Compile Include="Credentials\LSASecrets.cs" />
     <Compile Include="Lateral\PSExec.cs" />
     <Compile Include="Lateral\SMB.cs" />
+    <Compile Include="Lateral\SMBClientGet.cs" />
     <Compile Include="Lateral\SMBExec.cs" />
     <Compile Include="Lateral\WMIExec.cs" />
     <Compile Include="Persistence\AddUser.cs" />

@@ -8,22 +8,20 @@ namespace WheresMyImplant
 {
     class SMBClient : SMB
     {
-        Byte[] flags;
-        UInt32 messageId = 0x1;
-        Byte[] treeId = { 0x00, 0x00, 0x00, 0x00 };
-        Byte[] sessionId = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-        
-        Byte[] sessionKeyLength = { 0x00, 0x00 };
-        Boolean signing = false;
-        Byte[] sessionKey;
+        protected Byte[] flags;
+        protected UInt32 messageId = 0x1;
+        protected Byte[] treeId = { 0x00, 0x00, 0x00, 0x00 };
+        protected Byte[] sessionId = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
-        String version;//= "SMB2";
+        protected Byte[] sessionKeyLength = { 0x00, 0x00 };
+        protected Boolean signing = false;
+        protected Byte[] sessionKey;
 
-        Byte[] processId;
+        protected String version;//= "SMB2";
 
-        Byte[] guidFileHandle = new Byte[16];
+        protected Byte[] processId;
 
-        String target;
+        protected Byte[] guidFileHandle = new Byte[16];
 
         ////////////////////////////////////////////////////////////////////////////////
         //
@@ -475,6 +473,20 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
+        internal void ReadStreamSize()
+        {
+            String strRecieve = BitConverter.ToString(recieve).Replace("-", "");
+            Int32 index = strRecieve.Substring(10).IndexOf("FE534D42") + 170;
+            UInt32 streamSize = BitConverter.ToUInt32(recieve.Skip(index / 2).Take(8).ToArray(), 0);
+            Decimal quotient = Math.Truncate((Decimal)(streamSize / 65536));
+            UInt32 remainder = streamSize % 65536;
+
+
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
         internal Boolean FindRequest(String folder)
         {
             treeId = recieve.Skip(40).Take(4).ToArray();
@@ -509,6 +521,110 @@ namespace WheresMyImplant
             }
             Byte[] bHeader = header.GetHeader();
             
+
+            ////////////////////////////////////////////////////////////////////////////////
+            SMB2Header header2 = new SMB2Header();
+            header2.SetCommand(new Byte[] { 0x0e, 0x00 });
+            header2.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header2.SetMessageID(++messageId);
+            header2.SetProcessID(processId);
+            header2.SetTreeId(treeId);
+            header2.SetSessionID(sessionId);
+            header2.SetChainOffset(new Byte[] { 0x68, 0x00, 0x00, 0x00 });
+
+            SMB2FindFileRequestFile requestFile = new SMB2FindFileRequestFile();
+            requestFile.SetPadding(new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+            Byte[] bData2 = requestFile.GetRequest();
+
+            if (signing)
+            {
+                header2.SetFlags(new Byte[] { 0x0c, 0x00, 0x00, 0x00 });
+                header2.SetSignature(sessionKey, ref bData2);
+            }
+            else
+            {
+                header2.SetFlags(new Byte[] { 0x04, 0x00, 0x00, 0x00 });
+            }
+            Byte[] bHeader2 = header2.GetHeader();
+
+
+            ////////////////////////////////////////////////////////////////////////////////
+            SMB2Header header3 = new SMB2Header();
+            header3.SetCommand(new Byte[] { 0x0e, 0x00 });
+            header3.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header3.SetMessageID(++messageId);
+            header3.SetProcessID(processId);
+            header3.SetTreeId(treeId);
+            header3.SetSessionID(sessionId);
+
+            SMB2FindFileRequestFile requestFile2 = new SMB2FindFileRequestFile();
+            requestFile2.SetOutputBufferLength(new Byte[] { 0x80, 0x00, 0x00, 0x00 });
+            Byte[] bData3 = requestFile2.GetRequest();
+
+            if (signing)
+            {
+                header3.SetFlags(new Byte[] { 0x0c, 0x00, 0x00, 0x00 });
+                header3.SetSignature(sessionKey, ref bData3);
+            }
+            else
+            {
+                header3.SetFlags(new Byte[] { 0x04, 0x00, 0x00, 0x00 });
+            }
+            Byte[] bHeader3 = header3.GetHeader();
+
+
+            ////////////////////////////////////////////////////////////////////////////////
+            NetBIOSSessionService sessionService = new NetBIOSSessionService();
+            sessionService.SetHeaderLength(bHeader.Length + bHeader2.Length + bHeader3.Length);
+            sessionService.SetDataLength(bData.Length + bData2.Length + bData3.Length);
+            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
+
+            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            bSend = Misc.Combine(bSend, Misc.Combine(bHeader2, bData2));
+            bSend = Misc.Combine(bSend, Misc.Combine(bHeader3, bData3));
+            streamSocket.Write(bSend, 0, bSend.Length);
+            streamSocket.Flush();
+            streamSocket.Read(recieve, 0, recieve.Length);
+
+            if (GetStatus(recieve.Skip(12).Take(4).ToArray()))
+                return true;
+            else
+                return false;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal Boolean ReadRequest()
+        {
+            treeId = recieve.Skip(40).Take(4).ToArray();
+
+            ////////////////////////////////////////////////////////////////////////////////
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x05, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+
+            SMB2ReadRequest readRequest = new SMB2ReadRequest();
+            readRequest.SetGuidHandleFile(guidFileHandle);
+
+            Byte[] bData = readRequest.GetRequest();
+
+            header.SetChainOffset(bData.Length);
+            if (signing)
+            {
+                header.SetFlags(new Byte[] { 0x0c, 0x00, 0x00, 0x00 });
+                header.SetSignature(sessionKey, ref bData);
+            }
+            else
+            {
+                header.SetFlags(new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+            }
+            Byte[] bHeader = header.GetHeader();
+
 
             ////////////////////////////////////////////////////////////////////////////////
             SMB2Header header2 = new SMB2Header();

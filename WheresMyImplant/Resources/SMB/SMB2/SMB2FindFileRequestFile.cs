@@ -5,7 +5,7 @@ namespace WheresMyImplant
     class SMB2FindFileRequestFile
     {
         private readonly Byte[] StructureSize = { 0x21, 0x00 };
-        private readonly Byte[] InfoLevel = { 0x25 };
+        private Byte[] InfoLevel = { 0x25 };
         private readonly Byte[] Flags = { 0x00 };
         private readonly Byte[] FileIndex = { 0x00, 0x00, 0x00, 0x00 };
         private Byte[] FileID = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
@@ -17,6 +17,14 @@ namespace WheresMyImplant
 
         internal SMB2FindFileRequestFile()
         {
+        }
+
+        internal void SetInfoLevel(Byte[] InfoLevel)
+        {
+            if (InfoLevel.Length == this.InfoLevel.Length)
+            {
+                this.InfoLevel = InfoLevel;
+            }
         }
 
         internal void SetFileID(Byte[] FileID)

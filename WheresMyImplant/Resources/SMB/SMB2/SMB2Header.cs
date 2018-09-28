@@ -88,21 +88,21 @@ namespace WheresMyImplant
             throw new IndexOutOfRangeException();
         }
 
-        internal void SetTreeId(Byte[] treeId)
+        internal void SetTreeId(Byte[] TreeId)
         {
-            if (treeId.Length == this.TreeId.Length)
+            if (TreeId.Length == this.TreeId.Length)
             {
-                this.TreeId = treeId;
+                this.TreeId = TreeId;
                 return;
             }
             throw new IndexOutOfRangeException();
         }
 
-        internal void SetSessionID(Byte[] sessionId)
+        internal void SetSessionID(Byte[] SessionId)
         {
-            if (sessionId.Length == this.SessionId.Length)
+            if (SessionId.Length == this.SessionId.Length)
             {
-                this.SessionId = sessionId;
+                this.SessionId = SessionId;
                 return;
             }
             throw new IndexOutOfRangeException();
@@ -119,20 +119,22 @@ namespace WheresMyImplant
 
         internal Byte[] GetHeader()
         {
-            Byte[] header = Misc.Combine(ServerComponent, HeaderLength);
-            header = Misc.Combine(header, CreditCharge);
-            header = Misc.Combine(header, ChannelSequence);
-            header = Misc.Combine(header, Reserved);
-            header = Misc.Combine(header, Command);
-            header = Misc.Combine(header, CreditsRequested);
-            header = Misc.Combine(header, Flags);
-            header = Misc.Combine(header, ChainOffset);
-            header = Misc.Combine(header, MessageID);
-            header = Misc.Combine(header, ProcessId);
-            header = Misc.Combine(header, TreeId);
-            header = Misc.Combine(header, SessionId);
-            header = Misc.Combine(header, Signature);
-            return header;
+            Combine combine = new Combine();
+            combine.Extend(ServerComponent);
+            combine.Extend(HeaderLength);
+            combine.Extend(CreditCharge);
+            combine.Extend(ChannelSequence);
+            combine.Extend(Reserved);
+            combine.Extend(Command);
+            combine.Extend(CreditsRequested);
+            combine.Extend(Flags);
+            combine.Extend(ChainOffset);
+            combine.Extend(MessageID);
+            combine.Extend(ProcessId);
+            combine.Extend(TreeId);
+            combine.Extend(SessionId);
+            combine.Extend(Signature);
+            return combine.Retrieve();
         }
     }
 }

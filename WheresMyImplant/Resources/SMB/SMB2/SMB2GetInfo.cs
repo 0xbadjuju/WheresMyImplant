@@ -10,11 +10,11 @@ namespace WheresMyImplant
         private Byte[] MaxResponseSize = new Byte[4];
         private Byte[] GetInfoInputOffset = new Byte[2];
         private readonly Byte[] Reserved = { 0x00, 0x00 };
-        private readonly Byte[] InputBufferLength = { 0x00, 0x00, 0x00, 0x00 };
+        private readonly Byte[] GetInfoInputSize = { 0x00, 0x00, 0x00, 0x00 };
         private readonly Byte[] AdditionalInformation = { 0x00, 0x00, 0x00, 0x00 };
         private readonly Byte[] Flags = { 0x00, 0x00, 0x00, 0x00 };
         private Byte[] GUIDHandleFile;
-        private Byte[] Buffer = new Byte[1];
+        private Byte[] Buffer = new Byte[0];
 
 
         internal SMB2GetInfo()
@@ -58,7 +58,7 @@ namespace WheresMyImplant
             request = Misc.Combine(request, MaxResponseSize);
             request = Misc.Combine(request, GetInfoInputOffset);
             request = Misc.Combine(request, Reserved);
-            request = Misc.Combine(request, InputBufferLength);
+            request = Misc.Combine(request, GetInfoInputSize);
             request = Misc.Combine(request, AdditionalInformation);
             request = Misc.Combine(request, Flags);
             request = Misc.Combine(request, GUIDHandleFile);
