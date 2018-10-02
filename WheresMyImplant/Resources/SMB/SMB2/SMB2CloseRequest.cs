@@ -2,7 +2,7 @@
 
 namespace WheresMyImplant
 {
-    class SMB2CloseRequest
+    sealed class SMB2CloseRequest
     {
         private readonly Byte[] StructureSize = { 0x18, 0x00 };
         private readonly Byte[] Flags = { 0x00, 0x00 };

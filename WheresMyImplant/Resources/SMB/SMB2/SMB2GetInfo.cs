@@ -2,7 +2,7 @@
 
 namespace WheresMyImplant
 {
-    class SMB2GetInfo
+    sealed class SMB2GetInfo
     {
         private readonly Byte[] StructureSize = { 0x29, 0x00 };
         private Byte[] Class = new Byte[1];

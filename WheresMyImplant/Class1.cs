@@ -250,6 +250,7 @@ namespace WheresMyImplant
                     smbClient.ParseDirectoryContents();
                     smbClient.CloseRequest();
                     smbClient.DisconnectTree();
+                    smbClient.LogoffRequest();
                 }
                 catch (Exception ex)
                 {
@@ -309,19 +310,19 @@ namespace WheresMyImplant
                     smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "IPC$"));
                     smbClient.IoctlRequest(String.Format(@"\{0}\{1}", target, share));
                     smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, share));
-                    smbClient.CreateRequestGet(folder + file);
+                    smbClient.CreateRequest(folder + file);
                     smbClient.CloseRequest();
-                    smbClient.CreateRequestGet(folder);
-                    smbClient.FindRequestGet();                   
-                    smbClient.CreateRequestGet(folder + file);
-                    smbClient.ReadRequestGet();
-                    smbClient.CreateRequestGet(folder + file);
-                    smbClient.InfoRequestGet1();
-                    smbClient.InfoRequestGet2();
-                    smbClient.ReadRequestGet();
-                    smbClient.WriteFile(destination);
+                    smbClient.CreateRequest(folder);
+                    smbClient.FindRequest();                   
+                    smbClient.CreateRequest(folder + file);
+                    smbClient.ReadRequest();
+                    smbClient.CreateRequest(folder + file);
+                    smbClient.InfoRequest();
+                    smbClient.InfoRequest(destination);
+                    smbClient.ReadRequest();
                     smbClient.CloseRequest();
                     smbClient.DisconnectTree();
+                    smbClient.LogoffRequest();
                 }
                 catch (Exception ex)
                 {

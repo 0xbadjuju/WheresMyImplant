@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace WheresMyImplant
 {
-    class SMB2CreateRequest
+    sealed class SMB2CreateRequest
     {
         private Byte[] bAllocationSize;
 
@@ -50,7 +50,7 @@ namespace WheresMyImplant
             }
             else
             {
-                Console.WriteLine(paddingCheck);
+                Console.WriteLine("Padding: " + paddingCheck);
             }
         }
 

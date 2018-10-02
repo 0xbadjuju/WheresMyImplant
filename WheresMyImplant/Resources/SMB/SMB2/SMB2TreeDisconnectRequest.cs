@@ -2,7 +2,7 @@
 
 namespace WheresMyImplant
 {
-    class SMB2TreeDisconnectRequest
+    sealed class SMB2TreeDisconnectRequest
     {
         private readonly Byte[] StructureSize = { 0x04, 0x00 };
         private readonly Byte[] Reserved = { 0x00, 0x00 };

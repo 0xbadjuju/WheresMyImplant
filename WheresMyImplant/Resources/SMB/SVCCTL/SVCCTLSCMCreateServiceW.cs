@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace WheresMyImplant
 {
-    class SVCCTLSCMCreateServiceW
+    sealed class SVCCTLSCMCreateServiceW
     {
         private Byte[] ContextHandle;
         private Byte[] ServiceName_MaxCount;

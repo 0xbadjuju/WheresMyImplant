@@ -2,7 +2,7 @@
 
 namespace WheresMyImplant
 {
-    class SMB2WriteRequest
+    sealed class SMB2WriteRequest
     {
         private readonly Byte[] StructureSize = { 0x31, 0x00 };
         private readonly Byte[] DataOffset = { 0x70, 0x00 };

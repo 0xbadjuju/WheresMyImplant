@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Linq;
-using System.Security.Cryptography;
 
 namespace WheresMyImplant
 {
-    class SMB2IoctlRequest
+    sealed class SMB2IoctlRequest
     {
         private readonly Byte[] StructureSize = { 0x39, 0x00 };
         private readonly Byte[] Reserved = { 0x00, 0x00 };

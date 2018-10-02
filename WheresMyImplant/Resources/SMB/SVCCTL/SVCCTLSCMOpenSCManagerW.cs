@@ -3,7 +3,7 @@ using System.Text;
 
 namespace WheresMyImplant
 {
-    class SVCCTLSCMOpenSCManagerW
+    sealed class SVCCTLSCMOpenSCManagerW
     {
         private Byte[] MachineName_ReferentID;
         private Byte[] MachineName_MaxCount;

@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace WheresMyImplant
 {
-    class SMB2TreeConnectRequest
+    sealed class SMB2TreeConnectRequest
     {
         private readonly Byte[] StructureSize = { 0x09, 0x00 };
         private readonly Byte[] Reserved = { 0x00, 0x00 };

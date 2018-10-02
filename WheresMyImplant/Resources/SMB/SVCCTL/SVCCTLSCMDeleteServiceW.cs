@@ -2,7 +2,7 @@
 
 namespace WheresMyImplant
 {
-    class SVCCTLSCMDeleteServiceW
+    sealed class SVCCTLSCMDeleteServiceW
     {
         private Byte[] ContextHandle;
 

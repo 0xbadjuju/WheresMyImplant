@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace WheresMyImplant
 {
-    class SMB2NegotiateProtocolRequest
+    sealed class SMB2NegotiateProtocolRequest
     {
         private readonly Byte[] StructureSize = { 0x24, 0x00 };
         private readonly Byte[] DialectCount = { 0x02, 0x00 };

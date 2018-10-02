@@ -2,13 +2,13 @@
 
 namespace WheresMyImplant
 {
-    class SMB2ReadRequest
+    sealed class SMB2ReadRequest
     {
         private readonly Byte[] StructureSize = { 0x31, 0x00 };
         private readonly Byte[] Padding = { 0x50 };
         private readonly Byte[] Flags = { 0x00 };
         private Byte[] Length = { 0x00, 0x10, 0x00, 0x00 };
-        private readonly Byte[] Offset = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        private Byte[] Offset = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
         private Byte[] GuidHandleFile;
         private readonly Byte[] MinimumCount = { 0x00, 0x00, 0x00, 0x00 };
         private readonly Byte[] Channel = { 0x00, 0x00, 0x00, 0x00 };
@@ -22,11 +22,6 @@ namespace WheresMyImplant
 
         }
 
-        internal void SetGuidHandleFile(Byte[] GuidHandleFile)
-        {
-            this.GuidHandleFile = GuidHandleFile;
-        }
-
         internal void SetLength(Byte[] Length)
         {
             if (this.Length.Length == Length.Length)
@@ -35,6 +30,21 @@ namespace WheresMyImplant
                 return;
             }
             throw new IndexOutOfRangeException();
+        }
+
+        internal void SetOffset(Byte[] Offset)
+        {
+            if (this.Offset.Length == Offset.Length)
+            {
+                this.Offset = Offset;
+                return;
+            }
+            throw new IndexOutOfRangeException();
+        }
+
+        internal void SetGuidHandleFile(Byte[] GuidHandleFile)
+        {
+            this.GuidHandleFile = GuidHandleFile;
         }
 
         internal Byte[] GetRequest()

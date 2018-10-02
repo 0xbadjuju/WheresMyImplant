@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Linq;
-using System.Security.Cryptography;
 
 namespace WheresMyImplant
 {
-    class NTLMSSPAuth
+    sealed class NTLMSSPAuth
     {
         private readonly Byte[]ASNID = { 0xa1, 0x82 };
         private Byte[]ASNLength;

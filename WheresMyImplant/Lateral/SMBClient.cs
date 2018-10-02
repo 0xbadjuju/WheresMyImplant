@@ -380,7 +380,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean CreateRequest(String folder)
+        internal virtual Boolean CreateRequest(String folder)
         {
             treeId = recieve.Skip(40).Take(4).ToArray();
 
@@ -430,7 +430,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean InfoRequest()
+        internal virtual Boolean InfoRequest()
         {
             SMB2Header header = new SMB2Header();
             header.SetCommand(new Byte[] { 0x10, 0x00 });
@@ -473,21 +473,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal void ReadStreamSize()
-        {
-            String strRecieve = BitConverter.ToString(recieve).Replace("-", "");
-            Int32 index = strRecieve.Substring(10).IndexOf("FE534D42") + 170;
-            UInt32 streamSize = BitConverter.ToUInt32(recieve.Skip(index / 2).Take(8).ToArray(), 0);
-            Decimal quotient = Math.Truncate((Decimal)(streamSize / 65536));
-            UInt32 remainder = streamSize % 65536;
-
-
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////
-        //
-        ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean FindRequest(String folder)
+        internal virtual Boolean FindRequest(String folder)
         {
             treeId = recieve.Skip(40).Take(4).ToArray();
 
@@ -595,7 +581,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        internal Boolean ReadRequest()
+        internal virtual Boolean ReadRequest()
         {
             treeId = recieve.Skip(40).Take(4).ToArray();
 
@@ -804,9 +790,44 @@ namespace WheresMyImplant
                 header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
                 header.SetSignature(sessionKey, ref bData);
             }
+            Byte[] bHeader = header.GetHeader();
+
+            NetBIOSSessionService sessionService = new NetBIOSSessionService();
+            sessionService.SetHeaderLength(bHeader.Length);
+            sessionService.SetDataLength(bData.Length);
+            Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
+
+            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            streamSocket.Write(bSend, 0, bSend.Length);
+            streamSocket.Flush();
+            streamSocket.Read(recieve, 0, recieve.Length);
+
+            if (GetStatus(recieve.Skip(12).Take(4).ToArray()))
+                return true;
             else
+                return false;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        internal Boolean LogoffRequest()
+        {
+            SMB2Header header = new SMB2Header();
+            header.SetCommand(new Byte[] { 0x02, 0x00 });
+            header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
+            header.SetMessageID(++messageId);
+            header.SetProcessID(processId);
+            header.SetTreeId(treeId);
+            header.SetSessionID(sessionId);
+
+            SMB2SessionLogoffRequest logoffRequest = new SMB2SessionLogoffRequest();
+            Byte[] bData = logoffRequest.GetRequest();
+
+            if (signing)
             {
-                header.SetFlags(new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+                header.SetFlags(new Byte[] { 0x08, 0x00, 0x00, 0x00 });
+                header.SetSignature(sessionKey, ref bData);
             }
             Byte[] bHeader = header.GetHeader();
 
@@ -826,6 +847,9 @@ namespace WheresMyImplant
                 return false;
         }
 
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
         ~SMBClient()
         {
             Dispose();

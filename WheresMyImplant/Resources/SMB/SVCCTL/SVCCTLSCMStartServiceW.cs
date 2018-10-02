@@ -2,7 +2,7 @@
 
 namespace WheresMyImplant
 {
-    class SVCCTLSCMStartServiceW
+    sealed class SVCCTLSCMStartServiceW
     {
         private Byte[] ContextHandle;
         private readonly Byte[] Unknown = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };

@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace WheresMyImplant
 {
-    class SMB2Header
+    sealed class SMB2Header
     {
         private readonly Byte[] ServerComponent = { 0xfe, 0x53, 0x4d, 0x42 };
         private readonly Byte[] HeaderLength = { 0x40, 0x00 };

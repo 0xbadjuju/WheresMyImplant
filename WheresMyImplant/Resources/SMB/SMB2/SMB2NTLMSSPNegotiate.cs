@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace WheresMyImplant
 {
-    class SMB2NTLMSSPNegotiate
+    sealed class SMB2NTLMSSPNegotiate
     {
         private String version = String.Empty;
 

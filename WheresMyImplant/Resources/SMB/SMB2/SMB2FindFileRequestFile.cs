@@ -2,7 +2,7 @@
 
 namespace WheresMyImplant
 {
-    class SMB2FindFileRequestFile
+    sealed class SMB2FindFileRequestFile
     {
         private readonly Byte[] StructureSize = { 0x21, 0x00 };
         private Byte[] InfoLevel = { 0x25 };
