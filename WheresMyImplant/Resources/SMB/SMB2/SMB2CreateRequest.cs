@@ -50,7 +50,7 @@ namespace WheresMyImplant
             }
             else
             {
-                Console.WriteLine("Padding: " + paddingCheck);
+                //Console.WriteLine("Padding: " + paddingCheck);
             }
         }
 

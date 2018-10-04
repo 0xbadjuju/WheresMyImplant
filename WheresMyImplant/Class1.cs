@@ -319,7 +319,7 @@ namespace WheresMyImplant
                     smbClient.CreateRequest(folder + file);
                     smbClient.InfoRequest();
                     smbClient.InfoRequest(destination);
-                    smbClient.ReadRequest();
+                    smbClient.ReadRequest2();
                     smbClient.CloseRequest();
                     smbClient.DisconnectTree();
                     smbClient.LogoffRequest();

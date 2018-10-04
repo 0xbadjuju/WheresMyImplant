@@ -17,8 +17,14 @@ namespace WheresMyImplant
         private static readonly Byte[] status_access_denied = new Byte[] { 0x22, 0x00, 0x00, 0xc0 };
         private static readonly Byte[] status_file_closed = new Byte[] { 0x28, 0x01, 0x00, 0xc0 };
         private static readonly Byte[] status_file_not_found = new Byte[] { 0x34, 0x01, 0x00, 0xc0 };
+        private static readonly Byte[] status_object_name_not_found = new Byte[] { 0x34, 0x00, 0x00, 0xc0 };
+        private static readonly Byte[] status_object_path_not_found = new Byte[] { 0x3a, 0x00, 0x00, 0xc0 };
         private static readonly Byte[] status_network_name_deleted = new Byte[] { 0xc9, 0x00, 0x00, 0xc0 };
+        private static readonly Byte[] status_invalid_parameter = new Byte[] { 0x0d, 0x00, 0x00, 0xc0 };
 
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
         protected Boolean GetStatus(Byte[] status)
         {
             if (status.SequenceEqual(status_okay))
@@ -27,34 +33,48 @@ namespace WheresMyImplant
             }
             else if (status.SequenceEqual(status_access_denied))
             {
-                WriteOutput("[-] Access Denied");
+                Console.WriteLine("[-] Access Denied");
                 return false;
             }
             else if (status.SequenceEqual(status_file_closed))
             {
-                WriteOutput("[-] File Closed");
+                Console.WriteLine("[-] File Closed");
                 return false;
             }
-            else if (status.SequenceEqual(status_file_not_found))
+            else if (status.SequenceEqual(status_file_not_found) || status.SequenceEqual(status_object_name_not_found))
             {
-                WriteOutput("[-] File Not Found");
+                Console.WriteLine("[-] File Not Found");
+                return false;
+            }
+            else if (status.SequenceEqual(status_object_path_not_found))
+            {
+                Console.WriteLine("[-] Directory Not Found");
+                return false;
+            }
+            else if (status.SequenceEqual(status_invalid_parameter))
+            {
+                Console.WriteLine("[-] Invalid Parameter");
                 return false;
             }
             else if (status.SequenceEqual(status_network_name_deleted))
             {
-                WriteOutput("[-] Network Name Deleted");
+                Console.WriteLine("[-] Network Name Deleted");
                 return false;
             }
             else
             {
-                WriteOutput("[-] " + BitConverter.ToString(status));
+                Console.WriteLine("[-] " + BitConverter.ToString(status));
                 return false;
             }
         }
 
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
         public SMB()
         {
             smbClient = new TcpClient();
+            smbClient.Client.ReceiveTimeout = 30000;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +83,6 @@ namespace WheresMyImplant
         public Boolean Connect(String system)
         {
             this.system = system;
-            smbClient.Client.ReceiveTimeout = 30000;
 
             try
             {
@@ -87,15 +106,13 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         public void Dispose()
         {
-            if (null != streamSocket)
-            {
-                streamSocket.Dispose();
-            }
+            
 
             if (null != smbClient && smbClient.Connected)
-            {
                 smbClient.Close();
-            }
+
+            if (null != streamSocket)
+                streamSocket.Close(60);
         }
     }
 }
