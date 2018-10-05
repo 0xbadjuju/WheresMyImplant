@@ -9,14 +9,14 @@ namespace WheresMyImplant
 
         private readonly Byte[] StructureSize = { 0x39, 0x00 };
         private readonly Byte[] Flags = { 0x00 };
-        private readonly Byte[] RequestedOplockLevel = { 0x00 };
+        private Byte[] RequestedOplockLevel = { 0x00 };
         private readonly Byte[] Impersonation = { 0x02, 0x00, 0x00, 0x00 };
         private readonly Byte[] CreateFlags = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
         private readonly Byte[] Reserved = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
         private Byte[] AccessMask = { 0x03, 0x00, 0x00, 0x00 };
         private Byte[] FileAttributes = { 0x80, 0x00, 0x00, 0x00 };
         private Byte[] ShareAccess = { 0x01, 0x00, 0x00, 0x00 };
-        private readonly Byte[] Disposition = { 0x01, 0x00, 0x00, 0x00 };
+        private Byte[] Disposition = { 0x01, 0x00, 0x00, 0x00 };
         private Byte[] CreateOptions = { 0x40, 0x00, 0x00, 0x00 };
         private readonly Byte[] FileNameBlobOffset = { 0x78, 0x00 };
         private Byte[] FileNameBlobLength = { 0x00, 0x00 };
@@ -28,6 +28,30 @@ namespace WheresMyImplant
         internal SMB2CreateRequest()
         {
 
+        }
+
+        internal void SetRequestedOplockLevel(Byte[] RequestedOplockLevel)
+        {
+            if (this.RequestedOplockLevel.Length == RequestedOplockLevel.Length)
+            {
+                this.RequestedOplockLevel = RequestedOplockLevel;
+            }
+        }
+
+        internal void SetFileAttributes(Byte[] FileAttributes)
+        {
+            if (this.FileAttributes.Length == FileAttributes.Length)
+            {
+                this.FileAttributes = FileAttributes;
+            }
+        }
+
+        internal void SetDisposition(Byte[] Disposition)
+        {
+            if (this.Disposition.Length == Disposition.Length)
+            {
+                this.Disposition = Disposition;
+            }
         }
 
         internal void SetFileName(String filename)

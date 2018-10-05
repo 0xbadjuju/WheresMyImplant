@@ -155,11 +155,14 @@
     <Compile Include="Base\BaseRemote.cs" />
     <Compile Include="Base\BaseSQL.cs" />
     <Compile Include="Credentials\LSASecrets.cs" />
+    <Compile Include="Lateral.cs" />
     <Compile Include="Lateral\PSExec.cs" />
     <Compile Include="Lateral\SMB.cs" />
+    <Compile Include="Lateral\SMBClientPut.cs" />
     <Compile Include="Lateral\SMBClientGet.cs" />
     <Compile Include="Lateral\SMBExec.cs" />
     <Compile Include="Lateral\WMIExec.cs" />
+    <Compile Include="Persistence.cs" />
     <Compile Include="Persistence\AddUser.cs" />
     <Compile Include="Persistence\InstallUtil.cs">
       <SubType>Component</SubType>
@@ -181,6 +184,7 @@
     <Compile Include="Resources\SMB\DCOM\NTLMSSPVerifier.cs" />
     <Compile Include="Resources\SMB\SMB2\SMB2ReadRequest.cs" />
     <Compile Include="Resources\SMB\SMB2\SMB2SessionLogoffRequest.cs" />
+    <Compile Include="Resources\SMB\SMB2\SMB2SetInfo.cs" />
     <Compile Include="Resources\SMB\SMB2\SMB2WriteRequest.cs" />
     <Compile Include="Resources\SMB\SMB1\SMBCloseRequest.cs" />
     <Compile Include="Resources\SMB\SMB1\SMBLogoffAndXRequest.cs" />
