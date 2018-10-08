@@ -152,6 +152,7 @@ namespace WheresMyImplant
                     smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, "IPC$"));
                     smbClient.IoctlRequest(String.Format(@"\{0}\{1}", target, share));
                     smbClient.TreeConnect(String.Format(@"\\{0}\{1}", target, share));
+
                     smbClient.CreateRequest(folder + file);
                     smbClient.CloseRequest();
                     smbClient.CreateRequest(folder);
@@ -162,6 +163,7 @@ namespace WheresMyImplant
                     smbClient.InfoRequest();
                     smbClient.InfoRequest(destination);
                     smbClient.ReadRequest2();
+
                     smbClient.CloseRequest();
                     smbClient.DisconnectTree();
                     smbClient.LogoffRequest();

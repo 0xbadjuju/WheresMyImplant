@@ -71,6 +71,45 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
+        protected Boolean GetStatusSilent(Byte[] status)
+        {
+            if (status.SequenceEqual(status_okay))
+            {
+                return true;
+            }
+            else if (status.SequenceEqual(status_access_denied))
+            {
+                return false;
+            }
+            else if (status.SequenceEqual(status_file_closed))
+            {
+                return false;
+            }
+            else if (status.SequenceEqual(status_file_not_found) || status.SequenceEqual(status_object_name_not_found))
+            {
+                return false;
+            }
+            else if (status.SequenceEqual(status_object_path_not_found))
+            {
+                return false;
+            }
+            else if (status.SequenceEqual(status_invalid_parameter))
+            {
+                return false;
+            }
+            else if (status.SequenceEqual(status_network_name_deleted))
+            {
+                return false;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
         public SMB()
         {
             smbClient = new TcpClient();

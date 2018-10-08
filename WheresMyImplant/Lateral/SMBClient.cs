@@ -294,7 +294,10 @@ namespace WheresMyImplant
             streamSocket.Read(recieve, 0, recieve.Length);
 
             if (GetStatus(recieve.Skip(12).Take(4).ToArray()))
+            {
+                Console.WriteLine("[+] Login Successful");
                 return true;
+            }
             else
                 return false;
         }
@@ -763,10 +766,7 @@ namespace WheresMyImplant
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
 
-            if (GetStatus(recieve.Skip(12).Take(4).ToArray()))
-                return true;
-            else
-                return false;
+            return GetStatusSilent(recieve.Skip(12).Take(4).ToArray());
         }
 
         ////////////////////////////////////////////////////////////////////////////////

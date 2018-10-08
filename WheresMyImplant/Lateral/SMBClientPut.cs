@@ -67,12 +67,24 @@ namespace WheresMyImplant
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
 
-            if (!GetStatus(recieve.Skip(12).Take(4).ToArray()))
+            if (1 == step)
             {
-                guidFileHandle = recieve.Skip(0x0084).Take(16).ToArray();
+                if (GetStatusSilent(recieve.Skip(12).Take(4).ToArray()))
+                {
+                    Console.WriteLine("[-] File Exists");
+                    return false;
+                }
                 return true;
             }
-            return false;
+            else
+            {
+                if (GetStatus(recieve.Skip(12).Take(4).ToArray()))
+                {
+                    guidFileHandle = recieve.Skip(0x0084).Take(16).ToArray();
+                    return true;
+                }
+                return false;
+            }
         }
     
         ////////////////////////////////////////////////////////////////////////////////
@@ -234,8 +246,7 @@ namespace WheresMyImplant
                     
                 }
             }
-
-            
+            Console.WriteLine("[+] File Uploaded");
         }
 
         ////////////////////////////////////////////////////////////////////////////////

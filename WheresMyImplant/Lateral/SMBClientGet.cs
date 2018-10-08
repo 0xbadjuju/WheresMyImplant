@@ -146,12 +146,8 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-
         internal override Boolean ReadRequest()
         {
-            Boolean closing = false;
-
-            ////////////////////////////////////////////////////////////////////////////////
             SMB2Header header = new SMB2Header();
             header.SetCommand(new Byte[] { 0x08, 0x00 });
             header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
@@ -160,7 +156,6 @@ namespace WheresMyImplant
             header.SetTreeId(treeId);
             header.SetSessionID(sessionId);
             header.SetChainOffset(new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-
 
             SMB2ReadRequest readRequest = new SMB2ReadRequest();
             readRequest.SetGuidHandleFile(guidFileHandle);
@@ -175,7 +170,6 @@ namespace WheresMyImplant
             }
             Byte[] bHeader = header.GetHeader();
 
-            ////////////////////////////////////////////////////////////////////////////////
             NetBIOSSessionService sessionService = new NetBIOSSessionService();
             sessionService.SetHeaderLength(bHeader.Length);
             sessionService.SetDataLength(bData.Length);
@@ -200,7 +194,6 @@ namespace WheresMyImplant
             return true;
         }
 
-
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
@@ -218,6 +211,7 @@ namespace WheresMyImplant
                 if (bytesRecieved >= fileSize)
                     break;
             }
+            Console.WriteLine("[+] File Downloaded");
         }
 
         ////////////////////////////////////////////////////////////////////////////////
