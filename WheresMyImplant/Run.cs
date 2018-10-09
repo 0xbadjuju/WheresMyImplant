@@ -1,40 +1,29 @@
-﻿using System;
-using System.IO;
-
-namespace WheresMyImplant
+﻿namespace WheresMyImplant
 {
-    sealed class Combine
+    public sealed class Run
     {
-        private Byte[] combined = new Byte[0];
-
         ////////////////////////////////////////////////////////////////////////////////
         // 
         ////////////////////////////////////////////////////////////////////////////////
-        public Combine()
+        public static void RunCMD(string command, string parameters)
         {
-
+            RunCommandPrompt runCommandPrompt = new RunCommandPrompt(command, parameters);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         // 
         ////////////////////////////////////////////////////////////////////////////////
-        public void Extend(Byte[] nextPart)
+        public static void RunPowerShell(string command)
         {
-            Int32 dwSize = combined.Length + nextPart.Length;
-            using (MemoryStream memoryStream = new MemoryStream(new Byte[dwSize], 0, dwSize, true, true))
-            {
-                memoryStream.Write(combined, 0, combined.Length);
-                memoryStream.Write(nextPart, 0, nextPart.Length);
-                combined = memoryStream.GetBuffer();
-            }
+            RunPowerShell runPowerShell = new RunPowerShell(command);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         // 
         ////////////////////////////////////////////////////////////////////////////////
-        public Byte[] Retrieve()
+        public static void RunXpCmdShell(string server, string database, string username, string password, string command)
         {
-            return combined;
+            RunXPCmdShell runXPCmdShell = new RunXPCmdShell(server, database, username, password, command);
         }
     }
 }

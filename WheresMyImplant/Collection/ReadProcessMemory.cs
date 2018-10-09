@@ -3,8 +3,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
-using Unmanaged.Headers;
-using Unmanaged.Libraries;
+using MonkeyWorks.Unmanaged.Headers;
+using MonkeyWorks.Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
@@ -34,10 +34,10 @@ namespace WheresMyImplant
             hProcess = kernel32.OpenProcess(kernel32.PROCESS_QUERY_INFORMATION | kernel32.PROCESS_VM_READ, false, (UInt32)processID);
             if (IntPtr.Zero == hProcess)
             {
-                WriteOutputBad(String.Format("Unable to OpenProcess {0}", processID));
+                Console.WriteLine("[-] Unable to OpenProcess {0}", processID);
                 return false;
             }
-            WriteOutputGood(String.Format("Handle Received {0}", hProcess.ToInt64()));
+            Console.WriteLine("[+] Handle Received 0x{0}", hProcess.ToString("X4"));
             return true;
         }
 
@@ -53,12 +53,12 @@ namespace WheresMyImplant
             UInt64 bottom = (UInt64)systemInfo.lpMinimumApplicationAddress.ToInt64();
             UInt64 top = (UInt64)systemInfo.lpMaximumApplicationAddress.ToInt64();
             IntPtr currentAddress = systemInfo.lpMinimumApplicationAddress;
-            WriteOutputNeutral("Current: " + currentAddress.ToInt64());
-            WriteOutputNeutral("Bottom:  " + bottom);
-            WriteOutputNeutral("Top:     " + top);
+            Console.WriteLine("[*] Current: " + currentAddress.ToInt64());
+            Console.WriteLine("[*] Bottom:  " + bottom);
+            Console.WriteLine("[*] Top:     " + top);
 
             StringBuilder regions = new StringBuilder();
-            WriteOutputGood("Scraping Regions");
+            Console.WriteLine("[+] Scraping Regions");
             while (bottom < top)
             {
                 Winnt._MEMORY_BASIC_INFORMATION64 memoryBasicInformation;
@@ -90,7 +90,7 @@ namespace WheresMyImplant
                 bottom += memoryBasicInformation.RegionSize;
                 currentAddress = new IntPtr((Int64)bottom);
             }
-            WriteOutput(regions.ToString());
+            Console.WriteLine(regions.ToString());
         }
 
         ////////////////////////////////////////////////////////////////////////////////

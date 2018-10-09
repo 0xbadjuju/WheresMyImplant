@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 
-using Unmanaged.Libraries;
+using MonkeyWorks.Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
@@ -73,7 +73,7 @@ namespace WheresMyImplant
         public VaultCLI()
         {
             Double version = Misc.GetOSVersion();
-            WriteOutputNeutral(String.Format("Detected Windows {0}", version));
+            Console.WriteLine("[*] Detected Windows {0}", version);
             if (6.1 < version)
             {
                 getItem = GetItem8;
@@ -92,19 +92,19 @@ namespace WheresMyImplant
             Int32 dwVaultCount;
             IntPtr lpVaultGuids;
             vaultcli.VaultEnumerateVaults(0, out dwVaultCount, out lpVaultGuids);
-            WriteOutputGood(String.Format("{0} Vaults Enumerated\n", dwVaultCount));
+            Console.WriteLine("[+] {0} Vaults Enumerated\n", dwVaultCount);
            
             IntPtr lpVault;
             for (Int32 i = 0; i < dwVaultCount; i++)
             {
                 lpVault = new IntPtr(lpVaultGuids.ToInt32() + i * Marshal.SizeOf(typeof(Guid)));
                 Guid guid = (Guid)Marshal.PtrToStructure(lpVault, typeof(Guid));
-                WriteOutput(String.Format("{0,-20} {1,-20}", "Vault Type", GuidToString(guid)));
+                Console.WriteLine("{0,-20} {1,-20}", "Vault Type", GuidToString(guid));
 
                 IntPtr hVault;
                 vaultcli.VaultOpenVault(ref guid, 0, out hVault);
                 EnumerateItems(hVault);
-                WriteOutput("");
+                Console.WriteLine("");
             }
         }
 
@@ -116,7 +116,7 @@ namespace WheresMyImplant
             Int32 dwVaultItems;
             IntPtr hItem;
             vaultcli.VaultEnumerateItems(hVault, 0, out dwVaultItems, out hItem);
-            WriteOutput(String.Format("{0,-20} {1,-20}", "Vault Items", dwVaultItems));
+            Console.WriteLine("{0,-20} {1,-20}", "Vault Items", dwVaultItems);
             for (Int32 j = 0; j < dwVaultItems; j++)
             {
                 getItem(hVault, hItem, j);
@@ -147,7 +147,7 @@ namespace WheresMyImplant
             GetElementData("Resource", passItem.Resource);
             GetElementData("Identity", passItem.Identity);
             GetElementData("Authenticator", passItem.Authenticator);
-            WriteOutput(String.Format("{0,-20} {1,-20}", "LastWritten", DateTime.FromFileTime(passItem.LastWritten)));
+            Console.WriteLine("{0,-20} {1,-20}", "LastWritten", DateTime.FromFileTime(passItem.LastWritten));
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -176,7 +176,7 @@ namespace WheresMyImplant
             GetElementData("Identity", passItem.Identity);
             GetElementData("PackageSid", passItem.PackageSid);
             GetElementData("Authenticator", passItem.Authenticator);
-            WriteOutput(String.Format("{0,-20} {1,-20}", "LastWritten", DateTime.FromFileTime(passItem.LastWritten)));
+            Console.WriteLine("{0,-20} {1,-20}", "LastWritten", DateTime.FromFileTime(passItem.LastWritten));
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -216,7 +216,7 @@ namespace WheresMyImplant
         {
             if (IntPtr.Zero == lpInput)
             {
-                WriteOutput(String.Format("{0,-20} {1,-20}", name, ""));
+                Console.WriteLine("{0,-20} {1,-20}", name, "");
                 return;
             }
 
@@ -225,41 +225,41 @@ namespace WheresMyImplant
             switch (data.Type)
             {
                 case _VAULT_ELEMENT_TYPE.Type_Boolean:
-                    WriteOutput(String.Format("{0,-20} {1,-20}", name, Convert.ToBoolean(Marshal.ReadByte(lpData))));
+                    Console.WriteLine("{0,-20} {1,-20}", name, Convert.ToBoolean(Marshal.ReadByte(lpData)));
                     break;
                 case _VAULT_ELEMENT_TYPE.Type_Short:
-                    WriteOutput(String.Format("{0,-20} {1,-20}", name, Marshal.ReadInt16(lpData)));
+                    Console.WriteLine("{0,-20} {1,-20}", name, Marshal.ReadInt16(lpData));
                     break;
                 case _VAULT_ELEMENT_TYPE.Type_UnsignedShort:
-                    WriteOutput(String.Format("{0,-20} {1,-20}", name, Marshal.ReadInt16(lpData)));
+                    Console.WriteLine("{0,-20} {1,-20}", name, Marshal.ReadInt16(lpData));
                     break;
                 case _VAULT_ELEMENT_TYPE.Type_Integer:
-                    WriteOutput(String.Format("{0,-20} {1,-20}", name, Marshal.ReadInt32(lpData)));
+                    Console.WriteLine("{0,-20} {1,-20}", name, Marshal.ReadInt32(lpData));
                     break;
                 case _VAULT_ELEMENT_TYPE.Type_UnsignedInteger:
-                    WriteOutput(String.Format("{0,-20} {1,-20}", name, Marshal.ReadInt32(lpData)));
+                    Console.WriteLine("{0,-20} {1,-20}", name, Marshal.ReadInt32(lpData));
                     break;
                 case _VAULT_ELEMENT_TYPE.Type_Double:
-                    WriteOutput(String.Format("{0,-20} {1,-20}", name, (double)Marshal.PtrToStructure(lpData, typeof(double))));
+                    Console.WriteLine("{0,-20} {1,-20}", name, (double)Marshal.PtrToStructure(lpData, typeof(double)));
                     break;
                 case _VAULT_ELEMENT_TYPE.Type_Guid:
-                    WriteOutput(String.Format("{0,-20} {1,-20}", name, (Guid)Marshal.PtrToStructure(lpData, typeof(Guid))));
+                    Console.WriteLine("{0,-20} {1,-20}", name, (Guid)Marshal.PtrToStructure(lpData, typeof(Guid)));
                     break;
                 case _VAULT_ELEMENT_TYPE.Type_String:
-                    WriteOutput(String.Format("{0,-20} {1,-20}", name, Marshal.PtrToStringUni(Marshal.ReadIntPtr(lpData))));
+                    Console.WriteLine("{0,-20} {1,-20}", name, Marshal.PtrToStringUni(Marshal.ReadIntPtr(lpData)));
                     break;
                 case _VAULT_ELEMENT_TYPE.Type_ByteArray:
-                    WriteOutput(String.Format("{0,-20} {1,-20}", name, (Byte[])Marshal.PtrToStructure(lpData, typeof(Byte[]))));
+                    Console.WriteLine("{0,-20} {1,-20}", name, (Byte[])Marshal.PtrToStructure(lpData, typeof(Byte[])));
                     break;
                 case _VAULT_ELEMENT_TYPE.Type_TimeStamp:
-                    WriteOutput(String.Format("{0,-20} {1,-20}", name, (System.Runtime.InteropServices.ComTypes.FILETIME)Marshal.PtrToStructure(lpData, typeof(System.Runtime.InteropServices.ComTypes.FILETIME))));
+                    Console.WriteLine("{0,-20} {1,-20}", name, (System.Runtime.InteropServices.ComTypes.FILETIME)Marshal.PtrToStructure(lpData, typeof(System.Runtime.InteropServices.ComTypes.FILETIME)));
                     break;
                 case _VAULT_ELEMENT_TYPE.Type_ProtectedArray:
                     break;
                 case _VAULT_ELEMENT_TYPE.Type_Attribute:
                     break;
                 case _VAULT_ELEMENT_TYPE.Type_Sid:
-                    WriteOutput(String.Format("{0,-20} {1,-20}", name, (new System.Security.Principal.SecurityIdentifier(Marshal.ReadIntPtr(lpData))).Value));
+                    Console.WriteLine("{0,-20} {1,-20}", name, (new System.Security.Principal.SecurityIdentifier(Marshal.ReadIntPtr(lpData))).Value);
                     break;
                 case _VAULT_ELEMENT_TYPE.Type_Max:
                     break;

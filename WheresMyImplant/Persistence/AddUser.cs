@@ -3,7 +3,7 @@ using System.DirectoryServices;
 
 namespace WheresMyImplant
 {
-    class AddUser
+    sealed class AddUser
     {
         internal AddUser()
         {

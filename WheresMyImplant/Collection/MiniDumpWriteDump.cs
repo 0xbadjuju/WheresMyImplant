@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 
-using Unmanaged.Headers;
-using Unmanaged.Libraries;
+using MonkeyWorks.Unmanaged.Headers;
+using MonkeyWorks.Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
@@ -16,7 +16,7 @@ namespace WheresMyImplant
         {
             using (System.Diagnostics.Process proc = System.Diagnostics.Process.GetProcessById((Int32)dwProcessId))
             {
-                WriteOutputGood(String.Format("Received Handle: {0}", proc.Handle.ToInt64()));
+                Console.WriteLine("[+] Received Handle: {0}", proc.Handle.ToString("X4"));
                 try
                 {
                     using (FileStream file = new FileStream(fileName, FileMode.Create))
@@ -30,14 +30,14 @@ namespace WheresMyImplant
                             IntPtr.Zero,
                             IntPtr.Zero))
                         {
-                            WriteOutputBad("MiniDump Failed");
+                            Console.WriteLine("[-] MiniDump Failed");
                         }
-                        WriteOutputGood("Dump File Created");
+                        Console.WriteLine("[+] Dump File Created");
                     }
                 }
-                catch (Exception error)
+                catch (Exception ex)
                 {
-                    WriteOutputBad(error.ToString());
+                    Console.WriteLine("[-] {0}", ex.Message);
                 }
             }
         }

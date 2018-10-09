@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-using Unmanaged.Headers;
-using Unmanaged.Libraries;
+using MonkeyWorks.Unmanaged.Headers;
+using MonkeyWorks.Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
@@ -29,64 +29,64 @@ namespace WheresMyImplant
         internal void Execute()
         {
             ////////////////////////////////////////////////////////////////////////////////
-            WriteOutputNeutral(String.Format("Attempting to get handle on {0}", processId));
+            Console.WriteLine("[*] Attempting to get handle on {0}", processId);
             hProcess = kernel32.OpenProcess(/*kernel32.PROCESS_CREATE_THREAD | kernel32.PROCESS_QUERY_INFORMATION | kernel32.PROCESS_VM_OPERATION | kernel32.PROCESS_VM_WRITE | kernel32.PROCESS_VM_READ*/ kernel32.PROCESS_ALL_ACCESS, false, processId);
             if (IntPtr.Zero == hProcess)
             {
-                WriteOutputBad("Unable to open process");
+                Console.WriteLine("[-] Unable to open process");
                 return;
             }
-            WriteOutputGood(String.Format("Handle: 0x{0}", hProcess.ToString("X4")));
+            Console.WriteLine("[+] Handle: 0x{0}", hProcess.ToString("X4"));
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr hModule = kernel32.GetModuleHandle("kernel32.dll");
-            WriteOutput(hModule.ToString());
             if (IntPtr.Zero == hModule)
             {
-                WriteOutputBad("Unable to open module handle to kernel32.dll");
+                Console.WriteLine("[-] Unable to open module handle to kernel32.dll");
                 return;
             }
+            Console.WriteLine("[+] Module Handle: 0x{0}", hModule.ToString("X4"));
 
             IntPtr loadLibraryAddr = kernel32.GetProcAddress(hModule, "LoadLibraryA");
             if (IntPtr.Zero == loadLibraryAddr)
             {
-                WriteOutputBad("Unable to open module handle to LoadLibraryA");
+                Console.WriteLine("[-] Unable to open module handle to LoadLibraryA");
                 return;
             }
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = (UInt32)((library.Length + 1) * Marshal.SizeOf(typeof(char)));
-            WriteOutputNeutral("Attempting to allocate memory");
+            Console.WriteLine("[*] Attempting to allocate memory");
             IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, lpAddress, dwSize, kernel32.MEM_COMMIT | kernel32.MEM_RESERVE, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_READWRITE);
             if (IntPtr.Zero == lpBaseAddress)
             {
-                WriteOutputBad("Unable to allocate memory");
+                Console.WriteLine("[-] Unable to allocate memory");
                 return;
             }
-            WriteOutputGood(String.Format("Allocated {0} bytes at 0x{1}", dwSize, lpBaseAddress.ToString("X4")));
-            WriteOutputGood("Memory Protection Set to PAGE_READWRITE");
+            Console.WriteLine("[+] Allocated {0} bytes at 0x{1}", dwSize, lpBaseAddress.ToString("X4"));
+            Console.WriteLine("[+] Memory Protection Set to PAGE_READWRITE");
 
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 lpNumberOfBytesWritten = 0;
             libraryPtr = Marshal.StringToHGlobalAnsi(library);
-            WriteOutputNeutral("Attempting to write process memory");
+            Console.WriteLine("[*] Attempting to write process memory");
             if (!kernel32.WriteProcessMemory(hProcess, lpBaseAddress, libraryPtr, dwSize, ref lpNumberOfBytesWritten))
             {
-                WriteOutputBad("WriteProcessMemory Failed");
+                Console.WriteLine("[-] WriteProcessMemory Failed");
                 return;
             }
-            WriteOutputGood(String.Format("Wrote {0} bytes", lpNumberOfBytesWritten));
+            Console.WriteLine("[+] Wrote {0} bytes", lpNumberOfBytesWritten);
 
             ////////////////////////////////////////////////////////////////////////////////
             Winnt.MEMORY_PROTECTION_CONSTANTS lpflOldProtect = Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_NOACCESS;
-            WriteOutputNeutral("Attempting to Alter Memory Protections to PAGE_EXECUTE_READ");
+            Console.WriteLine("[*] Attempting to Alter Memory Protections to PAGE_EXECUTE_READ");
             if (!kernel32.VirtualProtectEx(hProcess, lpBaseAddress, dwSize, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READ, ref lpflOldProtect))
             {
-                WriteOutputBad("VirtualProtectEx Failed");
+                Console.WriteLine("[-] VirtualProtectEx Failed");
                 return;
             }
-            WriteOutputGood("Set Memory Protection to PAGE_EXECUTE_READ");
+            Console.WriteLine("[+] Set Memory Protection to PAGE_EXECUTE_READ");
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpThreadAttributes = IntPtr.Zero;
@@ -94,15 +94,15 @@ namespace WheresMyImplant
             IntPtr lpParameter = IntPtr.Zero;
             UInt32 dwCreationFlags = 0;
             UInt32 threadId = 0;
-            WriteOutputNeutral("Attempting to start remote thread");
+            Console.WriteLine("[*] Attempting to start remote thread");
             hThread = kernel32.CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, loadLibraryAddr, lpBaseAddress, dwCreationFlags, ref threadId);
             if (IntPtr.Zero == hThread)
             {
-                WriteOutputBad("CreateRemoteThread Failed");
+                Console.WriteLine("[-] CreateRemoteThread Failed");
                 return;
             }
 
-            WriteOutputGood(String.Format("Started Thread: 0x{0}", hThread.ToString("X4")));
+            Console.WriteLine("[+] Started Thread: 0x{0}", hThread.ToString("X4"));
 
             ///////////////////////////////////////////////////////////////////////////////
             kernel32.WaitForSingleObjectEx(hProcess, hThread, 0xFFFFFFFF);

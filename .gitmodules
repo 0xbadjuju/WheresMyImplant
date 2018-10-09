@@ -1,0 +1,6 @@
+[submodule "WheresMyImplant/Tokenvator"]
+	path = WheresMyImplant/Tokenvator
+	url = https://github.com/0xbadjuju/Tokenvator
+[submodule "WheresMyImplant/Resources/MonkeyWorks"]
+	path = WheresMyImplant/Resources/MonkeyWorks
+	url = https://github.com/NetSPI/MonkeyWorks.git

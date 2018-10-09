@@ -6,8 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 
-using Unmanaged.Headers;
-using Unmanaged.Libraries;
+using MonkeyWorks.Unmanaged.Headers;
+using MonkeyWorks.Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
@@ -40,9 +40,9 @@ namespace WheresMyImplant
             Boolean targetArch = Is32BitProcess();
             if (peLoader.is64Bit == targetArch)
             {
-                WriteOutput("[-] Architechure Mismatch");
-                WriteOutput(String.Format("[-] Source: {0}", peLoader.is64Bit));
-                WriteOutput(String.Format("[-] Destination: {0}", targetArch));
+                Console.WriteLine("[-] Architechure Mismatch");
+                Console.WriteLine("[-] Source: {0}", peLoader.is64Bit);
+                Console.WriteLine("[-] Destination: {0}", targetArch);
                 return;
             }
 
@@ -58,7 +58,7 @@ namespace WheresMyImplant
             {
                 return;
             }
-            WriteOutputNeutral(String.Format("Iterating through {0} Headers", peLoader.imageFileHeader.NumberOfSections));
+            Console.WriteLine("[*] Iterating through {0} Headers", peLoader.imageFileHeader.NumberOfSections);
 
             ////////////////////////////////////////////////////////////////////////////////
             for (Int32 i = 0; i < peLoader.imageFileHeader.NumberOfSections; i++)
@@ -159,7 +159,7 @@ namespace WheresMyImplant
                 IntPtr lpLocalModuleAddress = kernel32.LoadLibrary(dllName);
                 IntPtr lpModuleBaseAddress = LoadLibraryRemote(dllName);
                 WaitForSingleObjectExRemote(lpModuleBaseAddress);
-                WriteOutputGood(String.Format("Library {0}", dllName));
+                Console.WriteLine("[+] Library {0}", dllName);
 				
 				////////////////////////////////////////////////////////////////////////////////
                 IntPtr lpRvaImportAddressTable = new IntPtr(lpBaseAddress.ToInt64() + imageImportDirectory.FirstThunk);
@@ -178,11 +178,11 @@ namespace WheresMyImplant
                     IntPtr lpLocalFunctionAddress = kernel32.GetProcAddress(hModule, dllFunctionName);
                     IntPtr lpRelativeFunctionAddress = new IntPtr(lpLocalFunctionAddress.ToInt64() - lpLocalBaseAddress.ToInt64());
                     IntPtr lpFunctionAddress = new IntPtr(lpRemoteBaseAddress.ToInt64() + lpRelativeFunctionAddress.ToInt64());
-                    WriteOutputGood(String.Format("\tFunction: {0}", dllFunctionName));
+                    Console.WriteLine("[+] \tFunction: {0}", dllFunctionName);
 
                     if (!WriteInt64Remote(lpRvaImportAddressTable, (Int64)lpFunctionAddress))
                     {
-                        WriteOutputBad("RvaImportAddressTable Write Failed");
+                        Console.WriteLine("[-] RvaImportAddressTable Write Failed");
                         return;
                     }
                     lpRvaImportAddressTable = new IntPtr(lpRvaImportAddressTable.ToInt64() + sizeof(Int64));

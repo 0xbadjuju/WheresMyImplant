@@ -40,9 +40,10 @@ namespace WheresMyImplant
             {
                 managementScope.Connect();
             }
-            catch(Exception error)
+            catch(Exception ex)
             {
-                WriteOutputBad(error.ToString());
+                Console.WriteLine("[-] {0}", ex.Message);
+                
                 return false;
             }
 
@@ -66,9 +67,9 @@ namespace WheresMyImplant
             {
                 managementScope.Connect();
             }
-            catch (Exception error)
+            catch (Exception ex)
             {
-                WriteOutputBad(error.ToString());
+                Console.WriteLine("[-] {0}", ex.Message);
                 return false;
             }
 
@@ -92,9 +93,9 @@ namespace WheresMyImplant
             {
                 managementScope.Connect();
             }
-            catch (Exception error)
+            catch (Exception ex)
             {
-                WriteOutputBad(error.ToString());
+                Console.WriteLine("[-] {0}", ex.Message);
                 return false;
             }
 
@@ -116,11 +117,11 @@ namespace WheresMyImplant
             {
                 ManagementClass managementClass = new ManagementClass(managementScope, managementPath, options);
                 Object output = managementClass.InvokeMethod(method, args);
-                WriteOutputGood(String.Format("Return Value: {0}", output));
+                Console.WriteLine("[+] Return Value: {0}", output);
             }
-            catch (ManagementException error)
+            catch (ManagementException ex)
             {
-                WriteOutputBad(error.ToString());
+                Console.WriteLine("[-] {0}", ex.Message);
                 return false;
             }
             return true;
@@ -138,11 +139,11 @@ namespace WheresMyImplant
             {
                 ManagementClass managementClass = new ManagementClass(managementScope, managementPath, options);
                 output = managementClass.InvokeMethod(method, args);
-                WriteOutputGood(String.Format("Return Value: {0}", output));
+                Console.WriteLine("[+] Return Value: {0}", output);
             }
-            catch (ManagementException error)
+            catch (ManagementException ex)
             {
-                WriteOutputBad(error.ToString());
+                Console.WriteLine("[-] {0}", ex.Message);
                 return null;
             }
             return output;
@@ -161,9 +162,9 @@ namespace WheresMyImplant
                 ManagementClass managementClass = new ManagementClass(managementScope, managementPath, options);
                 managementInstance = managementClass.CreateInstance();
             }
-            catch (ManagementException error)
+            catch (ManagementException ex)
             {
-                WriteOutputBad(error.ToString());
+                Console.WriteLine("[-] {0}", ex.Message);
             }
             return managementInstance;
         }
@@ -179,9 +180,9 @@ namespace WheresMyImplant
                 ManagementObjectSearcher managementObjectSearcher = new ManagementObjectSearcher(managementScope, objectQuery);
                 PrintResults(managementObjectSearcher.Get());
             }
-            catch (ManagementException error)
+            catch (ManagementException ex)
             {
-                WriteOutputBad(error.ToString());
+                Console.WriteLine("[-] {0}", ex.Message);
                 return false;
             }
             return true;
@@ -251,7 +252,7 @@ namespace WheresMyImplant
                 {
                     output.Append(String.Format("{0,-10}", managementObject[property]));
                 }
-                WriteOutput(output.ToString());
+                Console.WriteLine(output.ToString());
             }
         }
 

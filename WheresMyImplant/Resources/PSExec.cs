@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using MonkeyWorks.Unmanaged.Headers;
 using MonkeyWorks.Unmanaged.Libraries;
 
-namespace WheresMyImplant
+namespace Resources
 {
     sealed class PSExec : IDisposable
     {
@@ -28,7 +28,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         public PSExec()
         {
-            serviceName = GenerateUuidAlpha(12);
+            this.serviceName = GenerateUuid(12);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -105,7 +105,7 @@ namespace WheresMyImplant
             }
 
             advapi32.CloseServiceHandle(hSCObject);
-            Console.WriteLine("[+] Created service");
+            Console.WriteLine("[+] Created service {0}", serviceName);
             return true;
         }
 
@@ -138,11 +138,11 @@ namespace WheresMyImplant
                 if (1053 != error)
                 {
                     Console.WriteLine("[-] Failed to start service");
-                    Console.WriteLine(error);
+                    Console.WriteLine(new System.ComponentModel.Win32Exception(error).Message);
                     return false;
                 }
             }
-            Console.WriteLine("[+] Service Started");
+            Console.WriteLine("[+] Started Service");
             return true;
         }
 
@@ -160,11 +160,11 @@ namespace WheresMyImplant
                 if (1062 != error)
                 {
                     Console.WriteLine("[-] Failed to stop service");
-                    Console.WriteLine(error);
+                    Console.WriteLine(new System.ComponentModel.Win32Exception(error).Message);
                     return false;
                 }
             }
-            Console.WriteLine("[+] Service Stopped");
+            Console.WriteLine("[+] Stopped Service");
             return true;
         }
 
@@ -176,7 +176,7 @@ namespace WheresMyImplant
             if (!advapi32.DeleteService(hSCObject))
             {
                 Console.WriteLine("[-] Failed to delete service");
-                Console.WriteLine(Marshal.GetLastWin32Error());
+                Console.WriteLine(new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message);
                 return false;
             }
             Console.WriteLine("[+] Deleted service");
@@ -186,7 +186,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         //
         ////////////////////////////////////////////////////////////////////////////////
-        private static String GenerateUuidAlpha(int length)
+        internal static String GenerateUuid(int length)
         {
             Random random = new Random();
             const String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";

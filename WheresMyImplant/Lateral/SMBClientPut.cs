@@ -2,6 +2,10 @@
 using System.IO;
 using System.Linq;
 
+using MonkeyWorks;
+using MonkeyWorks.SMB.NetBIOS;
+using MonkeyWorks.SMB.SMB2;
+
 namespace WheresMyImplant
 {
     sealed class SMBClientPut : SMBClient
@@ -62,7 +66,7 @@ namespace WheresMyImplant
             sessionService.SetDataLength(bData.Length);
             Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
 
-            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            Byte[] bSend = Combine.combine(Combine.combine(bSessionService, bHeader), bData);
             streamSocket.Write(bSend, 0, bSend.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
@@ -151,7 +155,7 @@ namespace WheresMyImplant
             combine.Extend(bData);
             combine.Extend(bHeader2);
             combine.Extend(bData2);
-            Byte[] bSend = Misc.Combine(bSessionService, combine.Retrieve());
+            Byte[] bSend = Combine.combine(bSessionService, combine.Retrieve());
             streamSocket.Write(bSend, 0, bSend.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
@@ -206,7 +210,7 @@ namespace WheresMyImplant
             sessionService.SetDataLength(bData.Length);
             Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
 
-            Byte[] bSend = Misc.Combine(bSessionService, Misc.Combine(bHeader, bData));
+            Byte[] bSend = Combine.combine(bSessionService, Combine.combine(bHeader, bData));
             streamSocket.Write(bSend, 0, bSend.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
@@ -282,7 +286,7 @@ namespace WheresMyImplant
             sessionService.SetDataLength(bData.Length);
             Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
 
-            Byte[] bSend = Misc.Combine(bSessionService, Misc.Combine(bHeader, bData));
+            Byte[] bSend = Combine.combine(bSessionService, Combine.combine(bHeader, bData));
             streamSocket.Write(bSend, 0, bSend.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);

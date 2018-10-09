@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Management;
-using System.Text;
 using System.ServiceProcess;
 
-namespace WheresMyImplant
+namespace Resources
 {
-    class Services : Base
+    class Services
     {
         private ServiceController service;
         private String serviceName;
@@ -25,7 +23,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal Boolean StartService()
         {
-            WriteOutputNeutral("Starting Service " + serviceName);
+            Console.WriteLine("[*]Starting Service " + serviceName);
             if (service.Status == ServiceControllerStatus.Running)
             {
                 return true;
@@ -35,7 +33,7 @@ namespace WheresMyImplant
             while (service.Status == ServiceControllerStatus.StartPending || service.Status == ServiceControllerStatus.Stopped)
             {
                 System.Threading.Thread.Sleep(1000);
-                WriteOutputNeutral("*");
+                Console.Write("*");
                 service.Refresh();
             }
 
@@ -53,14 +51,14 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal Boolean StopService()
         {
-            WriteOutputGood("Stopping Service " + serviceName);
+            Console.WriteLine("[+] Stopping Service " + serviceName);
             if (service.CanStop)
             {
                 service.Stop();
                 while (service.Status == ServiceControllerStatus.StopPending)
                 {
                     System.Threading.Thread.Sleep(1000);
-                    WriteOutputNeutral("-");
+                    Console.Write("-");
                     service.Refresh();
                 }
 
@@ -79,7 +77,7 @@ namespace WheresMyImplant
                 while (service.Status == ServiceControllerStatus.PausePending)
                 {
                     System.Threading.Thread.Sleep(1000);
-                    WriteOutputNeutral("*");
+                    Console.Write("*");
                     service.Refresh();
                 }
 
@@ -94,7 +92,7 @@ namespace WheresMyImplant
             }
             else
             {
-                WriteOutputBad("Unable to stop service");
+                Console.WriteLine("[-] Unable to stop service");
                 return false;
             }
         }
@@ -108,22 +106,22 @@ namespace WheresMyImplant
             scope.Connect();
             if (!scope.IsConnected)
             {
-                WriteOutputBad("Failed to connect to WMI");
+                Console.WriteLine("[-] Failed to connect to WMI");
             }
 
-            WriteOutputNeutral("Querying for service: " + serviceName);
+            Console.WriteLine("[*] Querying for service: " + serviceName);
             ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_Service WHERE Name = \'" + serviceName + "\'");
             ManagementObjectSearcher objectSearcher = new ManagementObjectSearcher(scope, query);
             ManagementObjectCollection objectCollection = objectSearcher.Get();
             if (objectCollection == null)
             {
-                WriteOutputNeutral("ManagementObjectCollection");
+                Console.WriteLine("[-] ManagementObjectCollection Failed");
             }
             foreach (ManagementObject managementObject in objectCollection)
             {
                 ProcessId = (UInt32)managementObject["ProcessId"];
             }
-            WriteOutputGood("Returned PID: " + ProcessId);
+            Console.WriteLine("[+] Returned PID: " + ProcessId);
             return ProcessId;
         }
     }
