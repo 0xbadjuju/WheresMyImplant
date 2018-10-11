@@ -4,7 +4,7 @@ namespace WheresMyImplant
 {
     public sealed class Persistence
     {
-        public static void AddUser(String username, String password, String admin)
+        public static void AddLocalUser(String username, String password, String admin)
         {
             if (!Boolean.TryParse(admin, out Boolean bAdmin))
             {

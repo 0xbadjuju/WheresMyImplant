@@ -88,6 +88,7 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.DirectoryServices.AccountManagement" />
     <Reference Include="System.EnterpriseServices" />
     <Reference Include="System.Management" />
     <Reference Include="System.Management.Automation" />
@@ -120,7 +121,7 @@
     <Compile Include="C2\Beacon\BeaconTask.cs" />
     <Compile Include="C2\Beacon\WebServiceBeacon.cs" />
     <Compile Include="C2\Implant\SMBServer.cs" />
-    <Compile Include="Class1.cs">
+    <Compile Include="Implant.cs">
     </Compile>
     <Compile Include="Collection.cs" />
     <Compile Include="Collection\ClipboardManaged.cs" />
@@ -256,8 +257,6 @@
     <Compile Include="Resources\Services.cs" />
     <Compile Include="Resources\WMI.cs" />
     <Compile Include="Run.cs" />
-    <Compile Include="Run\RunCommandPrompt.cs" />
-    <Compile Include="Run\RunPowerShell.cs" />
     <Compile Include="Run\RunXPCmdShell.cs" />
     <Compile Include="C2\Implant\WebService.cs" />
     <Compile Include="Credentials\Vault.cs" />

