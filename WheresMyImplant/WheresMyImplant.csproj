@@ -156,6 +156,7 @@
     <Compile Include="Base\BaseSQL.cs" />
     <Compile Include="Credentials\LSASecrets.cs" />
     <Compile Include="Lateral.cs" />
+    <Compile Include="Lateral\DCom.cs" />
     <Compile Include="Lateral\PSExec.cs" />
     <Compile Include="Lateral\SMB.cs" />
     <Compile Include="Lateral\SMBClientDelete.cs" />
@@ -170,11 +171,26 @@
     </Compile>
     <Compile Include="Persistence\InstallWMI.cs" />
     <Compile Include="Recon\LDAP.cs" />
+    <Compile Include="Recon\OrganizationalUnit.cs" />
+    <Compile Include="Recon.cs" />
+    <Compile Include="Recon\Sites and Services\FSMORoles.cs" />
+    <Compile Include="Recon\Sites and Services\Site.cs" />
+    <Compile Include="Recon\Sites and Services\Subnet.cs" />
+    <Compile Include="Recon\Trusts\TrustedDomain.cs" />
+    <Compile Include="Recon\Users and Computers\Computers\DomainComputers.cs" />
+    <Compile Include="Recon\Users and Computers\Computers\DomainControllers.cs" />
+    <Compile Include="Recon\Users and Computers\Computers\LAPS.cs" />
+    <Compile Include="Recon\Users and Computers\Users\DomainGroups.cs" />
+    <Compile Include="Recon\Users and Computers\Users\DomainUsers.cs" />
+    <Compile Include="Recon\Users and Computers\Users\KerberosPreauthentication .cs" />
+    <Compile Include="Recon\Users and Computers\Users\PasswordNeverExpires.cs" />
+    <Compile Include="Recon\Users and Computers\Users\PasswordNotRequired.cs" />
+    <Compile Include="Recon\Users and Computers\Users\ServicePrincipalName.cs" />
+    <Compile Include="Recon\Users and Computers\Users\TrustedForDelegation.cs" />
     <Compile Include="Resources\BouncyCastle\GeneralDigest.cs" />
     <Compile Include="Resources\BouncyCastle\IDigest.cs" />
     <Compile Include="Resources\BouncyCastle\IMemoable.cs" />
     <Compile Include="Resources\BouncyCastle\MD4Digest.cs" />
-    <Compile Include="Resources\CheckPrivileges.cs" />
     <Compile Include="Lateral\SMBClient.cs" />
     <Compile Include="Resources\CheckCreditCard.cs" />
     <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Combine.cs" />
@@ -267,6 +283,9 @@
     <Compile Include="Tokenvator\Tokenvator\NamedPipes.cs" />
     <Compile Include="Tokenvator\Tokenvator\Program.cs" />
     <Compile Include="Tokenvator\Tokenvator\Resources\CheckPrivileges.cs" />
+    <Compile Include="Tokenvator\Tokenvator\Resources\Constants.cs" />
+    <Compile Include="Tokenvator\Tokenvator\Resources\PSExec.cs" />
+    <Compile Include="Tokenvator\Tokenvator\Resources\Services.cs" />
     <Compile Include="Tokenvator\Tokenvator\Resources\TabComplete.cs" />
     <Compile Include="Tokenvator\Tokenvator\RestrictedToken.cs" />
     <Compile Include="Tokenvator\Tokenvator\Tokens.cs" />

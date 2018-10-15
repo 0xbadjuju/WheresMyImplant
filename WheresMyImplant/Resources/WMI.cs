@@ -10,6 +10,7 @@ namespace WheresMyImplant
     {
         private String scope = "\\\\.\\ROOT\\CIMV2";
         private ManagementScope managementScope;
+        private ManagementObjectCollection result = null;
 
         internal WMI()
         {
@@ -239,20 +240,22 @@ namespace WheresMyImplant
                 return;
             }
 
+            Int32 length = 0;
             ManagementObject propertiesObject = results.OfType<ManagementObject>().FirstOrDefault();
             foreach (PropertyData property in propertiesObject.Properties)
             {
                 properties.Add(property.Name);
+                if (property.Name.Length > length)
+                    length = property.Name.Length;
             }
 
             foreach (ManagementObject managementObject in results)
             {
-                StringBuilder output = new StringBuilder();
                 foreach (String property in properties)
                 {
-                    output.Append(String.Format("{0,-10}", managementObject[property]));
+                    Console.WriteLine("{0,-" + length + "} {1}", property, managementObject[property]);
                 }
-                Console.WriteLine(output.ToString());
+                Console.WriteLine("");
             }
         }
 
