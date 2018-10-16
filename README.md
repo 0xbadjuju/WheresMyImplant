@@ -4,7 +4,7 @@ WheresMyImplant contains the tooling nessessary to gaining and maintain access t
 
 To clone the project and it's dependencies recursive flag is required, e.g. git clone --recurive https://github.com/0xbadjuju/WheresMyImplant.git
 
-This project utilizes NetSPI [MonkeyWorks](https://github.com/NetSPI/MonkeyWorks) and [Tokenvatore](https://github.com/0xbadjuju/Tokenvator).
+This project utilizes NetSPI [MonkeyWorks](https://github.com/NetSPI/MonkeyWorks) and [Tokenvator](https://github.com/0xbadjuju/Tokenvator).
 
 Please refer to the [Wiki](https://github.com/0xbadjuju/WheresMyImplant/wiki) for [Building / Compiling Instruction](https://github.com/0xbadjuju/WheresMyImplant/wiki/Building-WheresMyImplant) and general use.
 
