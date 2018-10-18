@@ -45,6 +45,28 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         // 
         ////////////////////////////////////////////////////////////////////////////////
+        public static void XORString(String strKey, String strInput)
+        {
+            if (!Byte.TryParse(strKey, out Byte bKey))
+            {
+                Console.WriteLine("Unable to parse {0} to byte", strKey);
+                return;
+            }
+
+            String[] arrInput = strInput.Split(new String[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
+            Byte[] bInput = new Byte[arrInput.Length];
+            for (Int32 i = 0; i < arrInput.Length; i++)
+            {
+                Int32 value = (Int32)new System.ComponentModel.Int32Converter().ConvertFromString(arrInput[i]);
+                bInput[i] = (Byte) (bKey ^ Convert.ToByte(value));
+            }
+
+            Console.WriteLine("0x" + BitConverter.ToString(bInput).Replace("-", ", 0x"));
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // 
+        ////////////////////////////////////////////////////////////////////////////////
         public static void GenerateNTLMString(String password)
         {
             try
