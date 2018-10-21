@@ -10,7 +10,7 @@ namespace WheresMyImplant
     {
         private String scope = "\\\\.\\ROOT\\CIMV2";
         private ManagementScope managementScope;
-        private ManagementObjectCollection result = null;
+        private ManagementObjectCollection results = null;
 
         internal WMI()
         {
@@ -29,6 +29,11 @@ namespace WheresMyImplant
         ~WMI()
         {
             Dispose();
+        }
+
+        internal ManagementObjectCollection GetResults()
+        {
+            return results;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -179,7 +184,7 @@ namespace WheresMyImplant
             {
                 ObjectQuery objectQuery = new ObjectQuery(query);
                 ManagementObjectSearcher managementObjectSearcher = new ManagementObjectSearcher(managementScope, objectQuery);
-                PrintResults(managementObjectSearcher.Get());
+                results = managementObjectSearcher.Get();
             }
             catch (ManagementException ex)
             {
@@ -226,13 +231,13 @@ namespace WheresMyImplant
             ManagementPath managementPath = new ManagementPath(path);
             ObjectGetOptions options = new ObjectGetOptions(null, TimeSpan.MaxValue, true);
             ManagementClass managementClass = new ManagementClass(managementScope, managementPath, options);
-            PrintResults(managementClass.GetInstances());
+            results = managementClass.GetInstances();
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         // Prints a management object collection
         ////////////////////////////////////////////////////////////////////////////////
-        private void PrintResults(ManagementObjectCollection results)
+        public void PrintResults()
         {
             List<String> properties = new List<String>();
             if (null == results || 0 == results.Count)

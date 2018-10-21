@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Management;
 
 using DomainInfo;
@@ -10,15 +11,14 @@ namespace WheresMyImplant
 {
     class Recon
     {
-        public static void DomainControllers(String ip, String domain, String username, String password, String filename)
+        public static void DomainControllers(String ip, String domain, String username, String password)
         {
             if (String.IsNullOrEmpty(username))
             {
                 using (DomainControllers dc = new DomainControllers(ip, domain  + @"\" + username, password))
                 {
                     dc.Query();
-                    if (!String.IsNullOrEmpty(filename))
-                        dc.OutCsv(filename);
+                    dc.Print();
                 }
             }
             else
@@ -26,21 +26,19 @@ namespace WheresMyImplant
                 using (DomainControllers dc = new DomainControllers(ip))
                 {
                     dc.Query();
-                    if (!String.IsNullOrEmpty(filename))
-                        dc.OutCsv(filename);
+                    dc.Print();
                 }
             }
         }
 
-        public static void DomainComputers(String ip, String domain, String username, String password, String filename)
+        public static void DomainComputers(String ip, String domain, String username, String password)
         {
             if (String.IsNullOrEmpty(username))
             {
                 using (DomainComputers dc = new DomainComputers(ip))
                 {
                     dc.Query();
-                    if (!String.IsNullOrEmpty(filename))
-                        dc.OutCsv(filename);
+                    dc.Print();
                 }
             }
             else
@@ -48,22 +46,19 @@ namespace WheresMyImplant
                 using (DomainComputers dc = new DomainComputers(ip, username, password))
                 {
                     dc.Query();
-                    if (!String.IsNullOrEmpty(filename))
-                        dc.OutCsv(filename);
+                    dc.Print();
                 }
             }
         }
 
-        public static void DomainGroups(String ip, String domain, String username, String password, String filename)
+        public static void DomainGroups(String ip, String domain, String username, String password)
         {
             if (String.IsNullOrEmpty(username))
             {
                 using (DomainGroups dg = new DomainGroups(ip))
                 {
                     dg.Query();
-                    if (!String.IsNullOrEmpty(filename))
-                        dg.OutCsv(filename);
-                    dg.QueryGroupMembers();
+                    dg.Print();
                 }
             }
             else
@@ -71,25 +66,36 @@ namespace WheresMyImplant
                 using (DomainGroups dg = new DomainGroups(ip, username, password))
                 {
                     dg.Query();
-                    if (!String.IsNullOrEmpty(filename))
-                        dg.OutCsv(filename);
-                    dg.QueryGroupMembers();
+                    dg.Print();
                 }
             }
         }
 
-        public static void DomainUsers(String ip, String domain, String username, String password, String filename)
+        public static void DomainGroupMembers(String ip, String domain, String username, String password, String group)
+        {
+            if (String.IsNullOrEmpty(username))
+            {
+                using (DomainGroups dg = new DomainGroups(ip))
+                {
+                    dg.QueryGroupMembers(group);
+                }
+            }
+            else
+            {
+                using (DomainGroups dg = new DomainGroups(ip, username, password))
+                {
+                    dg.QueryGroupMembers(group);
+                }
+            }
+        }
+
+        public static void DomainUsers(String ip, String domain, String username, String password)
         {
             if (String.IsNullOrEmpty(username))
             {
                 using (DomainUsers du = new DomainUsers(ip))
                 {
                     du.Query();
-                    if (!String.IsNullOrEmpty(filename))
-                        du.OutCsv(filename);
-                    du.QueryAdminCount();
-                    if (!String.IsNullOrEmpty(filename))
-                        du.OutCsv(filename + "_protected.csv");
                 }
             }
             else
@@ -97,27 +103,56 @@ namespace WheresMyImplant
                 using (DomainUsers du = new DomainUsers(ip, username, password))
                 {
                     du.Query();
-                    if (!String.IsNullOrEmpty(filename))
-                        du.OutCsv(filename);
-                    du.QueryAdminCount();
-                    if (!String.IsNullOrEmpty(filename))
-                        du.OutCsv(filename + "_protected.csv");
                 }
             }
         }
 
-        public static void KerberosPreauthentication(String ip, String domain, String username, String password, String filename)
+        public static void DomainUserGroups(String ip, String domain, String username, String password, String user)
+        {
+            if (String.IsNullOrEmpty(username))
+            {
+                using (DomainUsers du = new DomainUsers(ip))
+                {
+                    du.QueryUserGroups(user);
+                }
+            }
+            else
+            {
+                using (DomainUsers du = new DomainUsers(ip, username, password))
+                {
+                    du.QueryUserGroups(user);
+                }
+            }
+        }
+
+        public static void DomainProtectedUsers(String ip, String domain, String username, String password)
+        {
+            if (String.IsNullOrEmpty(username))
+            {
+                using (DomainUsers du = new DomainUsers(ip))
+                {
+                    du.QueryAdminCount();
+                    du.Print();
+                }
+            }
+            else
+            {
+                using (DomainUsers du = new DomainUsers(ip, username, password))
+                {
+                    du.QueryAdminCount();
+                    du.Print();
+                }
+            }
+        }
+
+        public static void KerberosPreauthentication(String ip, String domain, String username, String password)
         {
             if (String.IsNullOrEmpty(username))
             {
                 using (KerberosPreauthentication kp = new KerberosPreauthentication(ip))
                 {
                     kp.Query();
-                    if (!String.IsNullOrEmpty(filename))
-                        kp.OutCsv(filename);
-                    kp.QueryAdminCount();
-                    if (!String.IsNullOrEmpty(filename))
-                        kp.OutCsv(filename + "_protected.csv");
+                    kp.Print();
                 }
             }
             else
@@ -125,27 +160,19 @@ namespace WheresMyImplant
                 using (KerberosPreauthentication kp = new KerberosPreauthentication(ip, username, password))
                 {
                     kp.Query();
-                    if (!String.IsNullOrEmpty(filename))
-                        kp.OutCsv(filename);
-                    kp.QueryAdminCount();
-                    if (!String.IsNullOrEmpty(filename))
-                        kp.OutCsv(filename + "_protected.csv");
+                    kp.Print();
                 }
             }
         }
 
-        public static void PasswordNeverExpires(String ip, String domain, String username, String password, String filename)
+        public static void PasswordNeverExpires(String ip, String domain, String username, String password)
         {
             if (String.IsNullOrEmpty(username))
             {
                 using (PasswordNeverExpires pne = new PasswordNeverExpires(ip))
                 {
                     pne.Query();
-                    if (!String.IsNullOrEmpty(filename))
-                        pne.OutCsv(filename);
-                    pne.QueryProtectedUsers();
-                    if (!String.IsNullOrEmpty(filename))
-                        pne.OutCsv(filename + "_protected.csv");
+                    pne.Print();
                 }
             }
             else
@@ -153,27 +180,19 @@ namespace WheresMyImplant
                 using (PasswordNeverExpires pne = new PasswordNeverExpires(ip, username, password))
                 {
                     pne.Query();
-                    if (!String.IsNullOrEmpty(filename))
-                        pne.OutCsv(filename);
-                    pne.QueryProtectedUsers();
-                    if (!String.IsNullOrEmpty(filename))
-                        pne.OutCsv(filename + "_protected.csv");
+                    pne.Print();
                 }
             }
         }
 
-        public static void PasswordNotRequired(String ip, String domain, String username, String password, String filename)
+        public static void PasswordNotRequired(String ip, String domain, String username, String password)
         {
             if (String.IsNullOrEmpty(username))
             {
                 using (PasswordNotRequired pnr = new PasswordNotRequired(ip))
                 {
                     pnr.Query();
-                    if (!String.IsNullOrEmpty(filename))
-                        pnr.OutCsv(filename);
-                    pnr.QueryProtectedUsers();
-                    if (!String.IsNullOrEmpty(filename))
-                        pnr.OutCsv(filename + "_protected.csv");
+                    pnr.Print();
                 }
             }
             else
@@ -181,27 +200,19 @@ namespace WheresMyImplant
                 using (PasswordNotRequired pnr = new PasswordNotRequired(ip, username, password))
                 {
                     pnr.Query();
-                    if (!String.IsNullOrEmpty(filename))
-                        pnr.OutCsv(filename);
-                    pnr.QueryProtectedUsers();
-                    if (!String.IsNullOrEmpty(filename))
-                        pnr.OutCsv(filename + "_protected.csv");
+                    pnr.Print();
                 }
             }
         }
 
-        public static void ServicePrincipalName(String ip, String domain, String username, String password, String filename)
+        public static void ServicePrincipalName(String ip, String domain, String username, String password)
         {
             if (String.IsNullOrEmpty(username))
             {
                 using (ServicePrincipalName spn = new ServicePrincipalName(ip))
                 {
                     spn.QueryUsers();
-                    if (!String.IsNullOrEmpty(filename))
-                        spn.OutCsv(filename);
-                    spn.QueryComputers();
-                    if (!String.IsNullOrEmpty(filename))
-                        spn.OutCsv(filename + "_protected.csv");
+                    spn.Print();
                 }
             }
             else
@@ -209,24 +220,19 @@ namespace WheresMyImplant
                 using (ServicePrincipalName spn = new ServicePrincipalName(ip, username, password))
                 {
                     spn.QueryUsers();
-                    if (!String.IsNullOrEmpty(filename))
-                        spn.OutCsv(filename);
-                    spn.QueryComputers();
-                    if (!String.IsNullOrEmpty(filename))
-                        spn.OutCsv(filename + "_protected.csv");
+                    spn.Print();
                 }
             }
         }
 
-        public static void LAPS(String ip, String domain, String username, String password, String filename)
+        public static void LAPS(String ip, String domain, String username, String password)
         {
             if (String.IsNullOrEmpty(username))
             {
                 using (LAPS laps = new LAPS(ip))
                 {
                     laps.Query();
-                    if (!String.IsNullOrEmpty(filename))
-                        laps.OutCsv(filename);
+                    laps.Print();
                 }
             }
             else
@@ -234,8 +240,7 @@ namespace WheresMyImplant
                 using (LAPS laps = new LAPS(ip, username, password))
                 {
                     laps.Query();
-                    if (!String.IsNullOrEmpty(filename))
-                        laps.OutCsv(filename);
+                    laps.Print();
                 }
             }
         }
@@ -250,6 +255,11 @@ namespace WheresMyImplant
             Console.WriteLine(Environment.UserDomainName);
         }
 
+        public static void LogonServer()
+        {
+            Console.WriteLine(Environment.GetEnvironmentVariable("logonserver"));
+        }
+
         public static void AntivirusProduct()
         {
             using (WMI wmi = new WMI(".", @"root\SecurityCenter2"))
@@ -261,10 +271,10 @@ namespace WheresMyImplant
                 }
 
                 wmi.ExecuteQuery("Select * FROM AntivirusProduct");
+                wmi.GetResults();
             }
         }
 
-        //This needs to be refined
         public static void OSInfo()
         {
             using (WMI wmi = new WMI("."))
@@ -276,6 +286,24 @@ namespace WheresMyImplant
                 }
 
                 wmi.ExecuteQuery("Select * FROM Win32_OperatingSystem");
+                ManagementObjectCollection results = wmi.GetResults();
+                if (null == results)
+                {
+                    Console.WriteLine("WMI Query Failed");
+                    return;
+                }
+                ManagementObject result = results.OfType<ManagementObject>().FirstOrDefault();
+                Console.WriteLine("OS Information");
+                Console.WriteLine("--------------");
+                Console.WriteLine("{0} {1} ({2})", result["Caption"], result["OSArchitecture"], result["BuildNumber"]);
+                Console.WriteLine("Computer Name    : {0}", result["CSName"]);
+                Console.WriteLine("Free Memory      : {0}/{1}", result["FreeVirtualMemory"], result["TotalVirtualMemorySize"]);
+                Console.WriteLine("Country & Locale : {0} - {1}", result["CountryCode"], result["Locale"]);
+                Console.WriteLine("System Device    : {0}", result["SystemDevice"]);
+                Console.WriteLine("BitLocker Level  : {0}", result["EncryptionLevel"]);
+                Console.WriteLine("InstallDate      : {0}", result["InstallDate"]);
+                Console.WriteLine("LastBootUpTime   : {0}", result["LastBootUpTime"]);
+                Console.WriteLine("LocalDateTime    : {0}", result["LocalDateTime"]);
             }
         }
 
@@ -290,6 +318,40 @@ namespace WheresMyImplant
                 }
 
                 wmi.ExecuteQuery("Select * FROM Win32_MappedLogicalDisk");
+                ManagementObjectCollection results = wmi.GetResults();
+                if (null == results)
+                {
+                    Console.WriteLine("WMI Query Failed");
+                    return;
+                }
+                try
+                {
+                    Console.WriteLine("{0,-9}  {1,-4}  {2,-15}  {3,-10} {4}", "Device ID", "Name", "VolumeName", "FileSystem", "FreeSpace");
+                    Console.WriteLine("{0,-9}  {1,-4}  {2,-15}  {3,-10} {4}", "---------", "----", "----------", "----------", "---------");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                
+                foreach (ManagementObject result in results)
+                {
+                    try
+                    {
+                        Console.WriteLine("{0,-9}  {1,-4}  {2,-15}  {3,-10} {4}/{5} M     {6}", 
+                            result["DeviceID"], 
+                            result["Name"], 
+                            result["VolumeName"], 
+                            result["FileSystem"], 
+                            (UInt64)result["FreeSpace"] / 1048576,
+                            (UInt64)result["Size"] / 1048576, 
+                            result["ProviderName"]);
+                    }
+                    catch(Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                }
             }
         }
 
