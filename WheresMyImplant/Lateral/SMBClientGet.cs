@@ -2,6 +2,10 @@
 using System.IO;
 using System.Linq;
 
+using MonkeyWorks;
+using MonkeyWorks.SMB.SMB2;
+using MonkeyWorks.SMB.NetBIOS;
+
 namespace WheresMyImplant
 {
     sealed class SMBClientGet : SMBClient
@@ -57,7 +61,7 @@ namespace WheresMyImplant
             sessionService.SetDataLength(bData.Length);
             Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
 
-            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            Byte[] bSend = Combine.combine(Combine.combine(bSessionService, bHeader), bData);
             streamSocket.Write(bSend, 0, bSend.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
@@ -135,7 +139,7 @@ namespace WheresMyImplant
             combine.Extend(bHeader2);
             combine.Extend(bData2);
 
-            Byte[] bSend = Misc.Combine(bSessionService, combine.Retrieve());
+            Byte[] bSend = Combine.combine(bSessionService, combine.Retrieve());
             streamSocket.Write(bSend, 0, bSend.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
@@ -175,7 +179,7 @@ namespace WheresMyImplant
             sessionService.SetDataLength(bData.Length);
             Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
 
-            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            Byte[] bSend = Combine.combine(Combine.combine(bSessionService, bHeader), bData);
             streamSocket.Write(bSend, 0, bSend.Length);
             streamSocket.Flush();
 
@@ -246,7 +250,7 @@ namespace WheresMyImplant
             sessionService.SetDataLength(bData.Length);
             Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
 
-            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            Byte[] bSend = Combine.combine(Combine.combine(bSessionService, bHeader), bData);
             streamSocket.Write(bSend, 0, bSend.Length);
             streamSocket.Flush();
 
@@ -334,7 +338,7 @@ namespace WheresMyImplant
             combine.Extend(bData);
             combine.Extend(bHeader2);
             combine.Extend(bData2);
-            Byte[] bSend = Misc.Combine(bSessionService, combine.Retrieve());
+            Byte[] bSend = Combine.combine(bSessionService, combine.Retrieve());
             streamSocket.Write(bSend, 0, bSend.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
@@ -413,7 +417,7 @@ namespace WheresMyImplant
             combine.Extend(bData);
             combine.Extend(bHeader2);
             combine.Extend(bData2);
-            Byte[] bSend = Misc.Combine(bSessionService, combine.Retrieve());
+            Byte[] bSend = Combine.combine(bSessionService, combine.Retrieve());
             streamSocket.Write(bSend, 0, bSend.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);

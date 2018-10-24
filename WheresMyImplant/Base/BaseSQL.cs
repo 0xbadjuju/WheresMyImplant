@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Data.SqlClient;
 using System.Text;
 
@@ -23,6 +24,8 @@ namespace WheresMyImplant
             {
                 connectionString = "Server=" + server + "; Database=" + database + "; User ID=" + username + "; Password=" + password + "; Connection Timeout=1";
             }
+
+            Console.WriteLine("[*] Connection String: " + connectionString);
         }
 
         ////////////////////////////////////////////////////////////////////////////////

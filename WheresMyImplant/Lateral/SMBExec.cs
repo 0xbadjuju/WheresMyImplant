@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 
+using MonkeyWorks;
+using MonkeyWorks.SMB.DCERPC;
+using MonkeyWorks.SMB.NetBIOS;
+using MonkeyWorks.SMB.SMB1;
+using MonkeyWorks.SMB.SMB2;
+using MonkeyWorks.SMB.SVCCTL;
 
 namespace WheresMyImplant
 {
@@ -43,11 +48,11 @@ namespace WheresMyImplant
 
             if (0 == serviceName.Length % 2)
             {
-                serviceName = Misc.Combine(serviceName, new Byte[] { 0x00, 0x00 });
+                serviceName = Combine.combine(serviceName, new Byte[] { 0x00, 0x00 });
             }
             else
             {
-                serviceName = Misc.Combine(serviceName, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+                serviceName = Combine.combine(serviceName, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
             }
         }
 
@@ -72,8 +77,8 @@ namespace WheresMyImplant
             sessionService.SetDataLength(bData.Length);
             Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
 
-            Byte[] send = Misc.Combine(bSessionService, bHeader);
-            send = Misc.Combine(send, bData);
+            Byte[] send = Combine.combine(bSessionService, bHeader);
+            send = Combine.combine(send, bData);
             streamSocket.Write(send, 0, send.Length);
             streamSocket.Flush();
             Byte[] recieve = new Byte[81920];
@@ -82,7 +87,7 @@ namespace WheresMyImplant
             Byte[] response = recieve.Skip(5).Take(4).ToArray();
             if (response == new Byte[] { 0xff, 0x53, 0x4d, 0x42 })
             {
-                WriteOutput("[-] SMB1 is not supported");
+                Console.WriteLine("[-] SMB1 is not supported");
                 return;
             }
 
@@ -92,7 +97,7 @@ namespace WheresMyImplant
 
             if (recieve.Skip(70).Take(1).ToArray().SequenceEqual(new Byte[] { 0x03 }))
             {
-                WriteOutputNeutral("SMB Signing Required");
+                Console.WriteLine("[*] SMB Signing Required");
                 signing = true;
                 flags = new Byte[] { 0x15, 0x82, 0x08, 0xa0 };
             }
@@ -125,8 +130,8 @@ namespace WheresMyImplant
             sessionService.SetDataLength(bData.Length);
             Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
 
-            Byte[] send = Misc.Combine(bSessionService, bHeader);
-            send = Misc.Combine(send, bData);
+            Byte[] send = Combine.combine(bSessionService, bHeader);
+            send = Combine.combine(send, bData);
             streamSocket.Write(send, 0, send.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
@@ -159,8 +164,8 @@ namespace WheresMyImplant
             sessionService.SetDataLength(bData.Length);
             Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
 
-            Byte[] send = Misc.Combine(bSessionService, bHeader);
-            send = Misc.Combine(send, bData);
+            Byte[] send = Combine.combine(bSessionService, bHeader);
+            send = Combine.combine(send, bData);
             streamSocket.Write(send, 0, send.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
@@ -208,7 +213,7 @@ namespace WheresMyImplant
 
             String usernameTarget = username.ToUpper();
             Byte[] bUsernameTarget = Encoding.Unicode.GetBytes(usernameTarget);
-            bUsernameTarget = Misc.Combine(bUsernameTarget, bDomain);
+            bUsernameTarget = Combine.combine(bUsernameTarget, bDomain);
 
             Byte[] NetNTLMv2Hash;
             using (HMACMD5 hmac = new HMACMD5())
@@ -224,13 +229,13 @@ namespace WheresMyImplant
                 bClientChallenge[i] = (Byte)random.Next(0, 255);
             }
 
-            Byte[] blob = Misc.Combine(new Byte[] { 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, bTime);
-            blob = Misc.Combine(blob, bClientChallenge);
-            blob = Misc.Combine(blob, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
-            blob = Misc.Combine(blob, details);
-            blob = Misc.Combine(blob, new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+            Byte[] blob = Combine.combine(new Byte[] { 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, bTime);
+            blob = Combine.combine(blob, bClientChallenge);
+            blob = Combine.combine(blob, new Byte[] { 0x00, 0x00, 0x00, 0x00 });
+            blob = Combine.combine(blob, details);
+            blob = Combine.combine(blob, new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
 
-            Byte[] bServerChallengeAndBlob = Misc.Combine(bServerChallenge, blob);
+            Byte[] bServerChallengeAndBlob = Combine.combine(bServerChallenge, blob);
             Byte[] NetNTLMv2Response;
             using (HMACMD5 hmacMD5 = new HMACMD5())
             {
@@ -247,42 +252,42 @@ namespace WheresMyImplant
                 }
             }
 
-            NetNTLMv2Response = Misc.Combine(NetNTLMv2Response, blob);
+            NetNTLMv2Response = Combine.combine(NetNTLMv2Response, blob);
             Byte[] NetNTLMv2ResponseLength = BitConverter.GetBytes(NetNTLMv2Response.Length).Take(2).ToArray();
 
             Byte[] sessionKeyOffset = BitConverter.GetBytes(bDomain.Length + bUsername.Length + bHostname.Length + NetNTLMv2Response.Length + 88);
 
             Byte[] NetNTLMSSPResponse = { 0x4e, 0x54, 0x4c, 0x4d, 0x53, 0x53, 0x50, 0x00, 0x03, 0x00, 0x00, 0x00 };
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, new Byte[] { 0x18, 0x00 });
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, new Byte[] { 0x18, 0x00 });
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, lmOffset);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, new Byte[] { 0x18, 0x00 });
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, new Byte[] { 0x18, 0x00 });
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, lmOffset);
 
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, NetNTLMv2ResponseLength);
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, NetNTLMv2ResponseLength);
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, ntOffset);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, NetNTLMv2ResponseLength);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, NetNTLMv2ResponseLength);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, ntOffset);
 
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, domainLength);
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, domainLength);
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, domainOffset);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, domainLength);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, domainLength);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, domainOffset);
 
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, usernameLength);
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, usernameLength);
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, usernameOffset);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, usernameLength);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, usernameLength);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, usernameOffset);
 
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, hostnameLength);
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, hostnameLength);
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, hostnameOffset);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, hostnameLength);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, hostnameLength);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, hostnameOffset);
 
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, sessionKeyLength);
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, sessionKeyLength);
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, sessionKeyOffset);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, sessionKeyLength);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, sessionKeyLength);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, sessionKeyOffset);
 
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, flags);
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, bDomain);
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, bUsername);
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, bHostname);
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
-            NetNTLMSSPResponse = Misc.Combine(NetNTLMSSPResponse, NetNTLMv2Response);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, flags);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, bDomain);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, bUsername);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, bHostname);
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, new Byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+            NetNTLMSSPResponse = Combine.combine(NetNTLMSSPResponse, NetNTLMv2Response);
 
             SMB2Header header = new SMB2Header();
             header.SetCommand(new Byte[] { 0x01, 0x00 });
@@ -306,7 +311,7 @@ namespace WheresMyImplant
             sessionService.SetDataLength(bData.Length);
             Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
 
-            Byte[] send = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            Byte[] send = Combine.combine(Combine.combine(bSessionService, bHeader), bData);
             streamSocket.Write(send, 0, send.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
@@ -314,12 +319,12 @@ namespace WheresMyImplant
             Byte[] status = recieve.Skip(12).Take(4).ToArray();
             if (status.SequenceEqual(new Byte[] { 0x00, 0x00, 0x00, 0x00 }))
             {
-                WriteOutputGood(String.Format("{0} Login Successful to {1}", username, system));
+                Console.WriteLine("[+] {0} Login Successful to {1}", username, system);
                 return true;
             }
             
-            WriteOutput(String.Format("[-] {0} Login Failed to {1}", username, system));
-            WriteOutput(String.Format("[-] Status: {0}", BitConverter.ToString(status)));
+            Console.WriteLine("[-] {0} Login Failed to {1}", username, system);
+            Console.WriteLine("[-] Status: {0}", BitConverter.ToString(status));
             return false;
         }
 
@@ -402,7 +407,7 @@ namespace WheresMyImplant
             SMB2WriteRequest writeRequest = new SMB2WriteRequest();
             writeRequest.SetGuidHandleFile(guidFileHandle);
             writeRequest.SetLength(bData.Length);
-            bData = Misc.Combine(writeRequest.GetRequest(), bData);
+            bData = Combine.combine(writeRequest.GetRequest(), bData);
 
             if (signing)
             {
@@ -483,7 +488,7 @@ namespace WheresMyImplant
             sessionService.SetDataLength(bData.Length);
             Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
 
-            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            Byte[] bSend = Combine.combine(Combine.combine(bSessionService, bHeader), bData);
             streamSocket.Write(bSend, 0, bSend.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);
@@ -508,7 +513,7 @@ namespace WheresMyImplant
             SVCCTLSCMCreateServiceW createServiceW = new SVCCTLSCMCreateServiceW();
             createServiceW.SetContextHandle(serviceContectHandle);
             createServiceW.SetServiceName();
-            WriteOutputGood("Creating Service " + createServiceW.GetServiceName());
+            Console.WriteLine("[*] Creating Service {0}", createServiceW.GetServiceName());
             createServiceW.SetCommand(command);
             Byte[] bData = createServiceW.GetRequest();
 
@@ -564,7 +569,7 @@ namespace WheresMyImplant
 
         internal Boolean StartServiceW()
         {
-            WriteOutputGood("Starting Service");
+            Console.WriteLine("[+] Starting Service");
             serviceHandle = recieve.Skip(112).Take(20).ToArray();
 
             SMB2Header header = new SMB2Header();
@@ -610,7 +615,7 @@ namespace WheresMyImplant
 
         internal Boolean DeleteServiceW()
         {
-            WriteOutputGood("Deleting Service");
+            Console.WriteLine("[+] Deleting Service");
             SMB2Header header = new SMB2Header();
             header.SetCommand(new Byte[] { 0x09, 0x00 });
             header.SetCreditsRequested(new Byte[] { 0x01, 0x00 });
@@ -793,7 +798,7 @@ namespace WheresMyImplant
             sessionService.SetDataLength(bData.Length);
             Byte[] bSessionService = sessionService.GetNetBIOSSessionService();
 
-            Byte[] bSend = Misc.Combine(Misc.Combine(bSessionService, bHeader), bData);
+            Byte[] bSend = Combine.combine(Combine.combine(bSessionService, bHeader), bData);
             streamSocket.Write(bSend, 0, bSend.Length);
             streamSocket.Flush();
             streamSocket.Read(recieve, 0, recieve.Length);

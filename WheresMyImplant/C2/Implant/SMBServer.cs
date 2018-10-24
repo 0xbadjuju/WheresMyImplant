@@ -58,11 +58,11 @@ namespace WheresMyImplant
                     namedPipeServerStream.Flush();
                     namedPipeServerStream.Close();
                 }
-                catch (IOException error)
+                catch (IOException)
                 {
                     Console.WriteLine("Pipe already closed");
                 }
-                catch (InvalidOperationException error)
+                catch (InvalidOperationException)
                 {
                     Console.WriteLine("Pipe already closed");
                 }
@@ -260,7 +260,7 @@ namespace WheresMyImplant
                 namedPipeServerStream.Write(BitConverter.GetBytes(message.Length), 0, sizeof(Int32));
                 namedPipeServerStream.Write(message, 0, message.Length);
             }
-            catch (IOException error)
+            catch (IOException)
             {
                 return;
             }
@@ -278,7 +278,7 @@ namespace WheresMyImplant
                 namedPipeServerStream.Write(BitConverter.GetBytes(message.Length), 0, sizeof(Int32));
                 namedPipeServerStream.Write(message, 0, message.Length);
             }
-            catch (IOException error)
+            catch (IOException)
             {
                 return;
             }

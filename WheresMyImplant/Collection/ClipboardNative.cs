@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Runtime.InteropServices;
 
-using Unmanaged.Headers;
-using Unmanaged.Libraries;
+using MonkeyWorks.Unmanaged.Headers;
+using MonkeyWorks.Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
@@ -15,7 +15,6 @@ namespace WheresMyImplant
         private IntPtr hInstance;
         private IntPtr hWndClipboard;
         private IntPtr hWndViewer;
-        private IntPtr hClipboardData;
 
         private GCHandle gcParam;
 
@@ -127,11 +126,6 @@ namespace WheresMyImplant
 
         public Boolean HandlerRoutine(Wincon.CtrlType dwCtrlType)
         {
-            if (IntPtr.Zero != hClipboardData)
-            {
-                kernel32.LocalFree(hClipboardData);
-            }
-
             if (IntPtr.Zero != hWndClipboard)
             {
                 user32.PostMessage(hWndClipboard, Winuser.WM_QUIT, 0x00000080, 0);

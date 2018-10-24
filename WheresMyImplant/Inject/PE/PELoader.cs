@@ -2,7 +2,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 
-using Unmanaged.Headers;
+using MonkeyWorks.Unmanaged.Headers;
 
 namespace WheresMyImplant
 {
@@ -100,12 +100,12 @@ namespace WheresMyImplant
 
             if (Winnt.CHARACTERISTICS.IMAGE_FILE_DLL == (imageFileHeader.Characteristics & Winnt.CHARACTERISTICS.IMAGE_FILE_DLL))
             {
-                WriteOutputNeutral("Injecting DLL");
+                Console.WriteLine("[*] Injecting DLL");
                 isDll = true;
             }
             else if (Winnt.CHARACTERISTICS.IMAGE_FILE_EXECUTABLE_IMAGE == (imageFileHeader.Characteristics & Winnt.CHARACTERISTICS.IMAGE_FILE_EXECUTABLE_IMAGE))
             {
-                WriteOutputNeutral("Injecting EXE");
+                Console.WriteLine("[*] Injecting EXE");
                 isExe = true;
             }
 
@@ -113,7 +113,7 @@ namespace WheresMyImplant
             {
                 if ((UInt16)c == (UInt16)(c & imageFileHeader.Characteristics))
                 {
-                    WriteOutputNeutral(String.Format("PE Characteristic: {0}", (Winnt.CHARACTERISTICS)(c & imageFileHeader.Characteristics)));
+                    Console.WriteLine("[*] PE Characteristic: {0}", (Winnt.CHARACTERISTICS)(c & imageFileHeader.Characteristics));
                 }
             }
 
@@ -147,13 +147,13 @@ namespace WheresMyImplant
                     return false;
             };
 
-            WriteOutputGood(String.Format("ImageBase: 0x{0}", imageBase.ToString("X4")));
-            WriteOutputGood(String.Format("EntryPoint: 0x{0}", addressOfEntryPoint.ToString("X4")));
+            Console.WriteLine("[+] ImageBase: 0x{0}", imageBase.ToString("X4"));
+            Console.WriteLine("[+] EntryPoint: 0x{0}", addressOfEntryPoint.ToString("X4"));
             foreach (Winnt.SUBSYSTEM ss in (Winnt.SUBSYSTEM[]) Enum.GetValues(typeof(Winnt.SUBSYSTEM)))
             {
                 if ((UInt16)ss == ((UInt16)ss & subsystem))
                 {
-                    WriteOutputNeutral(String.Format("PE SubSystem: {0}", (Winnt.SUBSYSTEM)((UInt16)ss & subsystem)));
+                    Console.WriteLine("[*] PE SubSystem: {0}", (Winnt.SUBSYSTEM)((UInt16)ss & subsystem));
                 }
             }
 
@@ -161,7 +161,7 @@ namespace WheresMyImplant
             {
                 if ((UInt16)dll == ((UInt16)dll & dllCharacteristics))
                 {
-                    WriteOutputNeutral(String.Format("DLL Characteristics: {0}", (Winnt.DLL_CHARACTERISTICS)((UInt16)dll & dllCharacteristics)));
+                    Console.WriteLine("[*] DLL Characteristics: {0}", (Winnt.DLL_CHARACTERISTICS)((UInt16)dll & dllCharacteristics));
                 }
             }
 

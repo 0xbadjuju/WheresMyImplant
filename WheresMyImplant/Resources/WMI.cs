@@ -10,6 +10,7 @@ namespace WheresMyImplant
     {
         private String scope = "\\\\.\\ROOT\\CIMV2";
         private ManagementScope managementScope;
+        private ManagementObjectCollection results = null;
 
         internal WMI()
         {
@@ -30,6 +31,11 @@ namespace WheresMyImplant
             Dispose();
         }
 
+        internal ManagementObjectCollection GetResults()
+        {
+            return results;
+        }
+
         ////////////////////////////////////////////////////////////////////////////////
         // Connect to the system specified by the management scope
         ////////////////////////////////////////////////////////////////////////////////
@@ -40,9 +46,10 @@ namespace WheresMyImplant
             {
                 managementScope.Connect();
             }
-            catch(Exception error)
+            catch(Exception ex)
             {
-                WriteOutputBad(error.ToString());
+                Console.WriteLine("[-] {0}", ex.Message);
+                
                 return false;
             }
 
@@ -66,9 +73,9 @@ namespace WheresMyImplant
             {
                 managementScope.Connect();
             }
-            catch (Exception error)
+            catch (Exception ex)
             {
-                WriteOutputBad(error.ToString());
+                Console.WriteLine("[-] {0}", ex.Message);
                 return false;
             }
 
@@ -92,9 +99,9 @@ namespace WheresMyImplant
             {
                 managementScope.Connect();
             }
-            catch (Exception error)
+            catch (Exception ex)
             {
-                WriteOutputBad(error.ToString());
+                Console.WriteLine("[-] {0}", ex.Message);
                 return false;
             }
 
@@ -116,11 +123,11 @@ namespace WheresMyImplant
             {
                 ManagementClass managementClass = new ManagementClass(managementScope, managementPath, options);
                 Object output = managementClass.InvokeMethod(method, args);
-                WriteOutputGood(String.Format("Return Value: {0}", output));
+                Console.WriteLine("[+] Return Value: {0}", output);
             }
-            catch (ManagementException error)
+            catch (ManagementException ex)
             {
-                WriteOutputBad(error.ToString());
+                Console.WriteLine("[-] {0}", ex.Message);
                 return false;
             }
             return true;
@@ -138,11 +145,11 @@ namespace WheresMyImplant
             {
                 ManagementClass managementClass = new ManagementClass(managementScope, managementPath, options);
                 output = managementClass.InvokeMethod(method, args);
-                WriteOutputGood(String.Format("Return Value: {0}", output));
+                Console.WriteLine("[+] Return Value: {0}", output);
             }
-            catch (ManagementException error)
+            catch (ManagementException ex)
             {
-                WriteOutputBad(error.ToString());
+                Console.WriteLine("[-] {0}", ex.Message);
                 return null;
             }
             return output;
@@ -161,9 +168,9 @@ namespace WheresMyImplant
                 ManagementClass managementClass = new ManagementClass(managementScope, managementPath, options);
                 managementInstance = managementClass.CreateInstance();
             }
-            catch (ManagementException error)
+            catch (ManagementException ex)
             {
-                WriteOutputBad(error.ToString());
+                Console.WriteLine("[-] {0}", ex.Message);
             }
             return managementInstance;
         }
@@ -177,11 +184,11 @@ namespace WheresMyImplant
             {
                 ObjectQuery objectQuery = new ObjectQuery(query);
                 ManagementObjectSearcher managementObjectSearcher = new ManagementObjectSearcher(managementScope, objectQuery);
-                PrintResults(managementObjectSearcher.Get());
+                results = managementObjectSearcher.Get();
             }
-            catch (ManagementException error)
+            catch (ManagementException ex)
             {
-                WriteOutputBad(error.ToString());
+                Console.WriteLine("[-] {0}", ex.Message);
                 return false;
             }
             return true;
@@ -224,13 +231,13 @@ namespace WheresMyImplant
             ManagementPath managementPath = new ManagementPath(path);
             ObjectGetOptions options = new ObjectGetOptions(null, TimeSpan.MaxValue, true);
             ManagementClass managementClass = new ManagementClass(managementScope, managementPath, options);
-            PrintResults(managementClass.GetInstances());
+            results = managementClass.GetInstances();
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         // Prints a management object collection
         ////////////////////////////////////////////////////////////////////////////////
-        private void PrintResults(ManagementObjectCollection results)
+        public void PrintResults()
         {
             List<String> properties = new List<String>();
             if (null == results || 0 == results.Count)
@@ -238,20 +245,22 @@ namespace WheresMyImplant
                 return;
             }
 
+            Int32 length = 0;
             ManagementObject propertiesObject = results.OfType<ManagementObject>().FirstOrDefault();
             foreach (PropertyData property in propertiesObject.Properties)
             {
                 properties.Add(property.Name);
+                if (property.Name.Length > length)
+                    length = property.Name.Length;
             }
 
             foreach (ManagementObject managementObject in results)
             {
-                StringBuilder output = new StringBuilder();
                 foreach (String property in properties)
                 {
-                    output.Append(String.Format("{0,-10}", managementObject[property]));
+                    Console.WriteLine("{0,-" + length + "} {1}", property, managementObject[property]);
                 }
-                WriteOutput(output.ToString());
+                Console.WriteLine("");
             }
         }
 

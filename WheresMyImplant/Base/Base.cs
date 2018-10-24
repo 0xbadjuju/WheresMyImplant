@@ -7,6 +7,7 @@ namespace WheresMyImplant
 {
     internal abstract class Base 
     {
+        /*
         protected StringBuilder stringBuilder = new StringBuilder();
 
         protected void WriteOutput(string output)
@@ -35,5 +36,6 @@ namespace WheresMyImplant
         {
             return stringBuilder.ToString().Trim();
         }
+        */
     }
 }

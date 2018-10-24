@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-using Unmanaged.Headers;
-using Unmanaged.Libraries;
+using MonkeyWorks.Unmanaged.Headers;
+using MonkeyWorks.Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
@@ -22,10 +22,6 @@ namespace WheresMyImplant
         IntPtr imagePtr;
         Winnt._IMAGE_FILE_HEADER imageFileHeader;
         Winnt._IMAGE_DOS_HEADER imageDosHeader;
-        
-        
-        
-        
 
         Boolean is32Bit;
 
@@ -63,9 +59,9 @@ namespace WheresMyImplant
                 return false;
             }
 
-            WriteOutputGood(String.Format("Started Process: {0}", lpProcessInformation.dwProcessId));
-            WriteOutputGood(String.Format("Started Thread:  {0}", lpProcessInformation.dwThreadId));
-            WriteOutputGood(String.Format("Recieved Handle: 0x{0}", lpProcessInformation.hProcess.ToString("X4")));
+            Console.WriteLine("[+] Started Process: {0}", lpProcessInformation.dwProcessId);
+            Console.WriteLine("[+] Started Thread:  {0}", lpProcessInformation.dwThreadId);
+            Console.WriteLine("[+] Recieved Handle: 0x{0}", lpProcessInformation.hProcess.ToString("X4"));
 
             return ReadPEB();
         }
@@ -98,7 +94,7 @@ namespace WheresMyImplant
             }
             catch (Exception)
             {
-                WriteOutputBad("ReadPEB Failed");
+                Console.WriteLine("[-] ReadPEB Failed");
                 return false;
             }
             finally
@@ -107,7 +103,7 @@ namespace WheresMyImplant
             }
 
             ////////////////////////////////////////////////////////////////////////////////
-            WriteOutputNeutral(String.Format("PEB Base Address:   0x{0}", processBasicInformation.PebBaseAddress.ToString("X4")));
+            Console.WriteLine("[*] PEB Base Address: 0x{0}", processBasicInformation.PebBaseAddress.ToString("X4"));
             Winternl._PEB64 peb;
             UInt32 pebSize = (UInt32)Marshal.SizeOf(typeof(Winternl._PEB64));
             IntPtr buffer = Marshal.AllocHGlobal((Int32)pebSize);
@@ -125,11 +121,11 @@ namespace WheresMyImplant
                 }
                 peb = (Winternl._PEB64)Marshal.PtrToStructure(buffer, typeof(Winternl._PEB64));
                 targetImageBaseAddress = peb.ImageBaseAddress;
-                WriteOutputNeutral(String.Format("Image Base Address: 0x{0}", targetImageBaseAddress.ToString("X4")));
+                Console.WriteLine("[*] Image Base Address: 0x{0}", targetImageBaseAddress.ToString("X4"));
             }
-            catch (Exception error)
+            catch (Exception)
             {
-                WriteOutputBad("ReadPEB Failed");
+                Console.WriteLine("[-] ReadPEB Failed");
                 return false;
             }
             finally
@@ -170,7 +166,7 @@ namespace WheresMyImplant
             String file = System.IO.Path.GetFullPath(sourceImage);
             if (!System.IO.File.Exists(file))
             {
-                WriteOutputBad("File Not Found");
+                Console.WriteLine("[-] File Not Found");
                 return false;
             }
 
@@ -225,11 +221,11 @@ namespace WheresMyImplant
 
             if (image.Length > (is32Bit ? imageNTHeader32.OptionalHeader.SizeOfImage : imageNTHeader64.OptionalHeader.SizeOfImage))
             {
-                WriteOutputNeutral(String.Format("NtUnmapViewOfSection: 0x{0}", targetImageBaseAddress.ToString("X4")));
+                Console.WriteLine("[*] NtUnmapViewOfSection: 0x{0}", targetImageBaseAddress.ToString("X4"));
                 UInt32 result = ntdll.NtUnmapViewOfSection(lpProcessInformation.hProcess, targetImageBaseAddress);
                 if (0 != result)
                 {
-                    WriteOutputBad("NtUnmapViewOfSection Failed");
+                    Console.WriteLine("[-] NtUnmapViewOfSection Failed");
                     return false;
                 }
                 

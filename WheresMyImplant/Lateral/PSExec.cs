@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 
-using Unmanaged.Headers;
-using Unmanaged.Libraries;
+using MonkeyWorks.Unmanaged.Headers;
+using MonkeyWorks.Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
@@ -27,7 +28,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         public PSExec()
         {
-            serviceName = Misc.GenerateUuidAlpha(12);
+            serviceName = GenerateUuidAlpha(12);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -180,6 +181,16 @@ namespace WheresMyImplant
             }
             Console.WriteLine("[+] Deleted service");
             return true;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        private static String GenerateUuidAlpha(int length)
+        {
+            Random random = new Random();
+            const String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            return new String(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
 }

@@ -82,7 +82,7 @@ namespace WheresMyImplant
             Type className = assembly.GetTypes()
                 .Where(t => t.Namespace == "WheresMyImplant").Distinct()
                 .Where(t => t.Name == "Implant").First();
-            WriteOutputNeutral("Adding Methods");
+            Console.WriteLine("[*] Adding Methods");
 
             foreach (MethodInfo methodInfo in className.GetMethods())
             {
@@ -126,16 +126,16 @@ namespace WheresMyImplant
             }
             catch (ManagementException ex)
             {
-                WriteOutput(ex.Message);
+                Console.WriteLine("[-] {0}", ex.Message);
             }
 
-            WriteOutput(statusMethods);
+            Console.WriteLine(statusMethods);
         }
 
         internal void AddRegistryLocal()
         {
             
-            WriteOutputNeutral("Adding Registry Keys");
+            Console.WriteLine("[*] Adding Registry Keys");
 
             foreach (String key in hkcrKeys)
             {
@@ -174,7 +174,7 @@ namespace WheresMyImplant
 
                 statusRegistry += ".";
             }
-            WriteOutput(statusRegistry);
+            Console.WriteLine(statusRegistry);
         }
 
         private void AddRegistryClassesRoot(String strKey, String value, String data)
@@ -188,7 +188,7 @@ namespace WheresMyImplant
             }
             catch (Exception ex)
             {
-                WriteOutputBad(ex.Message);
+                Console.WriteLine("[-] {0}", ex.Message);
             }
         }
 
@@ -203,7 +203,7 @@ namespace WheresMyImplant
             }
             catch(Exception ex)
             {
-                WriteOutputBad(ex.Message);
+                Console.WriteLine("[-] {0}", ex.Message);
             }
         }
 
@@ -213,7 +213,7 @@ namespace WheresMyImplant
             {
                 if (!wmi.Connect())
                 {
-                    WriteOutput("[-] Connection failed");
+                    Console.WriteLine("[-] Connection failed");
                     return;
                 }
                 foreach (String key in keys)
@@ -260,7 +260,7 @@ namespace WheresMyImplant
                     binaryWriter.Write(fileBytes, 0, fileBytes.Length);
                 }
             }
-            WriteOutputGood(String.Format("Copied assembly to {0}", destination));
+            Console.WriteLine("[+] Copied assembly to {0}", destination);
             fileBytes = null;
         }
 
@@ -287,7 +287,7 @@ namespace WheresMyImplant
 
         internal void ExtensionProviderSetup()
         {
-            WriteOutput("Creating WMI_extension");
+            Console.WriteLine("Creating WMI_extension");
             using (ManagementClass __Win32Provider = new ManagementClass(@"ROOT\cimv2", "__Win32Provider", null))
             {
                 using (ManagementClass WMI_extension = __Win32Provider.Derive("WMI_extension"))
@@ -306,12 +306,12 @@ namespace WheresMyImplant
                     }
                     catch (ManagementException ex)
                     {
-                        WriteOutput(ex.Message);
+                        Console.WriteLine("[-] {0}", ex.Message);
                     }
                 }
             }
 
-            WriteOutput("Registering " + Assembly.GetExecutingAssembly().GetName().Name + " as a WMI_extension Instance");
+            Console.WriteLine("Registering " + Assembly.GetExecutingAssembly().GetName().Name + " as a WMI_extension Instance");
             ManagementPath managementPath = null;
             using (ManagementClass WMI_extension = new ManagementClass(@"ROOT\cimv2", "WMI_extension", null))
             {
@@ -329,12 +329,12 @@ namespace WheresMyImplant
                     }
                     catch (ManagementException ex)
                     {
-                        WriteOutput("WMI_extension: " + ex.Message);
+                        Console.WriteLine("WMI_extension: " + ex.Message);
                     }
                 }
             }
 
-            WriteOutput("Registering " + providerDisplayName + " as an Instance Provider");
+            Console.WriteLine("Registering " + providerDisplayName + " as an Instance Provider");
             using (ManagementClass __InstanceProviderRegistration = new ManagementClass(@"ROOT\cimv2", "__InstanceProviderRegistration", null))
             {
                 using (ManagementObject managementObject = __InstanceProviderRegistration.CreateInstance())
@@ -350,12 +350,12 @@ namespace WheresMyImplant
                     }
                     catch (ManagementException ex)
                     {
-                        WriteOutput("__InstanceProviderRegistration: " + ex.Message);
+                        Console.WriteLine("__InstanceProviderRegistration: " + ex.Message);
                     }
                 }
             }
 
-            WriteOutput("Registering " + providerDisplayName + " as an Method Provider");
+            Console.WriteLine("Registering " + providerDisplayName + " as an Method Provider");
             using (ManagementClass __MethodProviderRegistration = new ManagementClass(@"ROOT\cimv2", "__MethodProviderRegistration", null))
             {
                 using (ManagementObject managementObject = __MethodProviderRegistration.CreateInstance())
@@ -367,7 +367,7 @@ namespace WheresMyImplant
                     }
                     catch (ManagementException ex)
                     {
-                        WriteOutput("__MethodProviderRegistration: " + ex.Message);
+                        Console.WriteLine("__MethodProviderRegistration: " + ex.Message);
                     }
                 }
             }

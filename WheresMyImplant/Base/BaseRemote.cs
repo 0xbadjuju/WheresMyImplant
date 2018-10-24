@@ -5,8 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 
-using Unmanaged.Headers;
-using Unmanaged.Libraries;
+using MonkeyWorks.Unmanaged.Headers;
+using MonkeyWorks.Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
@@ -19,14 +19,14 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         protected BaseRemote(UInt32 processId)
         {
-            WriteOutputNeutral(String.Format("Attempting to get handle on PID: {0}", processId));
+            Console.WriteLine("[*] Attempting to get handle on PID: {0}", processId);
             hProcess = kernel32.OpenProcess(kernel32.PROCESS_ALL_ACCESS, false, processId);
             if (IntPtr.Zero == hProcess)
             {
-                WriteOutputBad("Unable to get process handle");
+                Console.WriteLine("[-] Unable to get process handle");
                 return;
             }
-            WriteOutputGood(String.Format("Received Handle: 0x{0}", hProcess.ToString("X4")));
+            Console.WriteLine("[+] Received Handle: 0x{0}", hProcess.ToString("X4"));
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -38,15 +38,15 @@ namespace WheresMyImplant
             kernel32.GetNativeSystemInfo(out systemInfo);
             if (Winbase.INFO_PROCESSOR_ARCHITECTURE.PROCESSOR_ARCHITECTURE_INTEL == systemInfo.wProcessorArchitecture)
             {
-                WriteOutputBad("System is 32Bit");
+                Console.WriteLine("[-] System is 32Bit");
                 return true;
             }
 
             Boolean is32Bit;
             if (!kernel32.IsWow64Process(hProcess, out is32Bit))
             {
-                WriteOutputBad("IsWow64Process Failed");
-                WriteOutputBad("Assuming 32Bit System");
+                Console.WriteLine("[-] IsWow64Process Failed");
+                Console.WriteLine("[-] Assuming 32Bit System");
                 return true;
             }
             
@@ -62,11 +62,11 @@ namespace WheresMyImplant
                 hProcess, lpAddress, dwSize, kernel32.MEM_COMMIT | kernel32.MEM_RESERVE, protection);
             if (IntPtr.Zero == lpBaseAddress)
             {
-                WriteOutputBad("Unable to allocate memory");
+                Console.WriteLine("[-] Unable to allocate memory");
                 return IntPtr.Zero;
             }
-            WriteOutputGood(String.Format("Allocated {0} bytes at {1}", dwSize, lpBaseAddress.ToString("X4")));
-            WriteOutputGood(String.Format("\tMemory Protection Set to {0}", protection));
+            Console.WriteLine("[+] Allocated {0} bytes at {1}", dwSize, lpBaseAddress.ToString("X4"));
+            Console.WriteLine("[+] \tMemory Protection Set to {0}", protection);
             return lpBaseAddress;
         }
 
@@ -78,8 +78,8 @@ namespace WheresMyImplant
             UInt32 dwNumberOfBytesWritten = 0;
             if (!kernel32.WriteProcessMemory(hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesWritten))
             {
-                WriteOutputBad(
-                    "Unable to write process memory" +
+                Console.WriteLine(
+                    "[-] Unable to write process memory" +
                     "\n\tResult:                  " + Marshal.GetLastWin32Error() +
                     "\n\tdwSize                   " + dwSize +
                     "\n\tlpBaseAddress            " + lpBaseAddress.ToString("X4") +
@@ -88,7 +88,7 @@ namespace WheresMyImplant
                 );
                 return false;
             }
-            WriteOutputGood("Section " + sectionName.Replace("\0", "") + " (" + dwNumberOfBytesWritten + " bytes), Copied To " + lpBaseAddress.ToString("X4"));
+            Console.WriteLine("Section {0} ({1} bytes), Copied To 0x{2}" , sectionName.Replace("\0", ""), dwNumberOfBytesWritten, lpBaseAddress.ToString("X4"));
             return true;
         }
 
@@ -105,7 +105,7 @@ namespace WheresMyImplant
 
             if (!kernel32.WriteProcessMemory(hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesWritten))
             {
-                WriteOutputBad("Unable to write process memory");
+                Console.WriteLine("[-] Unable to write process memory");
                 return false;
             }
             return true;
@@ -119,8 +119,8 @@ namespace WheresMyImplant
             UInt32 dwNumberOfBytesRead = 0;
             if (!kernel32.ReadProcessMemory(hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesRead))
             {
-                WriteOutputBad(
-                    "Unable to read process memory" +
+                Console.WriteLine(
+                    "[-] Unable to read process memory" +
                     "\n\tResult:                  " + Marshal.GetLastWin32Error() +
                     "\n\tdwSize                   " + dwSize +
                     "\n\tlpBaseAddress            " + lpBaseAddress.ToString("X4") +
@@ -129,7 +129,7 @@ namespace WheresMyImplant
                 );
                 return false;
             }
-            //WriteOutputGood(String.Format("Section {0} ({1} bytes), Read From {2}", sectionName.Replace("\0", ""), dwNumberOfBytesRead, lpBaseAddress.ToString("X4")));
+            //Console.WriteLine("[+] Section {0} ({1} bytes), Read From {2}", sectionName.Replace("\0", ""), dwNumberOfBytesRead, lpBaseAddress.ToString("X4")));
             return true;
         }
 
@@ -145,10 +145,10 @@ namespace WheresMyImplant
             hThread = kernel32.CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, ref lpThreadId);
             if (IntPtr.Zero == hThread)
             {
-                WriteOutputBad("CreateRemoteThread Failed");
+                Console.WriteLine("[-] CreateRemoteThread Failed");
                 return false;
             }
-            WriteOutputGood(String.Format("Thread Created {0}", lpThreadId));
+            Console.WriteLine("[+] Thread Created {0}", lpThreadId);
             return true;
         }
 
@@ -189,7 +189,7 @@ namespace WheresMyImplant
             UInt16 integer = 0;
             UInt16 marshaledInt16 = 0;
             GCHandle pinnedInteger = GCHandle.Alloc(integer, GCHandleType.Pinned);
-            //WriteOutputNeutral("pinnedInteger: " + pinnedInteger.AddrOfPinnedObject());
+            //Console.WriteLine("[*] pinnedInteger: " + pinnedInteger.AddrOfPinnedObject());
             try
             {
                 IntPtr lpInteger = pinnedInteger.AddrOfPinnedObject();
@@ -202,7 +202,7 @@ namespace WheresMyImplant
             }
             catch
             {
-                WriteOutputBad("ReadInt16Remote Failed");
+                Console.WriteLine("[-] ReadInt16Remote Failed");
                 return marshaledInt16;
             }
             finally
@@ -231,8 +231,8 @@ namespace WheresMyImplant
             }
             catch (Exception ex)
             {
-                WriteOutputBad("PtrToInt32Remote Failed");
-                WriteOutput(ex.Message);
+                Console.WriteLine("[-] PtrToInt32Remote Failed");
+                Console.WriteLine(ex.Message);
                 return 0;
             }
             finally
@@ -255,14 +255,14 @@ namespace WheresMyImplant
                 IntPtr lpInteger = pinnedInteger.AddrOfPinnedObject();
                 if (!ReadProcessMemoryChecked(pointer, lpInteger, sizeof(Int64), typeof(Int64).ToString()))
                 {
-                    WriteOutputBad("ReadInt64Remote Failed");
+                    Console.WriteLine("[-] ReadInt64Remote Failed");
                     return marshaledInt64;
                 }
                 marshaledInt64 = Marshal.ReadInt64(lpInteger);
             }
             catch
             {
-                WriteOutputBad("ReadInt64Remote Failed");
+                Console.WriteLine("[-] ReadInt64Remote Failed");
                 return marshaledInt64;
             }
             finally
@@ -284,15 +284,15 @@ namespace WheresMyImplant
                 UInt32 dwNumberOfBytesWritten = 0;
                 if (!kernel32.WriteProcessMemory(hProcess, lpBaseAddress, lpInteger, (UInt32)sizeof(Int64), ref dwNumberOfBytesWritten))
                 {
-                    WriteOutputBad("WriteInt64Remote Failed");
+                    Console.WriteLine("[-] WriteInt64Remote Failed");
                     return false;
                 }
                 return true;
             }
             catch (Exception ex)
             {
-                WriteOutputBad("WriteInt64Remote Failed");
-                WriteOutput(ex.Message);
+                Console.WriteLine("[-] WriteInt64Remote Failed");
+                Console.WriteLine(ex.Message);
                 return false;
             }
             finally
@@ -324,8 +324,8 @@ namespace WheresMyImplant
             }
             catch (Exception ex)
             {
-                WriteOutputBad("WriteInt64Remote Failed");
-                WriteOutput(ex.Message);
+                Console.WriteLine("[-] WriteInt64Remote Failed");
+                Console.WriteLine(ex.Message);
             }
             finally
             {

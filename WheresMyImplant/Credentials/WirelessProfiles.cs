@@ -23,8 +23,8 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal void GetProfiles()
         {
-            WriteOutput(String.Format("{0,-20} {1,-63}", "SSID", "PSK"));
-            WriteOutput(String.Format("{0,-20} {1,-63}", "----", "---"));
+            Console.WriteLine("{0,-20} {1,-63}", "SSID", "PSK");
+            Console.WriteLine("{0,-20} {1,-63}", "----", "---");
 
             XmlDocument doc = new XmlDocument();
             foreach (String inter in interfaces)
@@ -38,7 +38,7 @@ namespace WheresMyImplant
                     XmlNodeList keys = doc.GetElementsByTagName("keyMaterial");
                     foreach (XmlNode key in keys)
                     {
-                        WriteOutput(String.Format("{0,-20} {1,-63}", name[0].InnerText, DPAPIDecrypt(key.InnerText)));
+                        Console.WriteLine("{0,-20} {1,-63}", name[0].InnerText, DPAPIDecrypt(key.InnerText));
                     }
                 }
             }

