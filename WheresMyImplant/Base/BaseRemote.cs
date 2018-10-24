@@ -5,74 +5,82 @@ using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 
+using MonkeyWorks.Unmanaged.Headers;
+using MonkeyWorks.Unmanaged.Libraries;
+
 namespace WheresMyImplant
 {
-    class BaseRemote : Base
+    internal abstract class BaseRemote : Base
     {
         private IntPtr hProcess;
 
         ////////////////////////////////////////////////////////////////////////////////
-        public BaseRemote(UInt32 processId)
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        protected BaseRemote(UInt32 processId)
         {
-            WriteOutputNeutral("Attempting to get handle on PID: " + processId);
-            UInt32 dwDesiredAccess = Unmanaged.PROCESS_CREATE_THREAD | Unmanaged.PROCESS_QUERY_INFORMATION | Unmanaged.PROCESS_VM_OPERATION | Unmanaged.PROCESS_VM_WRITE | Unmanaged.PROCESS_VM_READ;
-            hProcess = Unmanaged.OpenProcess(Unmanaged.PROCESS_ALL_ACCESS, false, processId);
+            Console.WriteLine("[*] Attempting to get handle on PID: {0}", processId);
+            hProcess = kernel32.OpenProcess(kernel32.PROCESS_ALL_ACCESS, false, processId);
             if (IntPtr.Zero == hProcess)
             {
-                WriteOutputBad("Unable to get process handle");
+                Console.WriteLine("[-] Unable to get process handle");
                 return;
             }
-            else
-            {
-                WriteOutputGood("Recieved Handle: 0x" + hProcess.ToString("X4"));
-            }
+            Console.WriteLine("[+] Received Handle: 0x{0}", hProcess.ToString("X4"));
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public IntPtr VirtualAllocExChecked(IntPtr lpAddress, UInt32 dwSize)
-        {
-            IntPtr lpBaseAddress = Unmanaged.VirtualAllocEx(
-                hProcess, lpAddress, dwSize, Unmanaged.MEM_COMMIT, Unmanaged.PAGE_EXECUTE_READWRITE
-            );
-
-            if (IntPtr.Zero == lpBaseAddress)
-            {
-                WriteOutputBad("Unable to allocate memory");
-                Environment.Exit(1);
-                //This is dumb
-                return IntPtr.Zero;
-            }
-            else
-            {
-                WriteOutputGood("Allocated " + dwSize + " bytes at " + lpBaseAddress.ToString("X4"));
-                WriteOutputGood("\tMemory Protection Set to PAGE_READWRITE");
-                return lpBaseAddress;
-            }
-        }
-
+        //
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean WriteProcessMemoryChecked(
-            IntPtr lpBaseAddress,
-            IntPtr lpBuffer,
-            UInt32 dwSize,
-            string sectionName
-        )
+        internal Boolean Is32BitProcess()
         {
-            UInt32 dwNumberOfBytesWritten = 0;
-            Boolean writeProcessMemoryResult = Unmanaged.WriteProcessMemory(
-                hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesWritten
-            );
-
-            if (writeProcessMemoryResult)
+            Winbase._SYSTEM_INFO systemInfo;
+            kernel32.GetNativeSystemInfo(out systemInfo);
+            if (Winbase.INFO_PROCESSOR_ARCHITECTURE.PROCESSOR_ARCHITECTURE_INTEL == systemInfo.wProcessorArchitecture)
             {
-                WriteOutputGood("Section " + sectionName.Replace("\0","") + " (" + dwNumberOfBytesWritten + " bytes), Copied To " + lpBaseAddress.ToString("X4"));
+                Console.WriteLine("[-] System is 32Bit");
                 return true;
             }
-            else
+
+            Boolean is32Bit;
+            if (!kernel32.IsWow64Process(hProcess, out is32Bit))
             {
-                WriteOutputBad(
-                    "Unable to write process memory" +
-                    "\n\tResult:                  " + writeProcessMemoryResult +
+                Console.WriteLine("[-] IsWow64Process Failed");
+                Console.WriteLine("[-] Assuming 32Bit System");
+                return true;
+            }
+            
+            return is32Bit;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // No idea why this exists
+        ////////////////////////////////////////////////////////////////////////////////
+        protected IntPtr VirtualAllocExChecked(IntPtr lpAddress, UInt32 dwSize, Winnt.MEMORY_PROTECTION_CONSTANTS protection)
+        {
+            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(
+                hProcess, lpAddress, dwSize, kernel32.MEM_COMMIT | kernel32.MEM_RESERVE, protection);
+            if (IntPtr.Zero == lpBaseAddress)
+            {
+                Console.WriteLine("[-] Unable to allocate memory");
+                return IntPtr.Zero;
+            }
+            Console.WriteLine("[+] Allocated {0} bytes at {1}", dwSize, lpBaseAddress.ToString("X4"));
+            Console.WriteLine("[+] \tMemory Protection Set to {0}", protection);
+            return lpBaseAddress;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // No idea why this exists
+        ////////////////////////////////////////////////////////////////////////////////
+        protected Boolean WriteProcessMemoryChecked(IntPtr lpBaseAddress, IntPtr lpBuffer, UInt32 dwSize, String sectionName)
+        {
+            UInt32 dwNumberOfBytesWritten = 0;
+            if (!kernel32.WriteProcessMemory(hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesWritten))
+            {
+                Console.WriteLine(
+                    "[-] Unable to write process memory" +
+                    "\n\tResult:                  " + Marshal.GetLastWin32Error() +
                     "\n\tdwSize                   " + dwSize +
                     "\n\tlpBaseAddress            " + lpBaseAddress.ToString("X4") +
                     "\n\tlpBuffer                 " + lpBuffer.ToString("X4") +
@@ -80,217 +88,274 @@ namespace WheresMyImplant
                 );
                 return false;
             }
+            Console.WriteLine("Section {0} ({1} bytes), Copied To 0x{2}" , sectionName.Replace("\0", ""), dwNumberOfBytesWritten, lpBaseAddress.ToString("X4"));
+            return true;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean WriteProcessMemoryUnChecked(
-            IntPtr lpBaseAddress,
-            IntPtr lpBuffer,
-            UInt32 dwSize,
-            string sectionName
-        )
+        // No idea why this exists
+        ////////////////////////////////////////////////////////////////////////////////
+        protected Boolean WriteProcessMemoryUnChecked(IntPtr lpBaseAddress, IntPtr lpBuffer, UInt32 dwSize, String sectionName)
         {
             UInt32 dwNumberOfBytesWritten = 0;
             if (IntPtr.Zero != lpBuffer)
             {
-                Boolean writeProcessMemoryResult = Unmanaged.WriteProcessMemory(
-                    hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesWritten
-                );
-
-                if (writeProcessMemoryResult)
-                {
-                    return true;
-                }
-                else
-                {
-                    WriteOutputBad("Unable to write process memory");
-                    return false;
-                }
-            }
-            else
-            {
                 return false;
             }
+
+            if (!kernel32.WriteProcessMemory(hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesWritten))
+            {
+                Console.WriteLine("[-] Unable to write process memory");
+                return false;
+            }
+            return true;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean ReadProcessMemoryChecked(
-            IntPtr lpBaseAddress,
-            IntPtr lpBuffer,
-            UInt32 dwSize,
-            string sectionName
-        )
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        protected Boolean ReadProcessMemoryChecked(IntPtr lpBaseAddress, IntPtr lpBuffer, UInt32 dwSize, String sectionName)
         {
             UInt32 dwNumberOfBytesRead = 0;
-            Boolean readProcessMemoryResult = Unmanaged.ReadProcessMemory(
-                hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesRead
-            );
-
-
-            if (readProcessMemoryResult)
+            if (!kernel32.ReadProcessMemory(hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesRead))
             {
-                WriteOutputGood("Section " + sectionName.Trim() + " (" + dwNumberOfBytesRead + " bytes), Read From To " + lpBaseAddress.ToString("X4"));
-                return true;
-            }
-            else
-            {
-                WriteOutputBad(
-                    "Unable to read process memory" +
-                    "\n\tResult:                  " + readProcessMemoryResult +
+                Console.WriteLine(
+                    "[-] Unable to read process memory" +
+                    "\n\tResult:                  " + Marshal.GetLastWin32Error() +
                     "\n\tdwSize                   " + dwSize +
                     "\n\tlpBaseAddress            " + lpBaseAddress.ToString("X4") +
                     "\n\tlpBuffer                 " + lpBuffer.ToString("X4") +
                     "\n\tdwNumberOfBytesRead      " + dwNumberOfBytesRead
                 );
-                //This is dumb
                 return false;
             }
+            //Console.WriteLine("[+] Section {0} ({1} bytes), Read From {2}", sectionName.Replace("\0", ""), dwNumberOfBytesRead, lpBaseAddress.ToString("X4")));
+            return true;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean ReadProcessMemoryUnChecked(
-            IntPtr lpBaseAddress,
-            IntPtr lpBuffer,
-            UInt32 dwSize,
-            string sectionName
-        )
-        {
-            UInt32 dwNumberOfBytesRead = 0;
-            Boolean readProcessMemoryResult = Unmanaged.ReadProcessMemory(
-                hProcess, lpBaseAddress, lpBuffer, dwSize, ref dwNumberOfBytesRead
-            );
-
-            if (readProcessMemoryResult)
-            {
-                return true;
-            }
-            else
-            {
-                WriteOutputNeutral("Unable to read process memory");
-                return false;
-            }
-        }
-
+        // No idea why this exists
         ////////////////////////////////////////////////////////////////////////////////
-        public IntPtr CreateRemoteThreadChecked(IntPtr lpStartAddress, IntPtr lpParameter)
+        protected Boolean CreateRemoteThreadChecked(IntPtr lpStartAddress, IntPtr lpParameter, IntPtr hThread)
         {
             IntPtr lpThreadAttributes = IntPtr.Zero;
             UInt32 dwStackSize = 0;
             UInt32 dwCreationFlags = 0;
             UInt32 lpThreadId = 0;
-            IntPtr hThread = Unmanaged.CreateRemoteThread(
-                hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, ref lpThreadId
-            );
-
-            WriteOutputGood("Thread Created " + lpThreadId);
-            return hThread;
+            hThread = kernel32.CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, ref lpThreadId);
+            if (IntPtr.Zero == hThread)
+            {
+                Console.WriteLine("[-] CreateRemoteThread Failed");
+                return false;
+            }
+            Console.WriteLine("[+] Thread Created {0}", lpThreadId);
+            return true;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public T PtrToStructureRemote<T>(IntPtr pointer)
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        protected T PtrToStructureRemote<T>(IntPtr pointer)
         {
             UInt32 imageSizeOfStruct = (UInt32)Marshal.SizeOf(typeof(T));
             byte[] structBuffer = new byte[imageSizeOfStruct];
             GCHandle pinnedStructBuffer = GCHandle.Alloc(structBuffer, GCHandleType.Pinned);
-            IntPtr lpStructBytes = new IntPtr((Int64)pinnedStructBuffer.AddrOfPinnedObject());
-            ReadProcessMemoryUnChecked(pointer, lpStructBytes, imageSizeOfStruct, typeof(T).ToString());
-            T marshaledStruct = (T)Marshal.PtrToStructure(lpStructBytes, typeof(T));
-            pinnedStructBuffer.Free();
+            T marshaledStruct = default(T);
+            try
+            {
+                IntPtr lpStructBytes = new IntPtr((Int64)pinnedStructBuffer.AddrOfPinnedObject());
+                if (!ReadProcessMemoryChecked(pointer, lpStructBytes, imageSizeOfStruct, typeof(T).ToString()))
+                {
+                    return marshaledStruct;
+                }
+                marshaledStruct = (T)Marshal.PtrToStructure(lpStructBytes, typeof(T));
+            }
+            catch
+            {
+                return marshaledStruct;
+            }
+            finally
+            {
+                pinnedStructBuffer.Free();
+            }
             return marshaledStruct;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Int16 ReadInt16Remote(IntPtr pointer, Int32 offset)
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        protected UInt16 ReadInt16Remote(IntPtr pointer, Int64 offset)
         {
-            Int16 integer = 0;
+            UInt16 integer = 0;
+            UInt16 marshaledInt16 = 0;
             GCHandle pinnedInteger = GCHandle.Alloc(integer, GCHandleType.Pinned);
-            WriteOutputNeutral("pinnedInteger " + pinnedInteger.ToString());
-            IntPtr lpInteger = new IntPtr((Int64)pinnedInteger.AddrOfPinnedObject());
-            WriteOutputNeutral("lpInteger " + lpInteger.ToString());
-            IntPtr adjustedPointer = new IntPtr(pointer.ToInt64() + offset);
-            WriteOutputNeutral("adjustedPointer " + adjustedPointer.ToString());
-            ReadProcessMemoryUnChecked(adjustedPointer, lpInteger, sizeof(Int16), typeof(Int16).ToString());
-            Int16 marshaledInt16 = Marshal.ReadInt16(lpInteger);
-            pinnedInteger.Free();
+            //Console.WriteLine("[*] pinnedInteger: " + pinnedInteger.AddrOfPinnedObject());
+            try
+            {
+                IntPtr lpInteger = pinnedInteger.AddrOfPinnedObject();
+                IntPtr adjustedPointer = new IntPtr(pointer.ToInt64() + offset);
+                if (ReadProcessMemoryChecked(adjustedPointer, lpInteger, sizeof(UInt16), typeof(UInt16).ToString()))
+                {
+                    return marshaledInt16;
+                }
+                marshaledInt16 = (UInt16)Marshal.ReadInt16(lpInteger);
+            }
+            catch
+            {
+                Console.WriteLine("[-] ReadInt16Remote Failed");
+                return marshaledInt16;
+            }
+            finally
+            {
+                pinnedInteger.Free();
+            }
             return marshaledInt16;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Int32 PtrToInt32Remote(IntPtr pointer)
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        protected Int32 PtrToInt32Remote(IntPtr pointer)
         {
             Int32 integer = 0;
+            Int32 remoteInt32 = 0;
             GCHandle pinnedInteger = GCHandle.Alloc(integer, GCHandleType.Pinned);
-            IntPtr lpInteger = new IntPtr((Int64)pinnedInteger.AddrOfPinnedObject());
-            ReadProcessMemoryUnChecked(pointer, lpInteger, sizeof(Int32), typeof(Int32).ToString());
-            Int32 marshaledInt16 = Marshal.ReadInt32(lpInteger);
-            return marshaledInt16;
+            try
+            {
+                IntPtr lpInteger = new IntPtr((Int64)pinnedInteger.AddrOfPinnedObject());
+                if (!ReadProcessMemoryChecked(pointer, lpInteger, sizeof(Int32), typeof(Int32).ToString()))
+                {
+                    return 0;
+                }
+                remoteInt32 = Marshal.ReadInt32(lpInteger);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[-] PtrToInt32Remote Failed");
+                Console.WriteLine(ex.Message);
+                return 0;
+            }
+            finally
+            {
+                pinnedInteger.Free();
+            }
+            return remoteInt32;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Int64 ReadInt64Remote(IntPtr pointer)
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        protected Int64 ReadInt64Remote(IntPtr pointer)
         {
             Int64 integer = 0;
+            Int64 marshaledInt64 = 0;
             GCHandle pinnedInteger = GCHandle.Alloc(integer, GCHandleType.Pinned);
-            IntPtr lpInteger = new IntPtr((Int64)pinnedInteger.AddrOfPinnedObject());
-            ReadProcessMemoryUnChecked(pointer, lpInteger, sizeof(Int64), typeof(Int64).ToString());
-            Int64 marshaledInt16 = Marshal.ReadInt64(lpInteger);
-            pinnedInteger.Free();
-            return marshaledInt16;
+            try
+            {
+                IntPtr lpInteger = pinnedInteger.AddrOfPinnedObject();
+                if (!ReadProcessMemoryChecked(pointer, lpInteger, sizeof(Int64), typeof(Int64).ToString()))
+                {
+                    Console.WriteLine("[-] ReadInt64Remote Failed");
+                    return marshaledInt64;
+                }
+                marshaledInt64 = Marshal.ReadInt64(lpInteger);
+            }
+            catch
+            {
+                Console.WriteLine("[-] ReadInt64Remote Failed");
+                return marshaledInt64;
+            }
+            finally
+            {
+                pinnedInteger.Free();
+            }
+            return marshaledInt64;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean WriteInt64Remote(IntPtr pointer, Int64 value)
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        protected Boolean WriteInt64Remote(IntPtr lpBaseAddress, Int64 value)
         {
             GCHandle pinnedInteger = GCHandle.Alloc(value, GCHandleType.Pinned);
-            IntPtr lpInteger = new IntPtr((Int64)pinnedInteger.AddrOfPinnedObject());
-            Boolean result = WriteProcessMemoryUnChecked(
-                pointer,
-                lpInteger,
-                (UInt32)sizeof(Int64),
-                ""
-            );
-            pinnedInteger.Free();
-            return result;
+            try
+            {
+                IntPtr lpInteger = pinnedInteger.AddrOfPinnedObject();
+                UInt32 dwNumberOfBytesWritten = 0;
+                if (!kernel32.WriteProcessMemory(hProcess, lpBaseAddress, lpInteger, (UInt32)sizeof(Int64), ref dwNumberOfBytesWritten))
+                {
+                    Console.WriteLine("[-] WriteInt64Remote Failed");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[-] WriteInt64Remote Failed");
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+            finally
+            {
+                pinnedInteger.Free();
+            }
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public string PtrToStringAnsiRemote(IntPtr pointer)
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        protected String PtrToStringAnsiRemote(IntPtr pointer)
         {
-            int offset = 0;
-            string stringResult = "";
-            byte character = new byte();
+            Int32 offset = 0;
+            String stringResult = "";
+            Byte character = new Byte();
             GCHandle pinnedCharacter = GCHandle.Alloc(character, GCHandleType.Pinned);
-            IntPtr lpCharacter = new IntPtr((Int64)pinnedCharacter.AddrOfPinnedObject());
-            char marshaledChar;
-            do {
-                IntPtr adjustedPointer = new IntPtr(pointer.ToInt64() + offset++);
-                ReadProcessMemoryUnChecked(adjustedPointer, lpCharacter, sizeof(char), typeof(char).ToString());
-                marshaledChar = (char)Marshal.ReadByte(lpCharacter);
-                stringResult += marshaledChar;
-            } while (marshaledChar != '\0');
-            pinnedCharacter.Free();
+            try
+            {
+                IntPtr lpCharacter = pinnedCharacter.AddrOfPinnedObject();
+                Char marshaledChar;
+                do
+                {
+                    IntPtr adjustedPointer = new IntPtr(pointer.ToInt64() + offset++);
+                    ReadProcessMemoryChecked(adjustedPointer, lpCharacter, sizeof(Char), typeof(Char).ToString());
+                    marshaledChar = (char)Marshal.ReadByte(lpCharacter);
+                    stringResult += marshaledChar;
+                } while (marshaledChar != '\0');
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[-] WriteInt64Remote Failed");
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                pinnedCharacter.Free();
+            }
             return stringResult;
         }
 
-        public IntPtr LoadLibraryRemote(string library)
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        protected IntPtr LoadLibraryRemote(String library)
         {
             ////////////////////////////////////////////////////////////////////////////////
-            IntPtr hmodule = Unmanaged.GetModuleHandle("kernel32.dll");
-            IntPtr loadLibraryAddr = Unmanaged.GetProcAddress(hmodule, "LoadLibraryA");
+            IntPtr hmodule = kernel32.GetModuleHandle("kernel32.dll");
+            IntPtr loadLibraryAddr = kernel32.GetProcAddress(hmodule, "LoadLibraryA");
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpAddress = IntPtr.Zero;
             UInt32 dwSize = (UInt32)((library.Length + 1) * Marshal.SizeOf(typeof(char)));
-            IntPtr lpBaseAddress = Unmanaged.VirtualAllocEx(hProcess, lpAddress, dwSize, Unmanaged.MEM_COMMIT | Unmanaged.MEM_RESERVE, Unmanaged.PAGE_READWRITE);
+            IntPtr lpBaseAddress = kernel32.VirtualAllocEx(hProcess, lpAddress, dwSize, kernel32.MEM_COMMIT | kernel32.MEM_RESERVE, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_READWRITE);
 
             ////////////////////////////////////////////////////////////////////////////////
             UInt32 lpNumberOfBytesWritten = 0;
             IntPtr libraryPtr = Marshal.StringToHGlobalAnsi(library);
-            Boolean writeProcessMemoryResult = Unmanaged.WriteProcessMemory(hProcess, lpBaseAddress, libraryPtr, dwSize, ref lpNumberOfBytesWritten);
+            Boolean writeProcessMemoryResult = kernel32.WriteProcessMemory(hProcess, lpBaseAddress, libraryPtr, dwSize, ref lpNumberOfBytesWritten);
 
             ////////////////////////////////////////////////////////////////////////////////
-            UInt32 lpflOldProtect = 0;
-            Boolean virtualProtectExResult = Unmanaged.VirtualProtectEx(hProcess, lpBaseAddress, dwSize, Unmanaged.PAGE_EXECUTE_READ, ref lpflOldProtect);
+            Winnt.MEMORY_PROTECTION_CONSTANTS lpflOldProtect = Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_NOACCESS;
+            Boolean virtualProtectExResult = kernel32.VirtualProtectEx(hProcess, lpBaseAddress, dwSize, Winnt.MEMORY_PROTECTION_CONSTANTS.PAGE_EXECUTE_READ, ref lpflOldProtect);
 
             ////////////////////////////////////////////////////////////////////////////////
             IntPtr lpThreadAttributes = IntPtr.Zero;
@@ -298,13 +363,20 @@ namespace WheresMyImplant
             IntPtr lpParameter = IntPtr.Zero;
             UInt32 dwCreationFlags = 0;
             UInt32 threadId = 0;
-            IntPtr hThread = Unmanaged.CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, loadLibraryAddr, lpBaseAddress, dwCreationFlags, ref threadId);
+            IntPtr hThread = kernel32.CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, loadLibraryAddr, lpBaseAddress, dwCreationFlags, ref threadId);
             return hThread;
         }
 
-        public void WaitForSingleObjectExRemote(IntPtr hThread)
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        protected Boolean WaitForSingleObjectExRemote(IntPtr hThread)
         {
-            Unmanaged.WaitForSingleObjectEx(hProcess, hThread, 0xFFFFFFFF);
+            if (0 != kernel32.WaitForSingleObjectEx(hProcess, hThread, 0xFFFFFFFF))
+            {
+                return false;
+            }
+            return true;
         }
     }
 }

@@ -5,8 +5,9 @@ using System.Text;
 
 namespace WheresMyImplant
 {
-    public class Base
+    internal abstract class Base 
     {
+        /*
         protected StringBuilder stringBuilder = new StringBuilder();
 
         protected void WriteOutput(string output)
@@ -16,24 +17,25 @@ namespace WheresMyImplant
 
         protected void WriteOutputGood(string output)
         {
-            stringBuilder.Append("[+] " + output + "\n");
+            stringBuilder.Append(String.Format("[+] {0}\n", output));
         }
 
         protected void WriteOutputNeutral(string output)
         {
-            stringBuilder.Append("[*] " + output + "\n");
+            stringBuilder.Append(String.Format("[*] {0}\n", output));
         }
 
         protected void WriteOutputBad(string output)
         {
-            stringBuilder.Append("[-] " + output + "\n");
-            string errorMessage = new Win32Exception(Marshal.GetLastWin32Error()).Message;
+            stringBuilder.Append(String.Format("[-] {0} 0x{1:X}\n", output, Marshal.GetLastWin32Error()));
+            String errorMessage = new Win32Exception(Marshal.GetLastWin32Error()).Message;
             stringBuilder.Append("[-] " + errorMessage + "\n");
         }
 
-        public string GetOutput()
+        internal string GetOutput()
         {
             return stringBuilder.ToString().Trim();
         }
+        */
     }
 }

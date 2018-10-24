@@ -1,15 +1,16 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Data.SqlClient;
 using System.Text;
 
 namespace WheresMyImplant
 {
-    class BaseSQL : Base
+    internal abstract class BaseSQL : Base
     {
         protected string connectionString;
 
         ////////////////////////////////////////////////////////////////////////////////
-        public BaseSQL(string server, string database, string username, string password)
+        internal BaseSQL(string server, string database, string username, string password)
         {
             if (null == username)
             {
@@ -23,6 +24,8 @@ namespace WheresMyImplant
             {
                 connectionString = "Server=" + server + "; Database=" + database + "; User ID=" + username + "; Password=" + password + "; Connection Timeout=1";
             }
+
+            Console.WriteLine("[*] Connection String: " + connectionString);
         }
 
         ////////////////////////////////////////////////////////////////////////////////

