@@ -150,6 +150,7 @@
     <Compile Include="Inject\PE\InjectPE.cs" />
     <Compile Include="Inject\PE\InjectPERemote.cs" />
     <Compile Include="Inject\ShellCode\InjectShellCode.cs" />
+    <Compile Include="Inject\ShellCode\InjectShellCodeAPC.cs" />
     <Compile Include="Inject\ShellCode\InjectShellCodeRemote.cs" />
     <Compile Include="Base\Base.cs" />
     <Compile Include="Base\BaseRemote.cs" />
