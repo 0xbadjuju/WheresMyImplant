@@ -97,6 +97,12 @@ namespace WheresMyImplant
                     if (0 == QueueUserAPC(hAlloc, hThread, IntPtr.Zero))
                     {
                         Console.WriteLine("[+] APC Started");
+                        if (0 != kernel32.ResumeThread(hThread))
+                        {
+                            Console.WriteLine("[-] Failed to Resume Thread");
+                            kernel32.CloseHandle(hThread);
+                            continue;
+                        }
                         kernel32.CloseHandle(hThread);
                         return true;
                     }
