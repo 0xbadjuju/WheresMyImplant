@@ -149,8 +149,9 @@
     <Compile Include="Inject\Dll\LoadDllRemote.cs" />
     <Compile Include="Inject\PE\InjectPE.cs" />
     <Compile Include="Inject\PE\InjectPERemote.cs" />
+    <Compile Include="Inject\ShellCode\InjectShellCodeManaged.cs" />
     <Compile Include="Inject\ShellCode\InjectShellCode.cs" />
-    <Compile Include="Inject\ShellCode\InjectShellCodeAPC.cs" />
+    <Compile Include="Inject\ShellCode\InjectShellCodeRemoteAPC.cs" />
     <Compile Include="Inject\ShellCode\InjectShellCodeRemote.cs" />
     <Compile Include="Base\Base.cs" />
     <Compile Include="Base\BaseRemote.cs" />
@@ -262,6 +263,7 @@
     <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\kernel32.cs" />
     <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\ntdll.cs" />
     <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\secur32.cs" />
+    <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\shell32.cs" />
     <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\user32.cs" />
     <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\vaultcli.cs" />
     <Compile Include="Resources\MonkeyWorks\MonkeyWorks\Unmanaged\Libraries\wlanapi.cs" />

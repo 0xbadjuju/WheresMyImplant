@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Management;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 using System.Text;
 
 using MonkeyWorks.Unmanaged.Headers;
@@ -197,6 +198,22 @@ namespace WheresMyImplant
         internal static string GetError()
         {
             return new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //
+        ////////////////////////////////////////////////////////////////////////////////
+        public static String FindFilePath(String name)
+        {
+            StringBuilder lpFileName = new StringBuilder(260);
+            IntPtr lpFilePart = new IntPtr();
+            UInt32 result = kernel32.SearchPath(null, name, null, (UInt32)lpFileName.Capacity, lpFileName, ref lpFilePart);
+            if (String.Empty == lpFileName.ToString())
+            {
+                Console.WriteLine(GetError());
+                return String.Empty;
+            }
+            return lpFileName.ToString();
         }
 
         ////////////////////////////////////////////////////////////////////////////////
